@@ -15,6 +15,38 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, #this is for data science
             janitor, #this is to clean data 
             palmerpenguins, # this is dataset
-            gtsummary) #this is for tables
+            gtsummary, #this is for tables
+            here) #this is for file paths
+```
+
+# Load dataset
+
+```{r}
+library(readxl) # this is to read Excel files
+dirty_data <- read_excel(here("Lecture_2", "data", "dirty_data.xlsx"), skip = 1) # skip = 1 skips the title row
+View(dirty_data)
+```
+
+# Data cleaning
+
+```{r}
+dirty_data |>
+  glimpse()
+```
+
+```{r}
+dirty_data |>
+  summary()
+```
+
+```{r}
+dirty_data |>
+  get_dupes() # find duplicate rows (from janitor)
+```
+
+```{r}
+# Remove empty rows and columns (where every value is NA)
+dirty_data |>
+  janitor::remove_empty(c("rows", "cols"))
 ```
 
