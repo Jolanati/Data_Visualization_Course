@@ -1,0 +1,77 @@
+---
+title: "Lecture_1_Document"
+author: "Jolanta.Stutane"
+format: html
+editor: source
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+To start new - Cltr + Alt + I
+
+```{r}
+# To comment
+
+```
+
+Alt+ - jauns chunk
+
+```{r}
+x <- 5
+y <- 9
+x+y
+```
+
+# The Penguins
+
+```{r}
+#| message: false
+#| warning: false
+# Install pacman once, then use it to install (if missing) and load the rest
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, gapminder, gtsummary)
+```
+
+```{r}
+# Load the Palmer Penguins dataset
+pacman::p_load(palmerpenguins)
+data(penguins)
+head(penguins)
+```
+
+## First graph
+
+```{r}
+#| warning: false
+# Scatter plot: flipper length vs body mass, colour = species, shape = island
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g,
+                     colour = species, shape = island)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_colour_manual(values = c(Adelie    = "#2a78d6",
+                                 Chinstrap = "#eb6834",
+                                 Gentoo    = "#1baf7a")) +
+  labs(title = "Penguins with longer flippers are heavier",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       colour = "Species", shape = "Island") +
+  theme_minimal()
+```
