@@ -12,18 +12,20 @@ editor: source
 if (!require("pacman")) install.packages("pacman")
 
 # Install (if missing) and load the packages for this lecture
-pacman::p_load(tidyverse, #this is for data science
-            janitor, #this is to clean data 
-            palmerpenguins, # this is dataset
-            gtsummary, #this is for tables
-            here) #this is for file paths
+pacman::p_load(tidyverse, # this is for data science
+            janitor, # this is to clean data
+            readxl, # to load xls
+            here, # to ensure file paths
+            naniar, # to deal with missing data
+            palmerpenguins, # this is a dataset
+            gtsummary) # this is to create nice tables
 ```
 
 # Load dataset
 
 ```{r}
 library(readxl) # this is to read Excel files
-dirty_data <- read_excel(here("Lecture_2", "data", "dirty_data.xlsx"), skip = 1) # skip = 1 skips the title row
+dirty_data <- read_excel(here::here("Lecture_2", "data", "dirty_data.xlsx"), skip = 1) # skip = 1 skips the title row
 View(dirty_data)
 ```
 
@@ -46,7 +48,77 @@ dirty_data |>
 
 ```{r}
 # Remove empty rows and columns (where every value is NA)
-dirty_data |>
+dirty_data <- dirty_data |>
   janitor::remove_empty(c("rows", "cols"))
+```
+
+```{r}
+# Count missing values in each column (from naniar)
+dirty_data |>
+  miss_var_summary()
+```
+
+## Select one column
+
+```{r}
+dirty_data$`First Name`
+```
+
+```{r}
+# Plot missing values in each column (from naniar)
+dirty_data |>
+  gg_miss_var()
+```
+
+```{r}
+# Show missing values for the whole dataset (from naniar)
+dirty_data |>
+  vis_miss()
+```
+
+```{r}
+# Count missing values in each row (from naniar)
+dirty_data |>
+  miss_case_summary()
+```
+
+# Clean the data
+
+```{r}
+# Make column names lowercase with underscores (from janitor)
+clean_data <- dirty_data |>
+  clean_names()
+```
+
+```{r}
+# All cleaning steps in one pipe: load, fix names, drop empty and constant columns
+cleaned_data <-
+  readxl::read_excel(here("Lecture_2", "data", "dirty_data.xlsx"), skip = 1) |>
+  clean_names() |>
+  remove_empty(which = c("rows", "cols")) |>
+  remove_constant()
+```
+
+# Penguins
+
+```{r}
+# Number of rows and columns
+dim(penguins)
+```
+
+```{r}
+# Summary statistics for each column
+summary(penguins)
+```
+
+```{r}
+# Show missing values in the penguins data (from naniar)
+penguins |>
+  vis_miss()
+```
+
+```{r}
+# Count penguins by species and island
+table(penguins$species, penguins$island)
 ```
 
