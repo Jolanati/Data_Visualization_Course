@@ -1,0 +1,15 @@
+# R / RStudio session files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# Quarto render output
+*.html
+*_files/
+/.quarto/
+
+# Editor and OS files
+.vscode/
+Thumbs.db
+desktop.ini
