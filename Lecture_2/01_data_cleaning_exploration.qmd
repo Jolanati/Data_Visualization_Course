@@ -1,0 +1,20 @@
+---
+title: "Data Cleaning and Exploration"
+author: "Jolanta.Stutane"
+format: html
+editor: source
+---
+
+## Packages
+
+```{r}
+# Install pacman once (if missing) and load it
+if (!require("pacman")) install.packages("pacman")
+
+# Install (if missing) and load the packages for this lecture
+pacman::p_load(tidyverse, #this is for data science
+            janitor, #this is to clean data 
+            palmerpenguins, # this is dataset
+            gtsummary) #this is for tables
+```
+

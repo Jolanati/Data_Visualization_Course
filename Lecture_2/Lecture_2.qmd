@@ -1,5 +1,5 @@
 ---
-title: "Lecture_2_Document"
+title: "Lecture 2: Data Exploration and Cleaning"
 author: "Jolanta.Stutane"
 format: html
 editor: source
