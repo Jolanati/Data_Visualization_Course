@@ -122,3 +122,9 @@ penguins |>
 table(penguins$species, penguins$island)
 ```
 
+# Our first nice table with gtsummary
+
+```{r}
+
+```
+
