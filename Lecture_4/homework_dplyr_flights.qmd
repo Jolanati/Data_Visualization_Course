@@ -353,12 +353,12 @@ flights |>
 ```{r}
 flights |>
   filter(origin == "EWR") |>
-  select(carrier, dest, arr_delay) |>
+  select(carrier, dest, arr_delay, origin, flight) |>
   arrange(desc(arr_delay)) |>
   head(5)
 ```
 
-Answer: The worst arrival delay from Newark was an Envoy Air (MQ) flight to Chicago O'Hare (ORD): 1,109 minutes (about 18.5 hours). The rest of the top five: AA to MIA (878), MQ to ORD (875), DL to SLC (847) and AA to MIA (846).
+Answer: The worst arrival delay from Newark was Envoy Air (MQ) flight 3695 to Chicago O'Hare (ORD): 1,109 minutes (about 18.5 hours). The rest of the top five: AA 172 to MIA (878), MQ 3744 to ORD (875), DL 1223 to SLC (847) and AA 172 to MIA again (846).
 
 ------------------------------------------------------------------------
 
@@ -372,6 +372,7 @@ Answer: The worst arrival delay from Newark was an Envoy Air (MQ) flight to Chic
 flights |>
   mutate(dep_delay_hours = dep_delay / 60) |>
   select(carrier, dep_delay, dep_delay_hours) |>
+  arrange(desc(dep_delay_hours)) |>     # sort most delayed first
   head()
 ```
 
