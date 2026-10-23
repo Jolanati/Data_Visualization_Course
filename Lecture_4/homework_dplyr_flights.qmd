@@ -488,6 +488,7 @@ Answer: To Miami, United (UA) had the worst mean arrival delay (6.7 min), then D
 ```{r}
 flights |>
   filter(carrier %in% c("AA", "UA", "DL")) |>
+  filter(origin == "JFK") |>
   select(carrier, dep_delay, arr_delay) |>
   tbl_summary(
     by = carrier,
