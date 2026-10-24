@@ -46,6 +46,24 @@ penguins |>
   geom_histogram(bins = 10)                          # 10 wide bars
 ```
 
+```{r}
+#| label: weight-histogram-facets
+penguins |>
+  filter(!is.na(body_mass_g)) |>                    # drop the 2 penguins with no weight recorded
+  ggplot(aes(x = body_mass_g, fill = species)) +    # fill: one color per species
+  geom_histogram(bins = 10, alpha = 0.7) +           # alpha: 70% opaque, so the colors are softer
+  facet_grid(species ~ .)                            # one panel per species, stacked in rows
+```
+
+```{r}
+#| label: weight-histogram-sex-species
+penguins |>
+  filter(!is.na(body_mass_g), !is.na(sex)) |>       # drop penguins with no weight or no sex recorded
+  ggplot(aes(x = body_mass_g, fill = species)) +    # fill: one color per species
+  geom_histogram(bins = 10, alpha = 0.7) +           # alpha: 70% opaque, so the colors are softer
+  facet_grid(sex ~ species)                          # rows: sex, columns: species
+```
+
 
 
 
