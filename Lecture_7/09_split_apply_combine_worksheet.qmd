@@ -9,8 +9,67 @@ The penguins come with the palmerpenguins package. Put `rosling_tidy.csv` in the
 
 ```{r}
 #| label: setup
-pacman::p_load(here, tidyverse, palmerpenguins)
+pacman::p_load(
+  here,            # file paths that work on any computer
+  tidyverse,       # ggplot2, dplyr, tidyr and friends
+  palmerpenguins,  # penguin measurements
+  gapminder,       # country health and wealth data over time
+  gtsummary,       # publication-ready summary tables
+  NHANES           # US health and nutrition survey data
+)
 ```
+
+```{r}
+#| label: look-penguins
+penguins
+```
+
+```{r}
+#| label: mean-weight-by-species
+penguins |>
+  group_by(species, island) |>                                      # split: one group per species
+  summarise(                                                # apply, then combine into one row per species
+    # the mean
+    mean_weight = mean(body_mass_g, na.rm = TRUE),
+    # the standard deviation
+    sd_weight = sd(body_mass_g, na.rm = TRUE),
+    # and the count
+    n = n()
+  )
+```
+
+```{r}
+#| label: weight-histogram
+penguins |>
+  filter(!is.na(body_mass_g)) |>                    # drop the 2 penguins with no weight recorded
+  ggplot(aes(x = body_mass_g, fill = species)) +    # fill: one color per species
+  geom_histogram(bins = 10)                          # 10 wide bars
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r}
 #| label: load-data
