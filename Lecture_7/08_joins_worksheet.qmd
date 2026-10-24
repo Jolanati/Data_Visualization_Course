@@ -1,0 +1,111 @@
+---
+title: "Joining tables: left, inner, full and anti (worksheet)"
+format: html
+---
+
+Replace each `___` with code, remove `#| eval: false` and run the chunk. Write your prediction before you run each join, then write the result.
+
+The tables come with the dplyr package.
+
+```{r}
+#| label: setup
+pacman::p_load(tidyverse)
+```
+
+## Look at the tables
+
+```{r}
+#| label: look-members
+band_members
+```
+
+```{r}
+#| label: look-instruments
+band_instruments
+```
+
+Which column do both tables share?
+
+Answer: `name`.
+
+Who appears in both tables?
+
+Answer: John and Paul. Mick is only in `band_members`, and Keith is only in `band_instruments`.
+
+## Your turn 1: left_join()
+
+Complete the key.
+
+```{r}
+#| label: turn-1
+band_members |>
+  left_join(band_instruments, join_by(name))
+```
+
+Prediction: 3 rows. Result: 3 rows.
+
+Who has `NA` in `plays`? Mick. He is in `band_members` but not in `band_instruments`, so there is no instrument to fill in.
+
+## Your turn 2: swap the tables
+
+```{r}
+#| label: turn-2
+#| eval: false
+band_instruments |>
+  left_join(band_members, join_by(name))
+```
+
+Prediction: [YOUR ANSWER HERE] rows. Result: [YOUR ANSWER HERE] rows.
+
+Who has `NA` in `band`? [YOUR ANSWER HERE]
+
+## Your turn 3: inner_join()
+
+Keep only the people who have a band and an instrument. Complete the function name.
+
+```{r}
+#| label: turn-3
+band_members |>
+  inner_join(band_instruments, join_by(name))
+```
+
+Prediction: 2 rows. Result: 2 rows.
+
+Who is missing from the result, and why? Mick and Keith. `inner_join()` keeps only the names that are in both tables. Mick has no instrument and Keith has no band.
+
+## Your turn 4: full_join()
+
+Keep all four people. Complete the function name.
+
+```{r}
+#| label: turn-4
+band_members |>
+  full_join(band_instruments, join_by(name))
+```
+
+Prediction: 4 rows. Result: 4 rows.
+
+Where do you see `NA`? Mick has `NA` in `plays` (no instrument), and Keith has `NA` in `band` (no band).
+
+## Your turn 5: anti_join()
+
+Who is in `band_members` and has no instrument?
+
+```{r}
+#| label: turn-5
+band_members |>
+  anti_join(band_instruments, join_by(name))
+```
+
+Prediction: Mick. Result: Mick (1 row). He is the only member with no match in `band_instruments`.
+
+## Your turn 6: choose the join
+
+Write the join that answers each question. Then run it to check.
+
+| Question | Join |
+|----------|------|
+| All members of the band, with or without an instrument | [YOUR ANSWER HERE] |
+| Only people with a band and an instrument | [YOUR ANSWER HERE] |
+| All four people, whatever is missing | [YOUR ANSWER HERE] |
+| Members with no instrument | [YOUR ANSWER HERE] |
