@@ -185,7 +185,7 @@ flights |>
 ```{r}
 #| label: load-gapminder
 # Life expectancy by country and year, read straight from a Google Sheet
-gapminder_wide <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQMKvrshkL1R55vcnXnXQ14VfJM6HB62bed8U6ukVc-9ncRg79co2GoaS84eb1o4aEg1bqLFiWNJAS3/pub?gid=554197504&single=true&output=csv")
+gapminder_wide <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQMKvrshkL1R55vcnXnXQ14VfJM6HB62bed8U6ukVc-9ncRg79co2GoaS84eb1o4aEg1bqLFiWNJAS3/pub?gid=554197504&single=true&output=csv")
 ```
 # EDA
 
@@ -194,5 +194,65 @@ gapminder_wide <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQMK
 #| label: view-gapminder
 #| eval: false
 # View() opens the table in a spreadsheet-like tab. It only works when you run the cell, not when you render
-View(gapminder_wide)
+#View(gapminder_wide)
 ```
+
+# Data manipulation
+
+```{r}
+#| label: baltic-select
+gapminder_wide |>
+  filter(name %in% c("Estonia", "Latvia", "Lithuania")) |>   # the three Baltic countries
+  select(geo, name, "1980":"2026")                           # every year from 1980 to 2026
+```
+
+
+
+## The plot
+
+```{r}
+#| label: pivot-plot
+gapminder_wide |>
+  # filter and select
+  filter(name %in% c("Estonia", "Latvia", "Lithuania")) |>
+  select(geo, name, "1880":"2026") |>    # keep name for the legend
+  # pivot: the year columns become one year column and one life_exp column
+  pivot_longer(
+    cols = "1880":"2026",
+    names_to = "year",
+    values_to = "life_exp"
+  ) |>
+  ggplot(aes(
+    x = year,
+    y = life_exp,
+    group = geo,                         # connect the points of each country into one line
+    color = name                         # one color per country
+  )) +
+  geom_line()
+```
+
+## The plot after WWII
+
+The Second World War ended in 1945, so this plot starts in 1946.
+
+```{r}
+#| label: pivot-plot-after-wwii
+gapminder_wide |>
+  # filter and select
+  filter(name %in% c("Estonia", "Latvia", "Lithuania")) |>
+  select(geo, name, "1946":"2026") |>    # only the years after WWII
+  # pivot: the year columns become one year column and one life_exp column
+  pivot_longer(
+    cols = "1946":"2026",
+    names_to = "year",
+    values_to = "life_exp"
+  ) |>
+  ggplot(aes(
+    x = year,
+    y = life_exp,
+    group = geo,                         # connect the points of each country into one line
+    color = name                         # one color per country
+  )) +
+  geom_line()
+```
+
