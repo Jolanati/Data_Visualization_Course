@@ -123,17 +123,38 @@ Answer: EWR is the only airport left.
 
 ## See the distribution of dep delay from JFK in Christmas time
 
+Delay in minutes.
+
 ```{r}
-#| label: jfk-christmas-delays
+#| label: jfk-christmas-delays-minutes
 flights |>
   filter(origin == "JFK") |>             # this is the airport
   filter(month == 12 & day == 25) |>     # this is Christmas Day
   filter(!is.na(dep_delay)) |>           # drop flights with no delay recorded
   ggplot(aes(x = dep_delay)) +
-  geom_histogram(binwidth = 10, fill = "#2a6fdb", color = "white") +
+  geom_histogram(binwidth = 10, fill = "#2adb4d", color = "white") +   # 10-minute bars
   labs(
     title = "Departure delays from JFK on December 25, 2013",
     x = "Departure delay (minutes)",
+    y = "Number of flights"
+  ) +
+  theme_minimal()
+```
+
+Delay in hours.
+
+```{r}
+#| label: jfk-christmas-delays-hours
+flights |>
+  filter(origin == "JFK") |>             # this is the airport
+  filter(month == 12 & day == 25) |>     # this is Christmas Day
+  filter(!is.na(dep_delay)) |>           # drop flights with no delay recorded
+  mutate(dep_delay_hours = dep_delay / 60) |>   # minutes to hours
+  ggplot(aes(x = dep_delay_hours)) +
+  geom_histogram(binwidth = 0.25, fill = "#2adb4d", color = "white") +   # 15-minute bars
+  labs(
+    title = "Departure delays from JFK on December 25, 2013",
+    x = "Departure delay (hours)",
     y = "Number of flights"
   ) +
   theme_minimal()
