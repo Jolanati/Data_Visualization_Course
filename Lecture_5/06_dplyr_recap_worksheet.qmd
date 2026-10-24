@@ -74,7 +74,8 @@ Flights that departed on December 25.
 ```{r}
 #| label: turn-3a
 flights |>
-  filter(month == 12 & day == 25)
+  filter(month == 12 & day == 25) |>
+  filter(dep_delay > 0)
 ```
 
 Flights that departed in June or July, with `|`.
