@@ -256,3 +256,31 @@ gapminder_wide |>
   geom_line()
 ```
 
+# Long to wide
+
+
+```{r}
+table2
+```
+
+```{r}
+#| label: table2-wider
+table2 |>
+  pivot_wider(
+    names_from = type,                   # the values of type become new column names
+    values_from = count                  # the values of count fill the new columns
+  ) |>
+  mutate(year = as.factor(year)) |>      # year as a category: the axis shows only 1999 and 2000
+  # adjust by 100,000 population
+  mutate(case_per_100000 = (cases / population) * 100000) |>
+
+  # the plot
+  ggplot(aes(
+    x = year,
+    y = case_per_100000,                 # cases per 100,000 people
+    color = country,                     # one color per country
+    group = country                      # connect the points of each country into one line
+  )) +
+  # scale_y_log10() +
+  geom_line()
+```
