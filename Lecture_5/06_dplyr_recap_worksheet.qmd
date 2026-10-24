@@ -1,0 +1,123 @@
+---
+title: "dplyr recap: select() and filter() (worksheet)"
+format: html
+---
+
+Replace each `___` with code, remove `#| eval: false` and run the chunk. Write your answer under each chunk.
+
+The data are all flights that departed from New York in 2013. They come from the `nycflights13` package.
+
+```{r}
+#| label: setup
+pacman::p_load(
+  here,            # file paths that work on any computer
+  tidyverse,       # ggplot2, dplyr, tidyr and friends
+  nycflights13     # all flights departing New York City in 2013
+)
+```
+
+```{r}
+#| label: load-data
+# flights comes from the nycflights13 package, so no csv file is needed
+flights <- nycflights13::flights
+```
+
+## Your turn 1: select a range
+
+Select the columns from `dep_time` to `arr_delay`.
+
+```{r}
+#| label: turn-1a
+flights |>
+  select(dep_time:arr_delay)
+```
+
+Answer: 6 columns.
+
+Select all columns except `dep_time` to `arr_delay`.
+
+```{r}
+#| label: turn-1b
+flights |>
+  select(!dep_time:arr_delay)
+```
+
+Answer: 13 columns.
+
+## Your turn 2: select by pattern
+
+Select the columns that end in `time`.
+
+```{r}
+#| label: turn-2a
+flights |>
+  select(ends_with("time"))
+```
+
+Answer: 5 columns.
+
+Select the columns that start with `sched`.
+
+```{r}
+#| label: turn-2b
+#| eval: false
+flights |>
+  select(starts_with("sched"))
+```
+
+Answer: [YOUR ANSWER HERE] columns.
+
+## Your turn 3: AND and OR
+
+Flights that departed on December 25.
+
+```{r}
+#| label: turn-3a
+flights |>
+  filter(month == 12 & day == 25)
+```
+
+Flights that departed in June or July, with `|`.
+
+```{r}
+#| label: turn-3b
+flights |>
+  filter(month == 6 | month == 7)
+```
+
+The same flights as the previous question, with `%in%`.
+
+```{r}
+#| label: turn-3c
+#| eval: false
+flights |>
+  filter(month %in% c(___, ___))
+```
+
+Answer: both versions return [YOUR ANSWER HERE] rows. Check it with `count()`.
+
+## Your turn 4: NOT
+
+Flights that did not depart from JFK.
+
+```{r}
+#| label: turn-4a
+#| eval: false
+flights |>
+  filter(origin ___ "JFK") |>
+  count(origin)
+```
+
+Answer: [YOUR ANSWER HERE] airports remain.
+
+Flights that did not depart from JFK or LGA.
+
+```{r}
+#| label: turn-4b
+#| eval: false
+flights |>
+  filter(!(origin %in% c("___", "___"))) |>
+  count(origin)
+```
+
+Answer: [YOUR ANSWER HERE] is the only airport left.
