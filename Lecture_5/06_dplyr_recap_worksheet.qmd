@@ -83,19 +83,19 @@ Flights that departed in June or July, with `|`.
 ```{r}
 #| label: turn-3b
 flights |>
-  filter(month == 6 | month == 7)
+  filter(month == 6 | month == 7) |>
+  filter(origin == "JFK")
 ```
 
 The same flights as the previous question, with `%in%`.
 
 ```{r}
 #| label: turn-3c
-#| eval: false
 flights |>
-  filter(month %in% c(___, ___))
+  filter(month %in% c(6, 7))
 ```
 
-Answer: both versions return [YOUR ANSWER HERE] rows. Check it with `count()`.
+Answer: both versions return 57,668 rows. Check it with `count()`.
 
 ## Your turn 4: NOT
 
@@ -103,22 +103,38 @@ Flights that did not depart from JFK.
 
 ```{r}
 #| label: turn-4a
-#| eval: false
 flights |>
-  filter(origin ___ "JFK") |>
+  filter(origin != "JFK") |>
   count(origin)
 ```
 
-Answer: [YOUR ANSWER HERE] airports remain.
+Answer: 2 airports remain.
 
 Flights that did not depart from JFK or LGA.
 
 ```{r}
 #| label: turn-4b
-#| eval: false
 flights |>
-  filter(!(origin %in% c("___", "___"))) |>
+  filter(!(origin %in% c("JFK", "LGA"))) |>
   count(origin)
 ```
 
-Answer: [YOUR ANSWER HERE] is the only airport left.
+Answer: EWR is the only airport left.
+
+## See the distribution of dep delay from JFK in Christmas time
+
+```{r}
+#| label: jfk-christmas-delays
+flights |>
+  filter(origin == "JFK") |>             # this is the airport
+  filter(month == 12 & day == 25) |>     # this is Christmas Day
+  filter(!is.na(dep_delay)) |>           # drop flights with no delay recorded
+  ggplot(aes(x = dep_delay)) +
+  geom_histogram(binwidth = 10, fill = "#2a6fdb", color = "white") +
+  labs(
+    title = "Departure delays from JFK on December 25, 2013",
+    x = "Departure delay (minutes)",
+    y = "Number of flights"
+  ) +
+  theme_minimal()
+```
