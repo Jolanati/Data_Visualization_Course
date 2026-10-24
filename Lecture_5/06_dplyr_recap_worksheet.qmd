@@ -179,3 +179,20 @@ flights |>
   ) +
   theme_minimal()
 ```
+
+# Pivot
+
+```{r}
+#| label: load-gapminder
+# Life expectancy by country and year, read straight from a Google Sheet
+gapminder_wide <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQMKvrshkL1R55vcnXnXQ14VfJM6HB62bed8U6ukVc-9ncRg79co2GoaS84eb1o4aEg1bqLFiWNJAS3/pub?gid=554197504&single=true&output=csv")
+```
+# EDA
+
+
+```{r}
+#| label: view-gapminder
+#| eval: false
+# View() opens the table in a spreadsheet-like tab. It only works when you run the cell, not when you render
+View(gapminder_wide)
+```
