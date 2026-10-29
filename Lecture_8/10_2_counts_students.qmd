@@ -21,7 +21,8 @@ if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 
 ```{r}
 #| label: packages
-pacman::p_load(tidyverse, here, mosaicData, NHANES, treemapify)
+pacman::p_load(tidyverse, here, mosaicData, NHANES, treemapify,
+               ggthemes)
 ```
 
 ## 2. Datasets
@@ -51,7 +52,7 @@ whickham <- Whickham |>
                         breaks = c(17, 34, 44, 54, 64, 74, 99),
                         labels = c("18-34", "35-44", "45-54", "55-64", "65-74", "75+"))
   )
-whickham |> glimpse()
+whickham |> head()
 ```
 
 ```{r}
@@ -61,6 +62,14 @@ whickham |>
   count(age_group, age_group_cut)
 ```
 
+```{r}
+#| label: plot-age-groups
+# one bar per age group, the height is the number of women
+whickham |>
+  ggplot(aes(x = age_group)) +
+  geom_bar()
+```
+
 ### 2.2 nhanes (package `NHANES`)
 
 10,000 people from two US survey cycles (2009_10 and 2011_12).
@@ -68,7 +77,7 @@ whickham |>
 ```{r}
 #| label: data-nhanes
 nhanes <- NHANES
-nhanes |> glimpse()
+nhanes |> head()
 ```
 
 ### 2.3 companies_lv (file in the course repository)
@@ -82,7 +91,7 @@ companies_lv <- read_csv(
   "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/companies_lv_smaller_2020_2025.csv",
   show_col_types = FALSE
 )
-companies_lv |> glimpse()
+companies_lv |> head()
 ```
 
 ### 2.4 world_exports (file in the course repository)
@@ -95,7 +104,7 @@ world_exports <- read_csv(
   "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/world_exports_1998_2000.csv",
   col_types = cols(product = col_character())
 )
-world_exports |> glimpse()
+world_exports |> head()
 ```
 
 ### 2.5 rosling (file in the course repository)
@@ -108,7 +117,7 @@ rosling <- read_csv(
   "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/rosling_tidy.csv",
   show_col_types = FALSE
 )
-rosling |> glimpse()
+rosling |> head()
 ```
 
 ## 3. Counting things
@@ -121,7 +130,6 @@ Draw a pie chart of the age groups. Then rank the six slices from largest to sma
 
 ```{r}
 #| label: q1
-#| eval: false
 whickham |>
   ggplot(aes(x = "", fill = age_group)) +
   geom_bar(width = 1) +
@@ -138,9 +146,14 @@ Draw the same counts as bars. Is the ranking easier to read? Write how sure you 
 
 ```{r}
 #| label: q2
-#| eval: false
 whickham |>
-
+  ggplot(aes(x = age_group)) +   # one bar per age group
+  geom_bar() +                   # bar height = number of women
+  labs(title = "My First Bar Plot",
+       y = "Counts",
+       subtitle = "Oct 28, 2026",
+       caption = "Sergio Uribe") +
+  theme_economist()              # The Economist style, from ggthemes
 ```
 
 **Your finding:**
@@ -153,9 +166,9 @@ Count the people by `Race1`. Which order do the bars follow?
 
 ```{r}
 #| label: q3
-#| eval: false
 nhanes |>
-
+  ggplot(aes(x = Race1)) +   # one bar per race group
+  geom_bar()                 # bar height = number of people
 ```
 
 **Your finding:**

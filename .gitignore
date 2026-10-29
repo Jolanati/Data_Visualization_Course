@@ -13,3 +13,6 @@
 .vscode/
 Thumbs.db
 desktop.ini
+
+# Keep the Vercel app pages
+!Final_work/app/*.html
