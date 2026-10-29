@@ -152,7 +152,7 @@ whickham |>
   labs(title = "My First Bar Plot",
        y = "Counts",
        subtitle = "Oct 28, 2026",
-       caption = "Sergio Uribe") +
+       caption = "Jolanta Stutane") +
   theme_economist()              # The Economist style, from ggthemes
 ```
 
@@ -196,8 +196,10 @@ Draw one bar per legal form (`type_text`). What happens to the labels?
 ```{r}
 #| label: q5
 companies_lv |>
-  ggplot(aes(x = type_text)) +   # one bar per legal form
-  geom_bar()                     # bar height = number of companies
+  ggplot(aes(x = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
+  geom_bar() +                                        # bar height = number of companies
+  coord_flip() +                                      # swap the axes, labels go on the left
+  labs(x = NULL)                                      # no axis title, the labels say it
 ```
 
 **Your finding:**
@@ -209,9 +211,8 @@ Flip the plot so the labels sit on the vertical axis. Which order do the bars fo
 ```{r}
 #| label: q6
 companies_lv |>
-  ggplot(aes(x = type_text)) +   # one bar per legal form
-  geom_bar() +                   # bar height = number of companies
-  coord_flip()                   # swap the axes, labels go on the left
+  ggplot(aes(y = type_text)) +   # y instead of x flips the bars, labels on the vertical axis
+  geom_bar()                     # bar length = number of companies
 ```
 
 **Your finding:**
@@ -223,10 +224,9 @@ Order the legal forms from largest to smallest, with the largest at the top.
 ```{r}
 #| label: q7
 companies_lv |>
-  ggplot(aes(x = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
-  geom_bar() +                                        # bar height = number of companies
-  coord_flip() +                                      # labels go on the left
-  labs(x = NULL)                                      # no axis title, the labels say it
+  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
+  geom_bar() +                                        # bar length = number of companies
+  labs(y = NULL)                                      # no axis title, the labels say it
 ```
 
 **Your finding:**
@@ -237,9 +237,11 @@ Keep the 5 most common legal forms and pool the others into one category. Then d
 
 ```{r}
 #| label: q8
-#| eval: false
 companies_lv |>
-
+  mutate(type_text = fct_lump_n(type_text, n = 5)) |>   # keep the 5 largest, pool the rest as Other
+  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +     # sort by size, largest on top
+  geom_bar() +                                          # bar length = number of companies
+  labs(y = NULL)                                        # no axis title, the labels say it
 ```
 
 **Your finding:**
@@ -252,9 +254,9 @@ Draw the age groups as bars and split each bar by `smoker`. Write what you can c
 
 ```{r}
 #| label: q9
-#| eval: false
 whickham |>
-
+  ggplot(aes(x = age_group, fill = smoker)) +   # one bar per age group, colour by smoker
+  geom_bar()                                    # stacked is the default
 ```
 
 **Your finding:**
