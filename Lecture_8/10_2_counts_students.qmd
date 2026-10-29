@@ -167,7 +167,7 @@ Count the people by `Race1`. Which order do the bars follow?
 ```{r}
 #| label: q3
 nhanes |>
-  ggplot(aes(x = Race1)) +   # one bar per race group
+  ggplot(aes(x = fct_infreq(Race1))) +   # one bar per race group
   geom_bar()                 # bar height = number of people
 ```
 
@@ -179,9 +179,10 @@ Reorder the bars by count. Why can we reorder race, but should keep the order of
 
 ```{r}
 #| label: q4
-#| eval: false
 nhanes |>
-
+  ggplot(aes(x = fct_infreq(Race1))) +   # fct_infreq() orders by frequency
+  geom_bar() +
+  labs(x = "Race1")
 ```
 
 **Your finding:**
@@ -194,9 +195,9 @@ Draw one bar per legal form (`type_text`). What happens to the labels?
 
 ```{r}
 #| label: q5
-#| eval: false
 companies_lv |>
-
+  ggplot(aes(x = type_text)) +   # one bar per legal form
+  geom_bar()                     # bar height = number of companies
 ```
 
 **Your finding:**
@@ -207,9 +208,10 @@ Flip the plot so the labels sit on the vertical axis. Which order do the bars fo
 
 ```{r}
 #| label: q6
-#| eval: false
 companies_lv |>
-
+  ggplot(aes(x = type_text)) +   # one bar per legal form
+  geom_bar() +                   # bar height = number of companies
+  coord_flip()                   # swap the axes, labels go on the left
 ```
 
 **Your finding:**
@@ -220,9 +222,11 @@ Order the legal forms from largest to smallest, with the largest at the top.
 
 ```{r}
 #| label: q7
-#| eval: false
 companies_lv |>
-
+  ggplot(aes(x = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
+  geom_bar() +                                        # bar height = number of companies
+  coord_flip() +                                      # labels go on the left
+  labs(x = NULL)                                      # no axis title, the labels say it
 ```
 
 **Your finding:**
