@@ -167,7 +167,7 @@ Count the people by `Race1`. Which order do the bars follow?
 ```{r}
 #| label: q3
 nhanes |>
-  ggplot(aes(x = fct_infreq(Race1))) +   # one bar per race group
+  ggplot(aes(x = Race1)) +   # one bar per race group
   geom_bar()                 # bar height = number of people
 ```
 
@@ -179,10 +179,14 @@ Reorder the bars by count. Why can we reorder race, but should keep the order of
 
 ```{r}
 #| label: q4
+#| eval: false
 nhanes |>
-  ggplot(aes(x = fct_infreq(Race1))) +   # fct_infreq() orders by frequency
+  distinct(ID, .keep_all = TRUE) |>        # keep each person once
+  ggplot(aes(x = fct_infreq(Race1))) +
   geom_bar() +
   labs(x = "Race1")
+
+
 ```
 
 **Your finding:**
@@ -195,11 +199,14 @@ Draw one bar per legal form (`type_text`). What happens to the labels?
 
 ```{r}
 #| label: q5
+#| eval: false
 companies_lv |>
-  ggplot(aes(x = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
-  geom_bar() +                                        # bar height = number of companies
-  coord_flip() +                                      # swap the axes, labels go on the left
-  labs(x = NULL)                                      # no axis title, the labels say it
+ ggplot(aes(x = fct_rev(fct_infreq(type_text)))) +
+  geom_bar() +
+  coord_flip() +
+  labs(x = NULL)
+
+
 ```
 
 **Your finding:**
@@ -210,9 +217,12 @@ Flip the plot so the labels sit on the vertical axis. Which order do the bars fo
 
 ```{r}
 #| label: q6
+#| eval: false
 companies_lv |>
-  ggplot(aes(y = type_text)) +   # y instead of x flips the bars, labels on the vertical axis
-  geom_bar()                     # bar length = number of companies
+  ggplot(aes(y = type_text)) +   # y instead of x flips the bars
+  geom_bar()
+
+
 ```
 
 **Your finding:**
@@ -223,10 +233,12 @@ Order the legal forms from largest to smallest, with the largest at the top.
 
 ```{r}
 #| label: q7
+#| eval: false
 companies_lv |>
-  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +   # sort by size, fct_rev() puts the largest on top
-  geom_bar() +                                        # bar length = number of companies
-  labs(y = NULL)                                      # no axis title, the labels say it
+  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +
+  geom_bar() +
+  labs(y = NULL)
+
 ```
 
 **Your finding:**
@@ -237,11 +249,14 @@ Keep the 5 most common legal forms and pool the others into one category. Then d
 
 ```{r}
 #| label: q8
+#| eval: false
 companies_lv |>
   mutate(type_text = fct_lump_n(type_text, n = 5)) |>   # keep the 5 largest, pool the rest as Other
-  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +     # sort by size, largest on top
-  geom_bar() +                                          # bar length = number of companies
-  labs(y = NULL)                                        # no axis title, the labels say it
+  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) +
+  geom_bar() +
+  labs(y = NULL)
+
+
 ```
 
 **Your finding:**
@@ -254,9 +269,12 @@ Draw the age groups as bars and split each bar by `smoker`. Write what you can c
 
 ```{r}
 #| label: q9
+#| eval: false
 whickham |>
-  ggplot(aes(x = age_group, fill = smoker)) +   # one bar per age group, colour by smoker
+  ggplot(aes(x = age_group, fill = smoker)) +   # colour by smoker
   geom_bar()                                    # stacked is the default
+
+
 ```
 
 **Your finding:**
@@ -269,6 +287,8 @@ Draw the same counts with the smoker and non-smoker bars next to each other. Wri
 #| label: q10
 #| eval: false
 whickham |>
+  ggplot(aes(x = age_group, fill = smoker)) +   # colour by smoker
+  geom_bar(position = "dodge")                  # bars next to each other
 
 ```
 
@@ -282,6 +302,10 @@ Draw bars that all reach 100% and show the share of smokers in each age group.
 #| label: q11
 #| eval: false
 whickham |>
+  ggplot(aes(x = age_group, fill = smoker)) +   # colour by smoker
+  geom_bar(position = "fill") +                 # every bar reaches 100%
+  labs(y = "share")                             # the y axis is now a share, not a count
+
 
 ```
 
@@ -297,6 +321,12 @@ Count the people by race and show the survey cycle (`SurveyYr`) with side-by-sid
 #| label: q12
 #| eval: false
 nhanes |>
+  ggplot(aes(x = fct_infreq(Race1), fill = SurveyYr)) +   # races sorted by size, colour by survey cycle
+  geom_bar(position = "fill") +                           # every bar reaches 1 (100%)
+  geom_hline(yintercept = 0.5,                            # a horizontal line at 50%
+             linetype = "dashed",
+             color = "red",
+             linewidth = 1)
 
 ```
 
@@ -310,6 +340,11 @@ Draw the sorted race counts in one panel for each survey cycle with `facet_wrap(
 #| label: q13
 #| eval: false
 nhanes |>
+  ggplot(aes(x = fct_infreq(Race1))) +   # races sorted by size
+  geom_bar() +                           # bar height = number of people
+  facet_wrap(~ SurveyYr) +               # one panel per survey cycle
+  labs(x = "Race1")                      # short axis title
+
 
 ```
 
@@ -325,6 +360,26 @@ The first digit of the product code is the broad sector. Sum the export value by
 #| label: q14
 #| eval: false
 world_exports |>
+  filter(country == "lva") |>                     # Latvia only
+  mutate(section = str_sub(product, 1, 1)) |>     # first digit of the product code = sector
+  mutate(section = case_when(                     # give each sector a readable name
+    section == "0" ~ "Food",
+    section == "1" ~ "Drinks and tobacco",
+    section == "2" ~ "Crude materials",
+    section == "3" ~ "Fuels",
+    section == "4" ~ "Oils and fats",
+    section == "5" ~ "Chemicals",
+    section == "6" ~ "Goods by material",
+    section == "7" ~ "Machinery and vehicles",
+    section == "8" ~ "Other manufactures",
+    .default = "Other"
+  )) |>
+  group_by(section) |>
+  summarise(value = sum(value)) |>                # total export value per sector
+  ggplot(aes(area = value, fill = section, label = section)) +
+  geom_treemap() +                                # one rectangle per sector, area = value
+  geom_treemap_text(colour = "white", reflow = TRUE) +   # sector names inside the boxes
+  theme(legend.position = "none")                 # the labels replace the legend
 
 ```
 
