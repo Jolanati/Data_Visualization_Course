@@ -1,5 +1,5 @@
 ---
-title: "What goes with AI use in EU enterprises?"
+title: "Why do Baltic men die earlier?"
 author: "Jolanta"
 format:
   html:
@@ -9,22 +9,373 @@ format:
     embed-resources: true
 ---
 
+# Project overview
+
+## Background
+
+In every EU country women live longer than men. The size of that difference, however, is not the same everywhere. Press coverage of Eurostat figures places the three Baltic states at the top of the list: in 2024 Latvia had the widest gap in the EU, close to ten years, followed by Lithuania and Estonia. These figures are checked against the data in this analysis.
+
+A gap of almost ten years means that many Baltic men do not live to see retirement, while the women around them do. I live in Latvia, so this isn't an abstract statistic for me. It made me want to find out what sits behind it, and whether the Baltic men simply follow a European pattern or fall outside it.
+
+## Aim
+
+The aim of this project is to describe the gap in life expectancy between women and men across the EU, and to identify which country-level factors are associated with it, with the Baltic states as the focus.
+
+## Research question
+
+**Main question:** Why do men in the Baltic states die so much earlier than women, compared with the rest of the EU?
+
+**Sub-questions:**
+
+1.  Which country-level factors (causes of death, alcohol, income, education) are associated with the size of the gap?
+2.  How has the gap changed between 2015 and 2024?
+3.  Where do Estonia, Latvia and Lithuania sit compared with the other EU countries?
+
+**Scope:**
+
+- **The measure:** life expectancy at birth, women minus men, in years, referred to as "the gap".
+- **The countries:** the EU member states, about 27.
+- **The period:** 2015 to 2024, or the latest year available in each table.
+- **The level:** countries, not individuals. Every number is a national figure.
+
+With about 27 countries, the data can show which factors go together, not what causes what. The analysis therefore uses "is associated with" or "goes with", never "causes".
+
+## Assumptions
+
+**Rationale:** the expected findings are written down before any data is opened. This allows the results to be compared with the initial expectations, and prevents the story from being adjusted to fit the results afterwards.
+
+**Expected message:** \[one sentence, written before any data is loaded\]
+
+**The factor expected to matter most:** deaths from heart and circulatory disease among men under 65. They are the most common cause of early death for men in the Baltics, and many of these men die decades before the women. Accidents and suicide are expected to come second. Alcohol is expected to sit behind both, which is why alcohol-related deaths are included in the data.
+
+**Hypotheses (expectations, not results):**
+
+1.  A bigger gap is associated with more men dying under 65 from heart and circulatory disease.
+2.  Accidents and suicide are also associated with a bigger gap.
+3.  More alcohol-related deaths among men are associated with a bigger gap.
+4.  Poorer countries have lower life expectancy for both sexes, but in the Baltics men fall further below the pattern than women do.
+5.  Where women are much more educated than men, the gap is bigger.
+6.  The gap has narrowed in most countries since 2015, but not at the same speed.
+7.  These factors overlap. Some may only stand in for wealth or for alcohol, so the analysis checks which of them still matters when the others are taken into account.
+
+# 1. Environment setup
+
+This section prepares R before any data is loaded. It has to be run first, every time the project is opened. Every later section depends on it.
+
+**Two steps:**
+
+1.  **Packages:** load the R packages used in the analysis, and install any that are missing.
+2.  **Project folder:** check that R finds the project folder, so every file path works on any computer.
+
+## 1.1 Packages
+
+All packages are loaded here, at the start, so they are listed in one place. `pacman::p_load()` loads each package and installs it first if it is missing. This way the file also runs on a computer that has never seen this project.
+
+| Package | Purpose in the analysis |
+|------------------------------------|------------------------------------|
+| `tidyverse` | Reading files (`read_csv()`), working with tables (`filter()`, `mutate()`, joins, pivots) and charts (`ggplot()`) |
+| `here` | File paths that start at the project folder, for example `here("data-raw", "demo_mlexpec.csv")` |
+| `janitor` | `clean_names()`, which makes column names short, lowercase and easy to type |
+| `gtsummary` | `tbl_summary()`, a ready-made table of missing values and ranges for the data quality checks |
+| `scales` | Readable axis labels, for example `label_percent()` for the education shares |
+| `ggrepel` | Country labels on charts that push away from each other, so they do not overlap (`geom_text_repel()`) |
+
 ```{r}
 #| label: setup
-pacman::p_load(tidyverse, here, janitor)
+# 1.1 Load every package the analysis uses, installing any that are missing
+pacman::p_load(
+  tidyverse,   # read_csv(), dplyr verbs, pivots, joins, ggplot2
+  here,        # file paths that start at the project folder
+  janitor,     # clean_names()
+  gtsummary,   # tbl_summary() for the data quality tables
+  scales,      # axis labels such as percentages
+  ggrepel      # country labels that don't overlap
+)
 ```
 
-# 1. Question
+**What it shows:** nothing if all goes well. A message only appears if a package had to be installed.
 
-**Question:** [my question]
+## 1.2 Project folder
 
-**Expected message:** [one sentence]
+`here()` finds the project folder by looking for the empty `.here` file in it. All paths start from there, so no full path like `C:/Users/...` is needed, and the project also works on another computer.
 
-**The indicator I expect to line up most strongly with AI use, and why:** [my guess]
+| Folder | Content |
+|------------------------------------|------------------------------------|
+| `data-raw/` | The downloads from Eurostat, exactly as they arrived. These files are never edited |
+| `data/` | The clean tables created in the analysis |
+| `figures/` | Exported charts |
+| `notes/` | Decisions made during the analysis and a glossary of functions |
 
-# 2. Data
+```{r}
+#| label: show-here
+# 1.2 Check where R thinks the project folder is
+here()  # should end in Final_work
+```
+
+**What it shows:** the path to the project folder. If it ends somewhere else, the `.here` file is missing.
+
+# 2. Gathering data
+
+To answer the research question, the analysis needs comparable figures for every EU country on life expectancy, health, causes of death, wealth and education, for the same years. The natural source is Eurostat, the statistical office of the EU. It collects the same figures from every member state using the same definitions, so the countries can be compared.
+
+The data is not downloaded by hand from the Eurostat website. Each table is requested from Eurostat's API (a web address that returns data) directly from R, so anyone can rerun this file and get the same data. Every Eurostat table has a code, for example `demo_mlexpec`, and is split into dimensions: sex, age, country, year. The values needed are selected inside the download link.
+
+Every dataset is loaded in its **original, uncleaned form**. The only selection happens in the download link (sex, age, years), where it is visible to any reader. After the download, nothing is filtered, renamed or fixed in this section. Cleaning while loading would hide what was removed. Keeping gathering (Section 2) and cleaning (Section 3) apart means that every dropped row is a documented decision, not a side effect of the loading step.
+
+**Every dataset follows the same three steps:**
+
+1.  **Build the link:** the table code plus the selected dimensions.
+2.  **Download once:** save the file to `data-raw/`. This folder is never edited, so the original download is always available.
+3.  **Load and look:** read the file into R, check its structure with `glimpse()` and inspect the first rows with `head()`.
+
+**Naming of objects:** every object created for a dataset starts with the full name of that dataset, followed by what the object holds. The names are long, but they say exactly what each object is. For life expectancy the prefix is `life_expectancy_`: `life_expectancy_url` (the download link), `life_expectancy_file` (the path to the saved file), `life_expectancy_raw` (the table as downloaded) and, in Section 3, `life_expectancy_clean` (the cleaned table). The other datasets follow the same pattern: `healthy_life_years_`, `deaths_`, `gdp_` and `education_`.
+
+| Sub-section | Dataset | Eurostat code | Role in the analysis |
+|------------------|------------------|------------------|------------------|
+| 2.1 | Life expectancy at birth | `demo_mlexpec` | The gap between women and men, the main measure |
+| 2.2 | Healthy life years | `hlth_hlye` | Years in good health, women and men |
+| 2.3 | Deaths by cause | `hlth_cd_asdr2` | Death rates under 65 by cause, including alcohol-related causes |
+| 2.4 | GDP per capita | `tec00114` | Wealth of each country compared with the EU average |
+| 2.5 | Education by sex | `sdg_04_20` | Share of 25 to 34 year olds with a university degree |
+
+------------------------------------------------------------------------
+
+## 2.1 Life expectancy at birth
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `demo_mlexpec`, "Life expectancy by age and sex" |
+| **What it measures** | How many years a newborn would live on average, if the death rates of that year stayed the same for their whole life |
+| **Unit** | Years |
+| **Selected dimensions** | Sex: `F` (females) and `M` (males). Age: `Y_LT1` ("less than 1 year"), which is how Eurostat labels life expectancy at birth. All countries, years 2015 to 2024 |
+| **Flags** | Some values carry letters: `e` estimated, `p` provisional, `b` break in the series (the method changed that year) |
+
+**Role in the analysis:** this is the main measure. The gap is women's life expectancy minus men's, so this table provides the value on the y axis of most charts.
+
+**Points to note:**
+
+- Life expectancy is a snapshot, not a forecast. It does not follow real people through life. It answers the question: "if the current death rates never changed, how long would a baby born now live?"
+- The table has 97 age classes, from `Y_LT1` to `Y_GE95`. Without selecting `Y_LT1` in the link, the file would have 97 rows per country, sex and year instead of one.
+- The file also contains EU totals and non-EU countries. They are kept for now and removed in Section 3.
+- 2020 and 2021 show a COVID dip. This is real, not an error.
+
+### 2.1.1 Build the link
+
+The link has four parts: the API address, the table code, the selected dimensions, and the years. In the dimension part, dots separate the dimensions in this order: frequency, unit, sex, age, country. `F+M` means both sexes, and the empty position after the last dot means all countries.
+
+```{r}
+#| label: show-life-expectancy-url
+# 2.1.1 The Eurostat API link for life expectancy
+life_expectancy_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "demo_mlexpec/",                      # the table code
+  "A.YR.F+M.Y_LT1.",                    # annual, in years, women and men, at birth, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+life_expectancy_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.1.2 Download once
+
+The file is saved to `data-raw/`. The `if` check makes R download only when the file is not there yet, so rerunning this document never overwrites the original download.
+
+```{r}
+#| label: show-life-expectancy-download
+# 2.1.2 Save the raw file to data-raw/, only if it isn't there yet
+life_expectancy_file <- here("data-raw", "demo_mlexpec.csv")  # where the raw file goes
+
+if (!file.exists(life_expectancy_file)) {   # TRUE only on the first run
+  download.file(life_expectancy_url,        # from this link
+                life_expectancy_file,       # to this file
+                mode = "wb")                # "wb" copies the file byte for byte
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.1.3 Load and look
+
+Eurostat writes missing values as `:`, so `read_csv()` is told to treat `:` as missing. This is not cleaning: the values stay missing, R only reads them correctly. The column names stay exactly as Eurostat wrote them, for example `TIME_PERIOD` and `OBS_VALUE`.
+
+```{r}
+#| label: show-life-expectancy-load
+# 2.1.3 Read the raw file and check what arrived
+life_expectancy_raw <- read_csv(life_expectancy_file,
+                                na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                                show_col_types = FALSE)  # keep the output short
+
+glimpse(life_expectancy_raw)  # rows, columns and the type of each column
+```
+
+`glimpse()` lists every column with its type. `head()` shows the first rows as a table, the way the file is actually laid out.
+
+```{r}
+#| label: show-life-expectancy-head
+# 2.1.3 The first six rows of the raw table
+head(life_expectancy_raw)
+```
+
+**What it shows:** a first overview of the raw table. Size and column types are visible in the output above. The remaining points are verified with code in Section 3.1.
+
+- **Size:** 906 rows and 11 columns.
+- **One row** is one geographic unit, one sex and one year, with its life expectancy in `OBS_VALUE`.
+- **Types:** `OBS_VALUE` and `TIME_PERIOD` are numbers, so the flags did not turn the values into text. `CONF_STATUS` is empty in every row.
+- **Geographic units:** 53 codes. They include all 27 EU member states (Greece appears as `EL`, not `GR`), 9 aggregates such as `EU27_2020`, `EA20` and `DE_TOT`, and 17 non-EU countries such as `NO`, `UK` and `UA`.
+- **Completeness:** every EU member state has all 10 years for both sexes (27 × 2 × 10 = 540 rows). Some non-EU countries have fewer years.
+- **Missing values and flags:** no value in `OBS_VALUE` is missing. 146 values carry a flag in `OBS_FLAG` (estimated, provisional or a break in the series).
+- **Columns with one value only:** `freq`, `unit` and `age` repeat the choices made in the link, so they add no information. They are removed in Section 3.
 
 # 3. Cleaning
+
+This section checks the quality of every raw table before anything is removed or changed. Only after the checks are the cleaning decisions made, so each decision is based on what the data actually contains.
+
+The first step for every table is `clean_names()`, which turns Eurostat's column names like `TIME_PERIOD` into `time_period`. It is done here, not during loading, so the raw tables in Section 2 keep Eurostat's original names.
+
+Every table then goes through the same five data quality checks, taken from the course checklist (class 03, "Know your data"):
+
+| # | Check | Question | Function |
+|---|---|---|---|
+| 1 | Types | Is every column the type it should be, for example numbers stored as numbers? | `glimpse()` |
+| 2 | Missing values | How many values are missing, and where? | `summary()`, `count()` |
+| 3 | Units and ranges | Are the values plausible for the unit? | `summary()`, `geom_histogram()` |
+| 4 | Duplicates | Does any combination of country, sex and year appear twice? | `distinct()`, `nrow()` |
+| 5 | Row counts | Does each country have the expected number of rows? | `count()` |
+
+---
+
+## 3.1 Life expectancy at birth
+
+### 3.1.1 Tidy the column names
+
+Eurostat uses the same technical column names in every table: `geo` for the country, `time_period` for the year and `obs_value` ("observed value") for the number itself. Two steps make them readable. `clean_names()` first turns them into lowercase with underscores, so `LAST UPDATE`, which contains a space, becomes `last_update`. `rename()` then gives the four key columns names that say what they hold. The new names `country_code` and `year` are also the keys used to join the tables in Section 4.
+
+| Eurostat name | After `clean_names()` | After `rename()` |
+|---|---|---|
+| `geo` | `geo` | `country_code` |
+| `TIME_PERIOD` | `time_period` | `year` |
+| `OBS_VALUE` | `obs_value` | `life_expectancy` |
+| `OBS_FLAG` | `obs_flag` | `flag` |
+
+```{r}
+#| label: show-life-expectancy-names
+# 3.1.1 Make the column names readable
+life_expectancy_clean <- life_expectancy_raw |>
+  clean_names() |>                        # for example TIME_PERIOD becomes time_period
+  rename(country_code    = geo,           # new name = old name
+         year            = time_period,
+         life_expectancy = obs_value,
+         flag            = obs_flag)
+
+names(life_expectancy_clean)   # list the new column names
+```
+
+**What it shows:** the same 11 columns. Four of them have new names: `country_code`, `year`, `life_expectancy` and `flag`. The technical columns (`dataflow`, `last_update`, `freq`, `unit`, `age`, `conf_status`) keep their names for now and are removed after the checks.
+
+### 3.1.2 Check 1: types
+
+The column types were already checked with `glimpse()` in 2.1.3, and `clean_names()` only changes names, not types.
+
+**Result:** `life_expectancy` and `year` are numbers. All other columns are text, except `conf_status`, which R reads as logical because it is empty.
+
+### 3.1.3 Check 2: missing values
+
+`summary()` reports the number of missing values (`NA's`) for every numeric column. `summary()` does not count missing values in text columns, so `count()` is used for those: on `sex`, to confirm there are only `F` and `M` and no gaps, and on `flag`, to see how many values carry a flag.
+
+```{r}
+#| label: show-life-expectancy-missing
+# 3.1.3 Check 2: missing values in the numeric columns
+summary(life_expectancy_clean)   # NA's appear under a column only if it has missing values
+```
+
+```{r}
+#| label: show-life-expectancy-sex
+# 3.1.3 Check 2: only F and M, and no missing sex
+life_expectancy_clean |>
+  count(sex)
+```
+
+```{r}
+#| label: show-life-expectancy-flags
+# 3.1.3 Check 2: how many values carry a flag, and which one
+life_expectancy_clean |>
+  count(flag)   # NA here means "no flag", not a missing value
+```
+
+**Result:** [to be filled in after running.]
+
+### 3.1.4 Check 3: units and ranges
+
+Life expectancy at birth in Europe is expected to lie roughly between 65 and 90 years. A value far outside this range would point to an error, for example a wrong age class.
+
+```{r}
+#| label: show-life-expectancy-range
+# 3.1.4 Check 3: the distribution of life expectancy values
+life_expectancy_clean |>
+  ggplot(aes(x = life_expectancy)) +   # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 1) +       # one bar per year of life expectancy
+  labs(x = "Life expectancy at birth (years)",
+       y = "Number of rows")
+```
+
+**Result:** [to be filled in after running.]
+
+### 3.1.5 Check 4: duplicates
+
+Each combination of country, sex and year should appear only once. If the number of distinct combinations equals the number of rows, no row repeats.
+
+```{r}
+#| label: show-life-expectancy-duplicates
+# 3.1.5 Check 4: compare all rows with distinct country, sex and year combinations
+nrow(life_expectancy_clean)   # all rows
+
+life_expectancy_clean |>
+  distinct(country_code, sex, year) |>   # each combination once
+  nrow()
+```
+
+**Result:** [to be filled in after running.]
+
+### 3.1.6 Check 5: row counts
+
+With 10 years and 2 sexes, every geographic unit should have 20 rows. `count()` lists each unit with its number of rows, and `arrange()` puts the incomplete ones first.
+
+```{r}
+#| label: show-life-expectancy-rows
+# 3.1.6 Check 5: number of rows per geographic unit, incomplete units first
+life_expectancy_clean |>
+  count(country_code) |>   # one row per geographic unit, n = number of rows
+  arrange(n) |>            # the smallest counts first
+  print(n = 53)            # show all units, not only the first 10
+```
+
+The EU member states are the focus of the analysis, so their completeness is checked separately. The list of the 27 member state codes is defined once here and reused in later sections.
+
+```{r}
+#| label: show-eu-codes
+# 3.1.6 The 27 EU member states, in Eurostat's codes (Greece is EL)
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+
+life_expectancy_clean |>
+  filter(country_code %in% eu_codes) |>   # keep only the member states
+  nrow()                                  # expected: 27 x 2 x 10 = 540
+```
+
+Finally, the columns `freq`, `unit` and `age` should each hold only one value, because they were fixed in the download link.
+
+```{r}
+#| label: show-life-expectancy-constant
+# 3.1.6 Columns fixed in the link: each should have only one value
+life_expectancy_clean |>
+  distinct(freq, unit, age)   # one row means each column has one value
+```
+
+**Result:** [to be filled in after running.]
 
 # 4. Combining the tables
 

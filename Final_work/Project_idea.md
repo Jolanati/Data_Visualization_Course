@@ -1,4 +1,4 @@
-# Project: What goes with AI use in EU enterprises?
+# Project: Why do Baltic men die earlier?
 
 Course: Data visualization and storytelling (SZF_184), RSU, autumn 2026. Lecturer: Sergio Uribe.
 Student: Jolanta. Language of the project: English.
@@ -7,6 +7,8 @@ Tools: Positron, R, Quarto, Claude Code. Deliverables: the whole analysis writte
 Put this file in the project root. Start every Claude Code session with: "Read Project_idea.md first, then continue from the Progress section."
 
 **Status:** Sergio has not sent the requirements for the final work yet. Until he does, we work like a data analyst, step by step: find the data, clean it, explore it, manipulate it, then tell the story. The course repo's capstone files (template, rubric, dates) are not the spec. Use them only as loose hints about what the course values. When the requirements arrive, we adjust.
+
+**Unofficial hints (classmates' group chat, 29 Oct, secondhand, confirm with Sergio):** use my own data. Make a "wow" moment in the presentation. Use everything learned in the classes. Show the code in the presentation and tell how I did it, as a story. Sergio said he will come back to this in a later class.
 
 **First session, in this order:**
 
@@ -17,10 +19,10 @@ Put this file in the project root. Start every Claude Code session with: "Read P
 
 ## Progress (Claude Code updates this at the end of every session)
 
-- [ ] Step 1. Ask: question locked, expected message written, indicator guess written
+- [ ] Step 1. Ask: question locked, expected message written, country-trait guess written
 - [ ] Step 2. Get the data: five files in `data-raw/`, filters recorded, each one imports
 - [ ] Step 3. Clean: five checks done for each table, notes written
-- [ ] Step 4. Combine: `data/ai_panel.csv` saved, row counts explained
+- [ ] Step 4. Combine: `data/gap_panel.csv` saved, row counts explained
 - [ ] Step 5. Explore: histograms, scatter plots, correlations, dead ends noted
 - [ ] Step 6. Story graph: final plot exported
 - [ ] Step 7. Report and app: `analysis.qmd` renders, app is live
@@ -29,9 +31,13 @@ Put this file in the project root. Start every Claude Code session with: "Read P
 Decisions so far:
 
 - Work mode: guided build, one step at a time, with a step gate (see section 1).
+- Time is included: 2015 to 2024, one row per country and year.
+- Story style: Rosling-like. One chart built up in frames, each with one spoken sentence (see Step 6).
 - Question: draft wording in section 2, not locked yet.
 - Expected message: not written yet.
+- Data direction: why Baltic men die earlier. Life expectancy by sex, healthy life years, deaths by cause, GDP per capita, education by sex (all Eurostat). The AI topic was dropped.
 - Tables: five, codes in section 3, filters still to confirm on download.
+- Alcohol (29 Oct): option C. Alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4 is done, if time allows.
 
 ---
 
@@ -52,9 +58,10 @@ Rules:
 - Run and test each piece with me before the next one. If something errors, explain the error before fixing it.
 - Prefer functions the course has taught: `glimpse()`, `summary()`, `filter()`, `select()`, `mutate()`, `arrange()`, `distinct()`, `rename()`, `case_when()`, `pivot_longer()`, `pivot_wider()`, the joins (`left_join()`, `inner_join()`, `full_join()`, `anti_join()` with `join_by()`), `group_by()` with `summarize()`, `count()`, `ggplot2` (`geom_point()`, `geom_histogram()`, `geom_smooth(method = "lm")`, `facet_wrap()`, `labs()`, `theme_minimal()`, `scale_color_manual()`, `annotate()`, `ggsave()`), `ggrepel::geom_text_repel()`, `janitor::clean_names()`, `gtsummary::tbl_summary()`. If something outside the list is better, name it, explain it in two sentences, and let me decide.
 - **Known new functions** (not taught in the course, so explain each one fully when we reach it): `cor()` for correlations in Step 5, and `parse_number()` only if Eurostat flags turn a number column into text in Step 3.
-- Never make an analysis decision silently (which year, which filter, what to do with an outlier, which indicator wins). Give options with a recommendation, and I choose.
+- Never make an analysis decision silently (which year, which filter, what to do with an outlier, which trait wins). Give options with a recommendation, and I choose.
 - Never edit files in `data-raw/`. Never replace `NA` with 0.
-- After each code piece, draft the explaining paragraph for `analysis.qmd` in my voice, short and plain. I edit it until it sounds like me.
+- After each code piece, draft the explaining paragraph for `analysis.qmd`, short and plain. I edit it until I'm happy with it.
+- **Academic voice in `analysis.qmd`:** no "I", "my" or "me". Use impersonal or passive phrasing ("the data is filtered in Section 3", "the analysis checks...") and no contractions. The only exception is the personal sentence in Background ("I live in Latvia..."). `notes/decisions.md` stays in my own voice, because it is for the talk.
 - Keep a running glossary in `notes/glossary.md`: each new function with a one-line meaning and a tiny example, so I can revise before the talk.
 - At the end of each workflow step, give me a "can I explain this?" summary in three bullet points.
 - **Step gate:** never start the next workflow step until I confirm I can explain the current one. One step at a time, even if going faster would be possible.
@@ -67,6 +74,7 @@ Code style:
 - Packages: `pacman::p_load(tidyverse, here, janitor)` at the top of every script.
 - Paths: always `here("data-raw", "file.csv")`. No absolute paths.
 - Native pipe `|>`, not `%>%`.
+- Object names: the full dataset name, then what the object holds, no short prefixes: `life_expectancy_url`, `life_expectancy_file`, `life_expectancy_raw`, `life_expectancy_clean`. Others: `healthy_life_years_`, `deaths_`, `gdp_`, `education_`. Chunk labels follow the same names, for example `show-life-expectancy-load`.
 - One comment per data quality check, written as a sentence.
 
 Writing style for any text Claude drafts for me (app text, titles, captions, notes):
@@ -80,55 +88,73 @@ Writing style for any text Claude drafts for me (app text, titles, captions, not
 
 ## 2. The question
 
-**Main question:** Which country-level indicators are most strongly associated with enterprise AI use in the EU in 2025, and where do the Baltic states sit?
+**Main question:** Which country-level factors (causes of death, income, education) go with the gap in life expectancy between women and men in EU countries, how has that gap changed between 2015 and 2024, and where do the Baltic states sit?
 
-- Number: share of enterprises using at least one AI technology.
+- Number: life expectancy at birth, women minus men, in years (the "gap").
 - Group: EU member states (about 27 countries).
-- Period: 2025.
+- Period: 2015 to 2024, or the latest year each table has. Time is part of the project from the start.
 - Highlighted group: Estonia (EE), Latvia (LV), Lithuania (LT).
 
-**Wording rule:** say "associated with" and "goes with". Never say "causes" or "fosters". With about 27 countries the data cannot show cause.
+**Wording rule:** say "associated with" and "goes with". Never say "causes". With about 27 countries the data cannot show cause.
+
+**Angles to compare in Exploration** (the story uses the one with the clearest message):
+
+1. The Rosling chart: life expectancy against GDP per capita, women and men side by side. Do Baltic women fit the EU pattern while Baltic men fall below it?
+2. Causes of death: which cause (circulatory diseases, cancer, external causes such as accidents and suicide) differs most between men and women under 65 in the Baltics?
+3. Healthy life years: how many years of good health do men have compared with women?
+4. Education: does the gap in tertiary education between women and men line up with the life expectancy gap?
+5. The Baltics against the rest of the EU.
+6. Change over time: did the gap narrow between 2015 and 2024, and which countries gained most?
 
 **Expected message (fill in before any code, then keep it unchanged):**
 
-> [One sentence. Write it myself before any code runs on the data. Examples of the shape: "Countries with more ICT specialists have more AI-using firms, but Latvia is an exception." or "No single indicator explains AI use."]
+> [One sentence. Write it myself before any code runs on the data. Examples of the shape: "The life expectancy gap is biggest where men die young from heart disease." or "Income does not explain the Baltic gap, men's deaths do."]
 
 Starting hypotheses, not results:
 
-1. More ICT specialists in the workforce goes with more AI-using firms.
-2. A more digitally skilled population goes with more AI-using firms.
-3. Higher R&D spending goes with more AI-using firms, but this may only reflect wealth.
-4. Richer countries (higher GDP per capita) have more AI-using firms. Check whether the other indicators still line up with AI use, or whether they are mostly stand-ins for wealth.
-5. Early hint to check: Latvia may have a high share of ICT specialists but low AI use.
+1. A bigger gap goes with higher male death rates under 65 from circulatory diseases.
+2. External causes (accidents, suicide) also go with a bigger gap.
+3. Poorer countries have lower life expectancy for both sexes, but men fall further below the pattern in the Baltics.
+4. Countries where women are much more educated than men have bigger gaps.
+5. The gap has narrowed in most countries since 2015, but not equally. The Baltic states may be catching up at different speeds.
+6. These factors overlap. Check which one still matters, and which are stand-ins for another (for example wealth).
+7. Early hints from press coverage of Eurostat data, to check: Latvia has the widest gap in the EU (9.8 years in 2024), then Lithuania (8.6) and Estonia (8.5). Baltic men have the lowest healthy life years in the EU. Lithuania had the highest male death rate from ischaemic heart disease in 2019. Women are much more educated than men in Latvia and Estonia. An older report listed the gaps as Lithuania 10.7, Latvia 9.8 and Estonia 8.9 years (year to check), so Lithuania's gap may have narrowed the most.
 
 ---
 
 ## 3. Data
 
-Five Eurostat tables, joined on country code. Download each as CSV from the Eurostat data browser into `data-raw/`.
+Five Eurostat tables, joined on country code and year. Download each one from R through the Eurostat API (an SDMX-CSV link built with `paste0()`, saved with `download.file()` only if the file doesn't exist yet) into `data-raw/`. The filters live in the link, so the download is reproducible.
 
 | Short name | Eurostat code | Variable I want | Year target | Status |
 |---|---|---|---|---|
-| AI use | `isoc_eb_ai` | % of enterprises using at least one AI technology, all sizes, all sectors | 2025 (2024 for context) | to confirm on download |
-| ICT specialists | `isoc_sks_itspt` | ICT specialists, % of total employment | 2025 | to confirm on download |
-| Digital skills | `isoc_sk_dskl_i21` | Individuals with at least basic digital skills (`I_DSK2_BAB`), % of individuals | 2025 | to confirm on download |
-| R&D | `rd_e_gerdtot` | R&D expenditure, % of GDP, all sectors | latest year, probably 2024 | to confirm on download |
-| GDP per capita | `tec00114` | GDP per capita in PPS, index with EU27 = 100 (built for comparing countries) | 2024, latest I found | to confirm on download |
-
-Optional extra table, only if time allows: SME digital intensity (`isoc_e_dii`).
+| Life expectancy | `demo_mlexpec` | Life expectancy at birth by sex (F and M), in years. The table has many age classes, so choose the one for birth (code to confirm, probably `Y_LT1`) | 2015 to 2024 | to confirm on download |
+| Healthy life years | `hlth_hlye` | Healthy life years at birth, women and men | 2015 to 2023 or 2024 | to confirm on download |
+| Deaths by cause | `hlth_cd_asdr2` | Standardised death rate per 100 000 by cause (circulatory diseases, cancer, external causes, and the alcohol-related causes: alcohol abuse and chronic liver disease, labels to confirm) and sex, for people under 65 | 2015 to the latest year, maybe 2022 or 2023 | to confirm on download |
+| GDP per capita | `tec00114` | GDP per capita in PPS, index with EU27 = 100 | 2015 to 2024 | to confirm on download |
+| Education by sex | `sdg_04_20` | % of people aged 25 to 34 with tertiary education, women and men | 2015 to 2024 | to confirm on download |
 
 Fallback for GDP if `tec00114` gives trouble: `nama_10_pc`, unit `CP_PPS_EU27_2020_HAB`, indicator `B1GQ` (GDP at market prices per capita, in PPS).
 
+**GDP over time:** `tec00114` is built for comparing countries within a year. Over the years it shows catching up or falling behind relative to the EU average, not real growth. Say so in the story. If I want real growth, switch to `nama_10_pc`, unit `CLV10_EUR_HAB` (chain linked volumes, euro per capita).
+
+**Alcohol, stage 2 (optional, only after Step 4):** total alcohol consumption per person aged 15+, litres of pure alcohol per year, from the WHO Global Health Observatory. It uses three-letter country codes (`LVA`, not `LV`), so it needs a code lookup before the join, and its latest year may be older than 2024. Check on download. Eurostat's drinking survey (EHIS) only has a few waves, so it is not used.
+
+Tables I know exist, if an angle needs them later: life expectancy by education level (`demo_mlexpecedu`, covers only about 19 countries), median age (`demo_pjanind`). Smoking data come from the same separate health survey (EHIS), and I have not checked those tables.
+
 Rules:
 
-- Write down the exact filter labels I choose on the Eurostat site (indicator, size class, sector, unit) in `notes/decisions.md`. A reader must be able to reproduce the download.
-- The AI table covers enterprises with 10 or more employees. State this in the app.
-- R&D and GDP are probably 2024, one year older than the AI data. Say so in the final graph's source line.
+- Keep 2015 to 2024 as the window unless a table forces a shorter one. Write down each table's years in `notes/decisions.md`.
+- Write down the exact filter labels I choose on the Eurostat site (indicator, sex, age class, cause of death, unit) in `notes/decisions.md`. A reader must be able to reproduce the download.
+- Life expectancy is a snapshot: it assumes today's death rates last for a whole life. State this in the app.
+- The tables may have different latest years (death rates are often a year or two behind). Write the year of each table in the final graph's source line.
 - Name the source on every chart: "Source: Eurostat, [codes], accessed [date]".
 
 Things to expect in cleaning:
 
 - Different country coverage per table (some include Norway and candidate countries).
+- 2020 and 2021 show a COVID dip in life expectancy. It is real data, not an error. Say so in the story.
+- The life expectancy table has many age classes, and the death rate table has many causes and age classes. Filter to one at a time and check the row count each time.
 - Aggregate rows such as an EU total. Remove them before joining.
 - Country codes may not match across tables (Eurostat uses its own codes, for example for Greece). Check with `anti_join()`.
 - Eurostat marks missing values with `:`. Declare it when reading the file, as class 4 does: `read_csv(na = c("", ":", "NA"), show_col_types = FALSE)`. Report how many are missing, do not replace them.
@@ -139,7 +165,7 @@ Things to expect in cleaning:
 ## 4. Folder structure
 
 ```
-ai-adoption-story/
+baltic-men-story/
 ├── Project_idea.md
 ├── .here                  # empty file so here() finds the project root
 ├── analysis.qmd           # the whole project: text that explains, then code
@@ -153,7 +179,7 @@ ai-adoption-story/
 │   ├── style.css
 │   ├── app.js
 │   ├── data/              # JSON exported from R
-│   └── img/story.png
+│   └── img/               # story frames from R
 └── notes/
     ├── decisions.md       # every choice and why
     └── glossary.md        # each new function, one line each
@@ -169,7 +195,7 @@ Header of `analysis.qmd`:
 
 ```yaml
 ---
-title: "What goes with AI use in EU enterprises?"
+title: "Why do Baltic men die earlier?"
 author: "Jolanta"
 format:
   html:
@@ -183,8 +209,9 @@ format:
 One heading per step:
 
 ```
-# 1. Question
-# 2. Data
+# Project overview      (no number: background, aim, research question, assumptions)
+# 1. Environment setup  (1.1 packages, 1.2 project folder)
+# 2. Gathering data     (opening text, then 2.1 to 2.5, one per dataset, each with x.1 build the link, x.2 download once, x.3 load and look)
 # 3. Cleaning
 # 4. Combining the tables
 # 5. Exploration
@@ -194,7 +221,7 @@ One heading per step:
 
 Pattern inside every section:
 
-1. **What I do and why:** two to five sentences, first person, plain words.
+1. **Rationale:** two to five sentences, academic impersonal voice, plain words.
 2. **Code:** one or a few short chunks (about 15 lines or less each).
 3. **What it shows:** one sentence on the result.
 
@@ -208,7 +235,7 @@ Rules:
 ````markdown
 ```{r}
 #| label: show-join
-ai_panel <- ai |> left_join(ict, by = join_by(country_code))
+gap_panel <- life_exp |> left_join(gdp, by = join_by(country_code))
 ```
 ````
 
@@ -223,12 +250,12 @@ When Sergio's requirements arrive, the headings can be renamed or regrouped with
 Each step has a task and a "done when", and points to the class that taught the tools.
 
 ### Step 1. Ask
-- **Task:** write the question and the one-sentence expected message in section 1 of `analysis.qmd`. Also write which indicator I expect to line up most strongly with AI use, and why. No code in this step.
+- **Task:** write the question and the one-sentence expected message in section 1 of `analysis.qmd`. Also write which factor I expect to matter most for the gap (heart disease deaths, accidents and suicide, income, or education), and why. No code in this step.
 - **Done when:** both are written, before any code runs on the data. If the course asks for the question to be registered somewhere, do that too (check with Sergio).
 
 ### Step 2. Get the data
-- **Task:** download the five CSVs into `data-raw/`. Record filters in `notes/decisions.md`. Import each file with `read_csv(na = c("", ":", "NA"), show_col_types = FALSE)` and check the column types with `glimpse()`.
-- **Done when:** each file imports with `read_csv()`, `clean_names()` and `glimpse()` without errors.
+- **Task:** download the five CSVs into `data-raw/` through the Eurostat API from R. Each dataset in `analysis.qmd` follows the same three steps: build the link, download once, load and look. Structure of each section follows my wine-dine notebook: section intro with a table, then sub-sections with description first, then small step-by-step code chunks. Record filters in `notes/decisions.md`. Import each file with `read_csv(na = c("", ":", "NA"), show_col_types = FALSE)` and check the column types with `glimpse()`.
+- **Done when:** each file imports with `read_csv()` and checks with `glimpse()` and `head()` without errors. No `clean_names()` here: it is the first step of Step 3, so the raw tables keep Eurostat's own names.
 
 ### Step 3. Clean (class 3 data quality checklist, classes 4 and 6)
 - **Task:** for each table run the five checks and write one comment line per check. `gtsummary::tbl_summary()` suits the quality table, the course uses it a lot. If Eurostat flags turned a number column into text, fix it (this is where `parse_number()` would come in, explained first).
@@ -244,30 +271,33 @@ Each step has a task and a "done when", and points to the class that taught the 
 - **Done when:** each table has a short "what I found, what I decided" note, and one table is shown in the app as a quality report.
 
 ### Step 4. Manipulate (classes 5, 7, 8, 9)
-- **Task:** keep EU member states and the target year, reshape if needed (`pivot_longer()`), rename to short column names, join the five tables on country code. After each join, check row counts and run `anti_join()` to list countries that did not match. Save the result to `data/ai_panel.csv`.
-- **Target columns:** `country_code`, `country`, `ai_use_pct`, `ict_specialists_pct`, `digital_skills_pct`, `rd_pct_gdp`, `gdp_pps_index`, `baltic` (TRUE for EE, LV, LT).
-- **Done when:** one row per country, no duplicates, missing values documented, row counts explained.
+- **Task:** keep EU member states and the years 2015 to 2024, reshape (`pivot_wider()` puts women and men side by side, `pivot_longer()` does the opposite), rename to short column names, compute the gaps with `mutate()`, and join the five tables on country code and year with `join_by(country_code, year)`. After each join, check row counts (about 27 countries times 10 years, so about 270 rows) and run `anti_join()` to list country-years that did not match. Save the result to `data/gap_panel.csv`.
+- **Core columns first:** `country_code`, `country`, `year`, `le_women`, `le_men`, `le_gap` (women minus men), `hly_women`, `hly_men`, `gdp_pps_index`, `baltic` (TRUE for EE, LV, LT). Add the rest when we reach the angles in Step 5: `death_circ_men_lt65`, `death_circ_women_lt65`, `death_cancer_men_lt65`, `death_cancer_women_lt65`, `death_ext_men_lt65`, `death_ext_women_lt65`, `death_alc_men_lt65`, `death_alc_women_lt65`, `tertiary_women_pct`, `tertiary_men_pct`.
+- **Done when:** one row per country and year, no duplicates, missing values documented, row counts explained.
 
 **Possible course checkpoint (from the course README, confirm that it applies): Fri 13 Nov 2026, 23:59.** Five lines that load the clean data and run without errors:
 
 ```r
 pacman::p_load(tidyverse, here)
-here("data", "ai_panel.csv") |>
+here("data", "gap_panel.csv") |>
   read_csv(show_col_types = FALSE) |>
   glimpse() |>
   nrow()
 ```
 
 ### Step 5. Explore (class 3 chart by type, class 10 chart by question)
-- **Task:** one histogram per variable. One scatter plot of `ai_use_pct` against each indicator, same y axis, using `facet_wrap()`. Add `geom_smooth(method = "lm")`. Report the correlation for each pair with `cor()` (new function, explain it first, including what the number means and how missing values are handled). If I decide against `cor()`, describe the pattern in words and drop `correlations.json`. Check each outlier: data error or real value? Write one sentence per outlier.
+- **Task:** one histogram per variable. One scatter plot of `le_gap` against each candidate explanation (male death rate from each cause, GDP, the tertiary education gap between women and men), same y axis, using `facet_wrap()`. Add `geom_smooth(method = "lm")`. Report the correlation for each pair with `cor()` (new function, explain it first, including what the number means and how missing values are handled). If I decide against `cor()`, describe the pattern in words and drop `correlations.json`. Check each outlier: data error or real value? Write one sentence per outlier.
 - **Keep a "dead ends" list** in `notes/decisions.md`: relationships I expected that were weak, and what I did about it.
-- **Look at GDP on purpose.** If every indicator goes with GDP as well as with AI use, say that they may be stand-ins for wealth.
-- **Done when:** I can name the strongest indicator, the weakest, one surprise, and whether GDP explains most of the pattern.
+- **Look at the overlap on purpose.** If every explanation also goes with GDP, say that they may be stand-ins for wealth.
+- **Time.** Draw the gap over the years for every country as lines (class 3: time means a line chart), with the Baltics in red. Use `group_by(country_code)` and `summarize()` to get each country's change from 2015 to 2024. Which countries narrowed the gap most? Which did not? Remember the 2020 and 2021 dip.
+- **Group comparison.** Compare the Baltic average with the rest of the EU using `group_by(baltic)` and `summarize()`, and show it with a box plot or bars (classes 9 and 10).
+- **The Rosling chart.** Use `pivot_longer()` to put women and men in one column called `sex`, then plot life expectancy against GDP with one dot per country and sex. Do Baltic men sit far below the pattern while Baltic women do not? Try this angle first.
+- **Done when:** I can name the strongest explanation, the weakest, one surprise, which angle has the clearest message, and whether GDP explains most of the pattern.
 
 ### Step 6. Tell the story (Show, Cut, Focus, Tell; classes 11, 12, 13)
 - **Task:** build one scatter plot.
   - Highlight the Baltics the way class 11 does, using the `baltic` column: `scale_color_manual(values = c("TRUE" = "firebrick", "FALSE" = "gray70"))`, `theme_minimal(base_size = 14)`, and `theme(legend.position = "none", panel.grid.minor = element_blank())`. Labels with `ggrepel::geom_text_repel()`, the note with `annotate("text", ...)` (class 12). Viridis stays for charts with several groups.
-  - Title states the finding. Example shape: "Latvia has [more/fewer] AI-using firms than its ICT workforce predicts".
+  - Title states the finding. Example shape (a shape only, not a result): "[Group of countries] have the widest gap between women and men in life expectancy, [by how much]".
   - One annotation pointing at the evidence (label the three Baltic points, or one outlier).
   - Source line, axis labels with units, no legend or grid line without a job, no border.
   - Honest scales: label the axes clearly, say if an axis does not start at zero.
@@ -277,7 +307,21 @@ here("data", "ai_panel.csv") |>
   - [ ] Cut: no non-data ink.
   - [ ] Focus: gray plus one color.
   - [ ] Tell: finding title, one annotation, source.
-- **Export:** `ggsave(here("figures", "story.png"), width = 8, height = 5.5, dpi = 300)`.
+- **Build the story in frames (Rosling style).** One chart, shown in five frames, preceded by an opening question. Each frame adds one layer and gets one spoken sentence. Axes, scales and point size are identical in every frame, so nothing jumps. Plan the frames before coding:
+
+| Frame | What appears | What I say (my words, one sentence) | Layer in R |
+|---|---|---|---|
+| 0 | A question to the audience, no chart yet (for example: which EU country has the biggest gap between how long women and men live?) | [write it] | none |
+| 1 | Women's and men's life expectancy against GDP in 2024, two dots per country, all in gray | [what the axes mean] | `geom_point()` in `gray70`, a different shape for men |
+| 2 | Each country's two dots joined by a line, the gap | [what the line length means] | `geom_line(aes(group = country_code))` |
+| 3 | The Baltics in red, with labels | [where the Baltics sit] | `scale_color_manual()`, `ggrepel::geom_text_repel()` |
+| 4 | Time: arrows from the 2015 position to the 2024 position for the Baltics | [how far each country moved] | `geom_segment()` with an arrow |
+| 5 | One annotation, the finding as the title, plus the source | [the finding in one sentence] | `annotate("text", ...)`, `labs(title = ..., caption = ...)` |
+
+  This is a starting idea for the frames. Decide the final frames in Step 6, after Exploration shows which angle is clearest.
+
+  Rules for the frames: say what to look at before it appears. One idea per frame. Plain words. The last frame states the finding. Build the frames by saving the plot after each added layer (for example `p1`, then `p2 <- p1 + ...`), so frame 5 is the final graph.
+- **Export:** each frame with `ggsave(here("figures", "story_frame_1.png"), width = 8, height = 5.5, dpi = 300)`, and so on up to frame 5. Frame 5 is also copied as `story.png`.
 
 ### Step 7. Build the report and the data app
 - **Report (safe submission):** `analysis.qmd` rendered to one self-contained HTML file with `quarto render analysis.qmd`. This is the version that must run from top to bottom.
@@ -301,12 +345,12 @@ here("data", "ai_panel.csv") |>
 - The analysis stays in R, with course tools, and runs top to bottom.
 - The code shown in the app is extracted from my real `analysis.qmd` file, so it cannot drift from what actually ran.
 - No framework, no build step, no npm packages. Fewer things to break before the deadline.
-- The final story graph is the ggplot2 image exported from R, so the course's Cut, Focus and Tell principles are applied with the course's own tool.
+- The story frames are ggplot2 images exported from R, so the course's Cut, Focus and Tell principles are applied with the course's own tool, and the app needs no JavaScript charting for the story.
 
 ### Data flow
 
 ```
-analysis.qmd  ->  R/99_export_for_app.R  ->  app/data/*.json + app/img/story.png
+analysis.qmd  ->  R/99_export_for_app.R  ->  app/data/*.json + app/img/story_frame_*.png
                                                               |
                                           app/index.html reads the JSON with fetch()
                                                               |
@@ -315,13 +359,13 @@ analysis.qmd  ->  R/99_export_for_app.R  ->  app/data/*.json + app/img/story.png
 
 | File written by R | Content | Used in section |
 |---|---|---|
-| `app/data/ai_panel.json` | Clean table, one object per country | Exploration, The story |
+| `app/data/gap_panel.json` | Clean table, one object per country and year | Exploration, The story |
 | `app/data/quality.json` | Per table: rows, columns, missing values, duplicates, range of the key variable, my decision | Cleaning |
 | `app/data/joins.json` | Row counts before and after each join, countries listed by `anti_join()` | Combining the tables |
-| `app/data/correlations.json` | Correlation of AI use with each indicator, plus n | Exploration |
+| `app/data/correlations.json` | Correlation of the life expectancy gap with each candidate explanation, plus n | Exploration |
 | `app/data/code.json` | R code per step, extracted from `analysis.qmd` | All |
 | `app/data/steps.json` | Two to four sentences per step on the logic, shortened from the "What I do and why" text in `analysis.qmd` | All |
-| `app/img/story.png` | The final ggplot, 300 dpi | The story |
+| `app/img/story_frame_1.png` to `story_frame_5.png`, and `story.png` | The story frames from R, 300 dpi. `story.png` is the last frame | The story |
 
 **Code extraction.** Chunks in `analysis.qmd` whose label starts with `show-` are the ones the app displays (see the example in section 4). `99_export_for_app.R` reads `analysis.qmd`, collects those chunks by label, and writes `code.json`. It uses `jsonlite`, which the course has not covered, so Claude Code should explain that script line by line.
 
@@ -338,8 +382,8 @@ One page that scrolls, with a sticky navigation for the seven sections. Each sec
 
 - **Cleaning:** a table of the five checks per dataset. Click a dataset to see my notes.
 - **Combining the tables:** row counts before and after each join, and the list of unmatched countries.
-- **Exploration:** a dropdown to switch the indicator on the x axis. Scatter plot with a hover tooltip (country, both values). A toggle to highlight the Baltics. The correlation and n for the selected indicator.
-- **The story:** the final image only. No controls, no extras. This is the part where the course's Cut and Focus principles show.
+- **Exploration:** a dropdown to switch the explanation on the x axis. Scatter plot with a hover tooltip (country, both values). A toggle to highlight the Baltics. The correlation and n for the selected explanation.
+- **The story:** the five frames of one chart with next and back buttons, and one caption per frame (my spoken sentence). The opening question comes first. No other controls. The last frame is the final graph. This is the part where the course's Cut and Focus principles show.
 
 ### Design rules
 
@@ -362,11 +406,11 @@ One page that scrolls, with a sticky navigation for the seven sections. Each sec
 Each piece works before the next starts.
 
 1. Skeleton page with seven empty sections and navigation. Deploy it.
-2. Load `ai_panel.json` (dummy data first) and draw the scatter plot.
+2. Load `gap_panel.json` (dummy data first) and draw the scatter plot.
 3. Add the info button with code from `code.json`.
-4. Add the indicator dropdown and the Baltic highlight.
+4. Add the explanation dropdown and the Baltic highlight.
 5. Add the quality and joins tables.
-6. Add the story image and polish.
+6. Add the story frames with next and back buttons and captions, then polish.
 
 ### Fallback
 
@@ -384,17 +428,18 @@ I show three things live: the **data**, the **code**, and the **app**.
 | 0:45 to 1:45 | Data | The five sources, one raw CSV, what each variable means | Positron data viewer, then app |
 | 1:45 to 3:15 | Clean | The five checks, one real problem I found, my decision | App, Cleaning section, quality table. Open the info button once |
 | 3:15 to 4:30 | Manipulate | The joins, the `anti_join()` result, row counts before and after | App, then the pipeline code |
-| 4:30 to 6:00 | Explore | Switch the indicator live with the dropdown, one dead end, why I picked the winner | App, Exploration section |
-| 6:00 to 8:00 | Story | The final graph: read the title, point at the annotation, say what the Baltics show | App, The story section |
-| 8:00 to 9:00 | Limits | Association not cause, about 27 countries, company size mix | App, Limits section |
+| 4:30 to 6:00 | Explore | Switch the explanation live with the dropdown, the gap over time, one dead end, why I picked the winner | App, Exploration section |
+| 6:00 to 8:00 | Story | Open with the guess question, then step through the five frames, one sentence each. End on the finding | App, The story section |
+| 8:00 to 9:00 | Limits | Association not cause, about 27 countries, life expectancy is a snapshot of today's death rates, countries differ in age structure | App, Limits section |
 | 9:00 to 10:00 | Wrap | What the method shows, what I would do next, questions | App |
 
 Rules for the talk:
 
 - Open the info button at most twice, on the two moments where the logic matters most (joins and the final graph).
 - Keep `analysis.qmd` open in Positron next to the app, to show the text-then-code structure.
-- Live interaction only in the Explore part. The Story part shows one still graph.
+- Live interaction only in the Explore part. In the Story part I step through the frames of one chart, Rosling style.
 - Say the finding in one sentence at the start of the Story part and again at the end.
+- Optional: one light joke to break the ice, friendly and never at anyone's expense. Draft: "Estonia added seven years of life expectancy in twenty years. For a country that runs its government like software, that is just a good update cycle." Use it only if it feels natural.
 - Offline backup: the app running from a local server on the laptop, the self-contained HTML report, the PNG of the final graph, and screenshots of each step. Wi-Fi fails at the worst time.
 
 Confirm the required talk length with Sergio when the requirements arrive.
@@ -412,6 +457,27 @@ Built from the course's Ask, Show, Cut, Focus, Tell principles. This is not offi
 | Cut | No non-data ink, no legend, border or grid line without a job |
 | Focus | Gray plus one color, the eye goes to the message |
 | Tell | Finding in the title, one annotation, a clear beginning, middle and end |
+
+Course coverage check, so the project shows what the classes taught. Built from the course repo's `classes/` folders and my own lecture folders (checked 29 Oct). Every row must be used at least once, on purpose, with a sentence in `analysis.qmd` saying why.
+
+| Class | Tools and ideas | Where they show up in the project |
+|---|---|---|
+| 01 Why storytelling | Bad graphs, the five principles (Ask, Show, Cut, Focus, Tell), baseline and axis tricks with `coord_cartesian()`, why pie charts mislead | Step 6 checklist. In the talk: one "bad" version of my chart next to the good one |
+| 02 First graph | `pacman::p_load()`, `read_csv()`, `glimpse()`, `ggplot()`, `geom_point()`, `labs()`, `ggsave()` | Setup chunk, Step 2 import, every scatter plot, exporting the story frames |
+| 03 Know your data | `summary()`, `count()`, `distinct()`, `arrange()`, chart by data type, outlier check, the data quality checklist (types, missing, ranges, duplicates, row counts) | Step 3: the five checks for every table. Step 5: one sentence per outlier |
+| 04 Row and column verbs | `filter()`, `select()`, `mutate()`, `arrange()`, `rename()`, `case_when()`, `is.na()`, `gtsummary::tbl_summary()`, `janitor::clean_names()` | Step 3: quality table with `tbl_summary()`. Step 4: EU countries, years, short names, `case_when()` for the `baltic` column |
+| 05 Tidy data | Tidy data rules, `pivot_longer()` (wide to long) | Step 4: check every Eurostat table is tidy. Step 5: `pivot_longer()` to one `sex` column for the Rosling chart |
+| 06 dplyr recap | The verbs together in one pipe, gapminder, `geom_line()` | Step 4: the cleaning pipeline. Step 5: the gap over time, one line per country |
+| 07 Pivot | `pivot_wider()`, `pivot_longer()` | Step 4: `pivot_wider()` puts women and men side by side so I can compute the gap |
+| 08 Joins | `left_join()`, `inner_join()`, `full_join()`, `anti_join()`, `join_by()` | Step 4: join the tables on `join_by(country_code, year)`, `anti_join()` to list what didn't match, row counts after each join |
+| 09 Split, apply, combine | `group_by()`, `summarize()`, `count()`, `arrange()` | Step 5: Baltic average against the rest, change from 2015 to 2024 per country, ranking countries by gap |
+| 10_1 Distribution | `geom_histogram()`, `geom_density()` | Step 3: range check. Step 5: one histogram per variable, density of the gap for women and men |
+| 10_2 Counts | `geom_bar()`, `geom_col()`, `fct_infreq()`, `fct_reorder()`, `fct_rev()`, `fct_other()`, `coord_flip()`, `slice_max()`, treemap, pie | Step 3: rows per country with `geom_bar()`, to spot missing countries. Step 5: ranked bar chart of the gap with `geom_col()`, `fct_reorder()` and `coord_flip()`. `slice_max()` for the top countries |
+| 10_3 Scatter | `geom_point()`, `geom_smooth(method = "lm")`, `facet_wrap()` | Step 5: the gap against each explanation, one panel per explanation, with a trend line. The Rosling chart |
+| 10_4 Differences | `geom_boxplot()`, `geom_violin()`, `geom_jitter()`, `stat_summary()` with `mean_se` error bars | Step 5: Baltics against the rest of the EU, box plot with jittered points, means with error bars |
+| Later classes (not built yet) | Themes, highlight color, `ggrepel`, `annotate()` | Step 6: the story frames. Update this row when those classes happen |
+
+Not from the lectures, explained in full when used: `cor()` (Step 5), `parse_number()` (Step 3, only if needed), `geom_segment()` with arrows (Step 6, frame 4), `jsonlite` (app export).
 
 Final check before submitting:
 
@@ -446,10 +512,13 @@ Build order if time gets short: get an ugly working version of the whole pipelin
 
 ## 10. Risks and open questions
 
-- Data years differ by table. R&D and GDP are probably one year older than the AI data (2024 against 2025). Say so in the source line.
+- Data years differ by table. Death rates are often a year or two behind, and education may be a different year. Say so in the source line.
 - Join problems (country codes, aggregate rows) are likely. Budget time for them.
 - With about 27 countries, one outlier can move the trend line. Show the line with and without it if it matters.
-- Company size mix may explain part of the country differences: in the EU in 2025, large enterprises used AI far more than small ones. Mention it as a caveat, no modelling needed.
+- Cause-of-death data is coded and reported differently across countries, and the latest year may lag. Mention it as a caveat, no modelling needed.
+- Optional extras for the story, only if time allows and only after the Thu 12 Nov go or no-go: bubble size by population (needs a population table, code to confirm, probably `demo_pjan`), and a year slider on the Exploration scatter plot, Rosling style (the data already has the year, so this is only app work). The five frames are the plan. Extras are not.
+- Time makes the panel bigger (about 270 rows) and the join needs two keys. Check row counts for each year.
+- The GDP index shows position relative to the EU average, not real growth. Say so.
 - App scope: JavaScript is not part of the course. Keep the app to the interactions listed in section 6. Every extra feature is a risk to the deadline.
 - Open question: what are the real requirements (deliverable form, talk length, deadlines)? Waiting for Sergio.
 - Open question: is a Vercel app accepted as the deliverable? Ask Sergio.
