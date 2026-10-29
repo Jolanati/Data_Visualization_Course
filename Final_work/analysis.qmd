@@ -1,0 +1,35 @@
+---
+title: "What goes with AI use in EU enterprises?"
+author: "Jolanta"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    embed-resources: true
+---
+
+```{r}
+#| label: setup
+pacman::p_load(tidyverse, here, janitor)
+```
+
+# 1. Question
+
+**Question:** [my question]
+
+**Expected message:** [one sentence]
+
+**The indicator I expect to line up most strongly with AI use, and why:** [my guess]
+
+# 2. Data
+
+# 3. Cleaning
+
+# 4. Combining the tables
+
+# 5. Exploration
+
+# 6. The story
+
+# 7. Limits
