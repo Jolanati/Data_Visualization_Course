@@ -5,7 +5,7 @@ format: html
 
 Replace each `___` with code, remove `#| eval: false` and run the chunk. Write your answer under each chunk.
 
-The penguins come with the palmerpenguins package. Put `rosling_tidy.csv` in the `data` folder of the project.
+The penguins come with the palmerpenguins package and the countries with the gapminder package.
 
 ```{r}
 #| label: setup
@@ -91,7 +91,8 @@ penguins |>
 
 ```{r}
 #| label: load-data
-rosling_tidy <- read_csv(here("data", "rosling_tidy.csv"))
+rosling_tidy <- gapminder |>                         # same data as rosling_tidy.csv
+  rename(life_exp = lifeExp, population = pop)      # match the column names used below
 ```
 
 ## 0. One number for the whole table
