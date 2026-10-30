@@ -44,7 +44,7 @@ With about 27 countries, the data can show which factors go together, not what c
 
 **Rationale:** the expected findings are written down before any data is opened. This allows the results to be compared with the initial expectations, and prevents the story from being adjusted to fit the results afterwards.
 
-**Expected message:** \[one sentence, written before any data is loaded\]
+**Expected message:** Baltic men die earlier, and this goes mainly with heart disease deaths before 65.
 
 **The factor expected to matter most:** deaths from heart and circulatory disease among men under 65. They are the most common cause of early death for men in the Baltics, and many of these men die decades before the women. Accidents and suicide are expected to come second. Alcohol is expected to sit behind both, which is why alcohol-related deaths are included in the data.
 
@@ -229,6 +229,57 @@ head(life_expectancy_raw)
 - **Missing values and flags:** no value in `OBS_VALUE` is missing. 146 values carry a flag in `OBS_FLAG` (estimated, provisional or a break in the series).
 - **Columns with one value only:** `freq`, `unit` and `age` repeat the choices made in the link, so they add no information. They are removed in Section 3.
 
+------------------------------------------------------------------------
+
+## 2.2 Healthy life years
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `hlth_hlye`, "Healthy life years and life expectancy at birth, by sex" |
+| **What it measures** | How many years a newborn would live in good health, without limitations in daily activities, if the conditions of that year stayed the same |
+| **Unit** | Years |
+| **Selected dimensions** | Unit: `YR` (years). Sex: `F` and `M`. Indicator: `HLY_Y0`, healthy life years at birth. All countries, years 2015 to 2024 |
+
+**Role in the analysis:** life expectancy says how long people live. Healthy life years say how much of that life is spent in good health. Together they show whether Baltic men lose years of life, years of good health, or both.
+
+### 2.2.1 Build the link
+
+The link has the same four parts as in 2.1. The dimensions are different in this table: frequency, unit, sex, health indicator, country. The table holds nine indicators (healthy life years and life expectancy, at birth, at 50 and at 65, in years and as a share), so the link selects only `HLY_Y0`.
+
+```{r}
+#| label: show-healthy-life-years-url
+# 2.2.1 The Eurostat API link for healthy life years
+healthy_life_years_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "hlth_hlye/",                         # the table code
+  "A.YR.F+M.HLY_Y0.",                   # annual, in years, women and men, healthy life years at birth, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+healthy_life_years_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.2.2 Download once
+
+Same as in 2.1.2: the file is saved to `data-raw/`, and only if it is not there yet.
+
+```{r}
+#| label: show-healthy-life-years-download
+# 2.2.2 Save the raw file to data-raw/, only if it isn't there yet
+healthy_life_years_file <- here("data-raw", "hlth_hlye.csv")  # where the raw file goes
+
+if (!file.exists(healthy_life_years_file)) {   # TRUE only on the first run
+  download.file(healthy_life_years_url,        # from this link
+                healthy_life_years_file,       # to this file
+                mode = "wb")                   # "wb" copies the file byte for byte
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
 # 3. Cleaning
 
 This section checks the quality of every raw table before anything is removed or changed. Only after the checks are the cleaning decisions made, so each decision is based on what the data actually contains.
@@ -305,7 +356,7 @@ life_expectancy_clean |>
   count(flag)   # NA here means "no flag", not a missing value
 ```
 
-**Result:** [to be filled in after running.]
+**Result:** no value of `life_expectancy` is missing. `sex` holds only `F` and `M`, with 453 rows each, so there are no gaps. 146 of the 906 values carry a flag, most often `b` (66 values, a break in the series), then `e` (28), `ep` (16), `bep` (12), `be` (10), `p` (10) and `bp` (4). A flag marks how a value was produced, not a missing value, so every flagged value is kept. Most flags belong to countries outside the focus: in the 27 EU member states only 52 of 540 values carry a flag, and Estonia, Latvia and Lithuania have none. `conf_status` is empty in all 906 rows.
 
 ### 3.1.4 Check 3: units and ranges
 
@@ -321,7 +372,7 @@ life_expectancy_clean |>
        y = "Number of rows")
 ```
 
-**Result:** [to be filled in after running.]
+**Result:** the values run from 66.8 to 86.5 years, all inside the expected range of 65 to 90. Half of the rows lie between 78.1 and 83.5 years (the 1st and 3rd quartiles in `summary()`). No value points to a wrong age class or a wrong unit.
 
 ### 3.1.5 Check 4: duplicates
 
@@ -337,7 +388,7 @@ life_expectancy_clean |>
   nrow()
 ```
 
-**Result:** [to be filled in after running.]
+**Result:** both counts are 906. Every combination of country, sex and year appears exactly once, so the table has no duplicates.
 
 ### 3.1.6 Check 5: row counts
 
@@ -375,7 +426,7 @@ life_expectancy_clean |>
   distinct(freq, unit, age)   # one row means each column has one value
 ```
 
-**Result:** [to be filled in after running.]
+**Result:** all 27 EU member states have the full 20 rows, 540 rows together, as expected. The units with fewer than 20 rows are all outside the focus: non-EU countries such as `XK` (2 rows), `MD` (6) and `UK` (8), and old aggregates such as `EU28` and `EU27_2007` (8 each). `freq`, `unit` and `age` each hold a single value (`A`, `YR`, `Y_LT1`), so they carry no information and can be removed.
 
 # 4. Combining the tables
 

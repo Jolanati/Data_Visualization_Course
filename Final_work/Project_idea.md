@@ -19,7 +19,7 @@ Put this file in the project root. Start every Claude Code session with: "Read P
 
 ## Progress (Claude Code updates this at the end of every session)
 
-- [ ] Step 1. Ask: question locked, expected message written, country-trait guess written
+- [x] Step 1. Ask: question locked, expected message written, country-trait guess written
 - [ ] Step 2. Get the data: five files in `data-raw/`, filters recorded, each one imports
 - [ ] Step 3. Clean: five checks done for each table, notes written
 - [ ] Step 4. Combine: `data/gap_panel.csv` saved, row counts explained
@@ -33,8 +33,8 @@ Decisions so far:
 - Work mode: guided build, one step at a time, with a step gate (see section 1).
 - Time is included: 2015 to 2024, one row per country and year.
 - Story style: Rosling-like. One chart built up in frames, each with one spoken sentence (see Step 6).
-- Question: draft wording in section 2, not locked yet.
-- Expected message: not written yet.
+- Question (locked): "Why do men in the Baltic states die so much earlier than women, compared with the rest of the EU?", with three sub-questions in `analysis.qmd`.
+- Expected message (30 Oct): "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." Written after the life expectancy table was loaded, but before the other four tables.
 - Data direction: why Baltic men die earlier. Life expectancy by sex, healthy life years, deaths by cause, GDP per capita, education by sex (all Eurostat). The AI topic was dropped.
 - Tables: five, codes in section 3, filters still to confirm on download.
 - Alcohol (29 Oct): option C. Alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4 is done, if time allows.
