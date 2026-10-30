@@ -1,0 +1,512 @@
+---
+title: "Counting things (students)"
+format:
+  html:
+    toc: true
+    code-fold: false
+---
+
+Read each question, then write the code in the empty chunk. Remove `#| eval: false` and run the chunk. Write what you see under **Your finding**.
+
+## 1. Packages
+
+### 1.1 Install pacman if it is missing
+
+```{r}
+#| label: install-pacman
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+```
+
+### 1.2 Load the packages
+
+```{r}
+#| label: packages
+pacman::p_load(tidyverse, here, mosaicData, NHANES, nycflights13, treemapify)
+```
+
+## 2. Datasets
+
+Each dataset loads once into a named object. Every question below starts from one of these objects.
+
+### 2.1 whickham (package `mosaicData`)
+
+1,314 women in a survey in Whickham, England. The variables are age, `smoker` and `outcome` (alive or dead 20 years later). The code makes the age groups in two ways, `case_when()` and `cut()`, and the next chunk checks that both give the same groups. The questions use `age_group`.
+
+```{r}
+#| label: data-whickham
+whickham <- Whickham |>
+  as_tibble() |>
+  mutate(
+    # way 1: case_when(), the first matching line wins
+    age_group = case_when(
+      age < 35 ~ "18-34",
+      age < 45 ~ "35-44",
+      age < 55 ~ "45-54",
+      age < 65 ~ "55-64",
+      age < 75 ~ "65-74",
+      .default = "75+"
+    ),
+    # way 2: cut(), shorter, but you give the breaks and the labels
+    age_group_cut = cut(age,
+                        breaks = c(17, 34, 44, 54, 64, 74, 99),
+                        labels = c("18-34", "35-44", "45-54", "55-64", "65-74", "75+"))
+  )
+whickham |> glimpse()
+```
+
+```{r}
+#| label: check-age-groups
+# both ways give the same six groups: 408, 216, 209, 238, 166 and 77 women
+whickham |>
+  count(age_group, age_group_cut)
+```
+
+### 2.2 nhanes (package `NHANES`)
+
+10,000 people from two US survey cycles (2009_10 and 2011_12).
+
+```{r}
+#| label: data-nhanes
+nhanes <- NHANES
+nhanes |> glimpse()
+```
+
+### 2.3 companies_lv (file in the course repository)
+
+55,261 companies registered in Latvia from 2020 to 2025.
+
+```{r}
+#| label: data-companies
+# Google Drive link to be added here later
+companies_lv <- read_csv(
+  "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/companies_lv_smaller_2020_2025.csv",
+  show_col_types = FALSE
+)
+companies_lv |> glimpse()
+```
+
+### 2.4 world_exports (file in the course repository)
+
+Export value in USD by country and product, average of 1998 to 2000. The product code follows the SITC classification, and its first digit gives the sector. The data come from the `economiccomplexity` package.
+
+```{r}
+#| label: data-exports
+world_exports <- read_csv(
+  "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/world_exports_1998_2000.csv",
+  col_types = cols(product = col_character())
+)
+world_exports |> glimpse()
+```
+
+### 2.5 rosling (file in the course repository)
+
+Life expectancy, income and population of 142 countries from 1952 to 2007.
+
+```{r}
+#| label: data-rosling
+rosling <- read_csv(
+  "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/rosling_tidy.csv",
+  show_col_types = FALSE
+)
+rosling |> glimpse()
+```
+
+### 2.6 flights (package `nycflights13`)
+
+336,776 flights that left New York City airports in 2013. The data come with the `nycflights13` package, so no loading step is needed.
+
+```{r}
+#| label: data-flights
+flights |> head()
+```
+
+## 3. Counting things
+
+### 3.1 Pie or bars?
+
+#### Question 1: How many women are in each age group?
+
+Draw a pie chart of the age groups. Then rank the six slices from largest to smallest.
+
+```{r}
+#| label: q1
+#| eval: false
+whickham |>
+  ggplot(aes(x = "", fill = age_group)) +
+  geom_bar(width = 1) +
+  coord_polar(theta = "y") +   # bends the bar into a circle
+  theme_void()
+
+```
+
+**Your finding:**
+
+#### Question 2: Same counts, drawn as bars
+
+Draw the same counts as bars. Is the ranking easier to read? Write how sure you are about the third largest group on the pie and on the bars.
+
+```{r}
+#| label: q2
+whickham |>
+  ggplot(aes(x = age_group)) +   # one bar per age group
+  geom_bar() +                   # bar height = number of women
+  labs(x = "Age group", y = "Number of women")
+```
+
+**Your finding:** The bars are much easier to rank. The order is 18-34 (408), 55-64 (238), 35-44 (216), 45-54 (209), 65-74 (166), 75+ (77). On the pie I am not sure which group is third, because 35-44, 45-54 and 55-64 have slices of almost the same size. On the bars I am fairly sure 35-44 is third, although it is only a little taller than 45-54.
+
+### 3.2 Order the bars
+
+#### Question 3: How many people of each race are in the survey?
+
+Count the people by `Race1`. Which order do the bars follow?
+
+```{r}
+#| label: q3
+nhanes |>
+  count(Race1)                   # the numbers behind the bars
+
+nhanes |>
+  ggplot(aes(x = Race1)) +       # one bar per race
+  geom_bar() +                   # bar height = number of people
+  labs(x = "Race", y = "Number of people")
+```
+
+**Your finding:** The bars follow the order of the factor levels in `Race1`: Black (1,197), Hispanic (610), Mexican (1,015), White (6,372), Other (806). This is almost alphabetical, with Other moved to the end, and it has nothing to do with the size of the groups. White is by far the largest group, but you have to search the graph to rank the others.
+
+#### Question 4: Sort the bars from largest to smallest
+
+Reorder the bars by count. Why can we reorder race, but should keep the order of the age groups?
+
+```{r}
+#| label: q4
+nhanes |>
+  ggplot(aes(x = fct_infreq(Race1))) + # fct_infreq(): levels from most to least frequent
+  geom_bar() +
+  labs(x = "Race", y = "Number of people")
+```
+
+**Your finding:** Sorted by count, the order is White (6,372), Black (1,197), Mexican (1,015), Other (806), Hispanic (610), and the ranking is clear at a glance. Race is a nominal variable: the groups have no natural order, so we are free to sort them by size. Age groups are ordinal: 18-34, 35-44, ... 75+ have a natural order, and sorting them by count would break it and make the graph harder to read.
+
+### 3.3 Many categories
+
+#### Question 5: Which legal forms do the new companies use?
+
+Draw one bar per legal form (`type_text`). What happens to the labels?
+
+```{r}
+#| label: q5
+companies_lv |>
+  ggplot(aes(x = type_text)) +   # one bar per legal form, 24 forms
+  geom_bar() +
+  labs(x = "Legal form", y = "Number of companies")
+```
+
+**Your finding:** There are 24 legal forms, and their names are long (for example "Katoļu baznīcas publisko tiesību juridiskā persona"), so the labels on the x axis overlap and cannot be read. The bars are in alphabetical order, so the size ranking is hidden too. One form dominates: SIA, "Sabiedrība ar ierobežotu atbildību" (44,633 of 55,261 companies), followed by Biedrība (5,110) and Individuālais komersants (3,951). Most of the other bars are so short they are hard to see.
+
+#### Question 6: Make the labels readable
+
+Flip the plot so the labels sit on the vertical axis. Which order do the bars follow now?
+
+```{r}
+#| label: q6
+companies_lv |>
+  ggplot(aes(y = type_text)) +   # legal form on the y axis: the labels sit horizontally
+  geom_bar() +
+  labs(x = "Number of companies", y = "Legal form")
+```
+
+**Your finding:** With the legal forms on the vertical axis, every label can be read. The bars still follow alphabetical order, from "Akciju sabiedrība" at the bottom to "Zvejnieku saimniecība" at the top, so the order has nothing to do with the size of the bars. To find the second or third largest form you still have to compare bars spread across the whole graph.
+
+#### Question 7: Sort the flipped bars
+
+Order the legal forms from largest to smallest, with the largest at the top.
+
+```{r}
+#| label: q7
+companies_lv |>
+  ggplot(aes(y = fct_rev(fct_infreq(type_text)))) + # fct_infreq(): most common first; fct_rev(): largest at the top
+  geom_bar() +
+  labs(x = "Number of companies", y = "Legal form")
+```
+
+**Your finding:** Now the ranking reads from top to bottom: Sabiedrība ar ierobežotu atbildību (SIA, 44,633), Biedrība (5,110), Individuālais komersants (3,951), Zemnieku saimniecība (340), Ārvalsts komersanta filiāle (290) and so on. `fct_infreq()` alone puts the largest bar at the bottom, because the y axis starts from the bottom, so `fct_rev()` turns it around. SIA is so large that the bars below the top three are hard to tell apart.
+
+#### Question 8: Pool the small forms
+
+Keep the 5 most common legal forms and pool the others into one category. Then draw the sorted, flipped bars. Change `5` to `3` and describe what happens to the pooled bar.
+
+```{r}
+#| label: q8
+companies_lv |>
+  mutate(type_top = type_text |>
+           fct_lump_n(n = 5) |>                    # keep the 5 most common, the rest become "Other"
+           fct_infreq() |>                         # sort by count
+           fct_relevel("Other", after = Inf) |>    # "Other" goes last, whatever its size
+           fct_rev()) |>                           # largest at the top, "Other" at the bottom
+  ggplot(aes(y = type_top)) +
+  geom_bar() +
+  labs(x = "Number of companies", y = "Legal form")
+```
+
+**Your finding:** With `n = 5` the graph has 6 bars: SIA (44,633), Biedrība (5,110), Individuālais komersants (3,951), Zemnieku saimniecība (340), Ārvalsts komersanta filiāle (290) and Other (937). The 19 small forms together are larger than the 4th and 5th forms, so sorted only by count, Other would sit in the middle of the ranking. That is why it is moved to the bottom. With `n = 3`, Zemnieku saimniecība and Ārvalsts komersanta filiāle also go into Other, and the pooled bar grows to 1,567 companies. The graph is simpler, but we lose the detail on those two forms.
+
+### 3.4 Groups inside the bars
+
+#### Question 9: How many smokers are in each age group?
+
+Draw the age groups as bars and split each bar by `smoker`. Write what you can compare in this graph.
+
+```{r}
+#| label: q9
+whickham |>
+  ggplot(aes(x = age_group, fill = smoker)) + # fill splits each bar by smoker
+  geom_bar() +                                # stacked bars (position = "stack")
+  labs(x = "Age group", y = "Number of women", fill = "Smoker")
+```
+
+**Your finding:** The total height of each bar is easy to compare, because all bars start at 0: 18-34 is the largest group (408 women) and 75+ the smallest (77). The bottom segment (smokers, "Yes") also starts at 0, so it can be compared across age groups too: most smokers are aged 18-34 (180) and 45-54 (131), and very few are 65-74 (37) and 75+ (13). The top segment (non-smokers) starts at a different height in every bar, so it is hard to compare. It is also hard to see within one bar whether smokers or non-smokers are the larger part, for example in 35-44 (105 vs 111) or 55-64 (116 vs 122).
+
+#### Question 10: Put the groups side by side
+
+Draw the same counts with the smoker and non-smoker bars next to each other. Write what you can compare now.
+
+```{r}
+#| label: q10
+whickham |>
+  ggplot(aes(x = age_group, fill = smoker)) +
+  geom_bar(position = "dodge") +              # "dodge": smoker and non-smoker bars next to each other
+  labs(x = "Age group", y = "Number of women", fill = "Smoker")
+```
+
+**Your finding:** Now every bar starts at 0, so both smokers and non-smokers can be compared across the age groups, and within each age group we can see at once which group is larger. Smokers outnumber non-smokers only in 45-54 (131 vs 78). In 35-44 (105 vs 111) and 55-64 (116 vs 122) the two are almost equal, and from 65 on non-smokers clearly dominate (65-74: 129 vs 37, 75+: 64 vs 13). What we lose is the total of each age group, because the two bars are no longer stacked on top of each other.
+
+#### Question 11: What share of each age group smokes?
+
+Draw bars that all reach 100% and show the share of smokers in each age group.
+
+```{r}
+#| label: q11
+whickham |>
+  ggplot(aes(x = age_group, fill = smoker)) +
+  geom_bar(position = "fill") +                       # "fill": every bar reaches 1 (100%)
+  scale_y_continuous(labels = scales::percent) +      # show 0.25 as 25%
+  labs(x = "Age group", y = "Share of women", fill = "Smoker")
+```
+
+**Your finding:** Every bar has the same height, so the graph shows shares instead of counts, and the bottom segment (smokers) can be compared directly across age groups. The share of smokers is 44% in 18-34, about 49% in 35-44 and 55-64, and highest in 45-54 (63%). After 65 it drops sharply: 22% in 65-74 and 17% in 75+. The graph hides how many women are in each group, so the 75+ bar (77 women) looks as solid as the 18-34 bar (408 women).
+
+### 3.5 Differences in counts across a second variable
+
+#### Question 12: Did the race mix change between the two survey cycles?
+
+Count the people by race and show the survey cycle (`SurveyYr`) with side-by-side bars. Which race changed the most?
+
+```{r}
+#| label: q12
+nhanes |>
+  ggplot(aes(x = fct_infreq(Race1), fill = SurveyYr)) + # races sorted by size, colour = survey cycle
+  geom_bar(position = "dodge") +                        # the two cycles side by side
+  labs(x = "Race", y = "Number of people", fill = "Survey cycle")
+```
+
+**Your finding:** In counts, White changed the most: from 3,237 people in 2009_10 to 3,135 in 2011_12 (-102). But White is by far the largest group, so this is only a 3% drop and is hard to see on the graph. Relative to their size, Hispanic (260 to 350, +90, about +35%) and Other (360 to 446, +86, about +24%) changed the most, and these are the differences you can actually see between the bars. Mexican (-55) and Black (-19) dropped a little.
+
+#### Question 13: One panel per survey cycle
+
+Draw the sorted race counts in one panel for each survey cycle with `facet_wrap()`. Compare the dodge graph with the panels.
+
+```{r}
+#| label: q13
+nhanes |>
+  ggplot(aes(x = fct_infreq(Race1))) + # races sorted by size
+  geom_bar() +
+  facet_wrap(~ SurveyYr) +             # one panel per survey cycle, same y axis in both
+  labs(x = "Race", y = "Number of people")
+```
+
+**Your finding:** Each panel shows the race mix of one cycle, and the two panels look almost the same: White is far ahead in both, followed by Black and Mexican. Because both panels share the same y axis, each panel is easy to read on its own, but small changes between the cycles, such as the rise of Hispanic (260 to 350) and Other (360 to 446), are harder to spot, because the bars to compare are in different panels. In the dodge graph the two cycles stand right next to each other, so the change in each race is easier to see. The panels are better for describing each cycle, and the dodge graph is better for comparing them.
+
+### 3.6 Many parts of a whole: the treemap
+
+#### Question 14: What did Latvia export in 1998 to 2000?
+
+The first digit of the product code is the broad sector. Sum the export value by sector for Latvia (`lva`) and draw a treemap. Which sector has the largest area?
+
+```{r}
+#| label: q14
+# names of the SITC sectors, looked up by the first digit of the product code
+sector_names <- c(
+  "0" = "Food",
+  "1" = "Beverages and tobacco",
+  "2" = "Crude materials",
+  "3" = "Mineral fuels",
+  "4" = "Oils and fats",
+  "5" = "Chemicals",
+  "6" = "Manufactured goods",
+  "7" = "Machinery and transport",
+  "8" = "Misc. manufactured",
+  "9" = "Other"
+)
+
+world_exports |>
+  filter(country == "lva") |>                     # Latvia only
+  mutate(sector = str_sub(product, 1, 1)) |>      # first digit of the SITC code = sector
+  group_by(sector) |>
+  summarise(value = sum(value)) |>                # total export value per sector
+  mutate(sector = sector_names[sector]) |>        # "3" becomes "Mineral fuels"
+  ggplot(aes(area = value, fill = sector, label = sector)) + # area of each tile = export value
+  geom_treemap() +
+  geom_treemap_text(colour = "white", place = "centre", grow = FALSE) +
+  theme(legend.position = "none")                  # the labels are on the tiles
+```
+
+**Your finding:** Mineral fuels (sector 3) has by far the largest area, about 37% of Latvia's exports (84 million USD). Crude materials (sector 2, 17%) and Manufactured goods (sector 6, 17%) come next, with tiles of almost the same size. Machinery, Misc. manufactured, Chemicals and Food each have 6-8%. Beverages and tobacco, Oils and fats and Other are tiny tiles of under 1% each, and their labels barely fit. It is easy to see that one sector is a third of the whole, but hard to tell whether sector 2 or sector 6 is larger.
+
+#### Question 15: Treemap or bars?
+
+Draw the same sector values as sorted bars. Which graph ranks the sectors better, and which shows the whole better?
+
+```{r}
+#| label: q15
+world_exports |>
+  filter(country == "lva") |>
+  mutate(sector = str_sub(product, 1, 1)) |>
+  group_by(sector) |>
+  summarise(value = sum(value)) |>
+  mutate(sector = sector_names[sector]) |>             # sector_names comes from q14
+  ggplot(aes(x = value, y = fct_reorder(sector, value))) + # fct_reorder(): sort by value, largest at the top
+  geom_col() +                                         # the values are already summed, so geom_col()
+  scale_x_continuous(labels = scales::label_number(scale = 1e-6, suffix = " M")) + # 84151898 -> 84 M
+  labs(x = "Export value (USD)", y = "Sector")
+```
+
+**Your finding:** The bars rank the sectors much better. The order is clear at once: Mineral fuels (84 M), Crude materials (39 M), Manufactured goods (38 M), Machinery and transport (17 M), Misc. manufactured (17 M), Chemicals (14 M), Food (13 M), and then three very small sectors. On the bars we can see that Crude materials is just ahead of Manufactured goods, which was impossible to tell on the treemap. The treemap shows the whole better: the tiles fill one rectangle, so we see directly that Mineral fuels is more than a third of all exports. On the bars we would have to add up the lengths ourselves to see the parts of the whole.
+
+### 3.7 Bars from a calculation: geom_col()
+
+#### Question 16: Why does geom_bar() fail on a table of counts?
+
+Count the companies by `type` in a table. Draw the table with `geom_bar()` and `y = n`. Read the error, then fix the plot.
+
+```{r}
+#| label: q16
+#| error: true
+companies_lv |>
+  count(type) |>                 # a table: one row per legal form, n = number of companies
+  ggplot(aes(x = type, y = n)) + # give the counts as y
+  geom_bar()                     # error: stat_count() must only have an x or y aesthetic
+```
+
+```{r}
+#| label: q16-fix
+companies_lv |>
+  count(type) |>
+  ggplot(aes(x = type, y = n)) + # bar height = n from the table
+  geom_col()                     # geom_col() draws y as is, no counting
+```
+
+**Your finding:** `geom_bar()` counts the rows itself (`stat = "count"`). After `count()` there is only one row per legal form, so without `y` every bar is 1, and with `y = n` it gives the error "stat_count() must only have an x or y aesthetic". When the table already holds the numbers, use `geom_col()`, which uses `n` as the bar height.
+
+#### Question 17: What share of the companies has each legal form?
+
+Calculate the share of each legal form, keep the three largest and draw them as bars with the percent written on each bar.
+
+```{r}
+#| label: q17
+companies_lv |>
+  count(type) |>                                # one row per legal form, n = number of companies
+  mutate(share = n / sum(n)) |>                 # share of all companies, before we drop any rows
+  slice_max(share, n = 3) |>                    # keep the three largest
+  ggplot(aes(x = fct_reorder(type, share, .desc = TRUE), y = share)) +
+  geom_col() +                                  # bar height = share from the table
+  geom_text(aes(label = scales::percent(share, accuracy = 0.1)), # 0.808 -> "80.8%"
+            vjust = -0.5) +                     # write the label just above the bar
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Legal form", y = "Share of companies")
+```
+
+**Your finding:** SIA (limited liability company) is by far the most common legal form, with 80.8% of the 55,261 companies. BDR (association, Biedrība) has 9.2% and IK (individual merchant) 7.1%. Together the three largest forms cover about 97% of all new companies, so the other 21 forms share only about 3%. The share has to be calculated before `slice_max()`. If we kept the three largest first, the shares would be out of these three companies only and would add up to 100%.
+
+#### Question 18: Which airline departs late most often?
+
+A flight is late when it departs more than 15 minutes after schedule. Calculate the share of late flights for each airline (`carrier`). Keep the airlines with 1,000 or more flights and draw the shares as bars with the percent written on each bar.
+
+```{r}
+#| label: q18
+flights |>
+  group_by(carrier) |>
+  summarise(
+    n = n(),                                          # number of flights per airline
+    late = mean(dep_delay > 15, na.rm = TRUE)         # share of late flights; cancelled flights (NA) are left out
+  ) |>
+  filter(n >= 1000) |>                                # keep the airlines with 1,000 or more flights
+  ggplot(aes(x = late, y = fct_reorder(carrier, late))) + # sorted, most often late at the top
+  geom_col() +
+  geom_text(aes(label = scales::percent(late, accuracy = 1)), # 0.305 -> "31%"
+            hjust = -0.2) +                           # write the label just right of the bar
+  scale_x_continuous(labels = scales::percent) +
+  labs(x = "Share of flights that departed more than 15 minutes late", y = "Airline")
+```
+
+**Your finding:** 11 of the 16 airlines have 1,000 or more flights. ExpressJet (EV) departs late most often: 31% of its flights left more than 15 minutes after schedule. Southwest (WN, 27%), AirTran (FL, 27%) and Endeavor (9E, 26%) follow. US Airways (US, 12%), American (AA, 16%) and Delta (DL, 16%) are the most punctual. The filter matters: without it, small airlines such as YV (601 flights, 29%) and F9 (685 flights, 28%) would rank near the top, although a share based on few flights is less reliable. Cancelled flights have no departure delay (NA), so `na.rm = TRUE` leaves them out of the share.
+
+### 3.8 Likert data
+
+#### Question 19: How do adults rate their health?
+
+`HealthGen` is a 5-point rating of general health: Excellent, Vgood, Good, Fair and Poor. Check the order of the levels with `levels()`. Count the adults who answered in each level and draw the counts as bars in the order of the scale.
+
+```{r}
+#| label: q19
+levels(nhanes$HealthGen)                          # the order of the scale: Excellent ... Poor
+
+nhanes |>
+  select(HealthGen) |>
+  filter(HealthGen != "NA") |>                    # drops the people who did not answer
+  count(HealthGen) |>                             # a table: one row per answer, n = number of people
+  ggplot(aes(x = HealthGen,                       # the factor keeps the order of the scale
+             fill = HealthGen,
+             y = n)) +
+  geom_col() +                                    # y = n from the table, so geom_col(), not geom_bar() (see q16)
+  labs(x = "General health", y = "Number of people")
+```
+
+**Your finding:** The levels are already in the order of the scale, from Excellent to Poor, so the bars follow the scale without any reordering. Of the 7,539 people who answered, most rate their health as Good (2,956, 39%) or Vgood (2,508, 33%). Fewer say Fair (1,010, 13%) or Excellent (878, 12%), and very few say Poor (187, 2.5%). The answers lean towards the positive end of the scale. Here we must not sort the bars by count, because the rating is ordinal, just like the age groups.
+
+#### Question 20: Does the rating change with education?
+
+Draw one bar per education level that shows the share of each answer. Use a color scale with two ends, so good ratings and poor ratings sit at opposite ends.
+
+```{r}
+#| label: q20
+nhanes |>
+  filter(!is.na(HealthGen), !is.na(Education)) |>   # Education is recorded for adults aged 20 and over
+  ggplot(aes(x = Education, fill = HealthGen)) +
+  geom_bar(position = "fill") +                      # every bar = 100% of one education level
+  scale_fill_brewer(palette = "RdBu", direction = -1) + # two ends: Excellent = dark blue, Poor = dark red, Good = light middle
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Education", y = "Share of adults", fill = "General health")
+```
+
+**Your finding:** Yes, the rating improves clearly with education. Among college graduates, 19% rate their health as Excellent and 44% as Vgood, so the blue part covers almost two thirds of the bar, and only 6.5% say Fair or Poor. Among adults with only 8th grade, only 18% say Excellent or Vgood, while 47% say Fair or Poor (38% Fair, 9% Poor), so the red part is the largest. The levels in between change step by step. The two-ended color scale makes this easy to see: the blue part grows and the red part shrinks from left to right, while Good, the neutral middle, stays at about 30 to 44% in every group. The graph shows shares, so it hides that the 8th grade group is small (369 adults) compared with the college graduates (1,897).
+
+### 3.9 Homework
+
+#### Question 21: Where do people live?
+
+Sum the population of the 142 countries by continent in 2007 and draw the totals as bars. Which continent has the largest total?
+
+```{r}
+#| label: q21
+rosling |>
+  filter(year == 2007) |>                             # one row per country in 2007
+  group_by(continent) |>
+  summarise(population = sum(population)) |>          # total population per continent
+  ggplot(aes(x = fct_reorder(continent, population, .desc = TRUE), y = population)) + # largest first
+  geom_col() +                                        # the totals are already in the table, so geom_col()
+  scale_y_continuous(labels = scales::label_number(scale = 1e-9, suffix = " bn")) + # 3811953827 -> 3.8 bn
+  labs(x = "Continent", y = "Population in 2007")
+```
+
+**Your finding:** Asia has by far the largest total: 3.8 billion people, about 61% of the population of the 142 countries. China (1.32 billion) and India (1.11 billion) alone make up most of it. Africa (0.93 billion, 15%) and the Americas (0.90 billion, 14%) are almost the same size, then Europe (0.59 billion, 9%). Oceania has only 2 countries in the data (Australia and New Zealand) and 25 million people, so its bar is barely visible. The totals only cover the 142 countries in the data, not the whole world.

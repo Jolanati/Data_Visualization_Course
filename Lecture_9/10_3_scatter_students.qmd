@@ -1,0 +1,371 @@
+---
+title: "Relationships (students)"
+format:
+  html:
+    toc: true
+    code-fold: false
+---
+
+Read each question, then write the code in the empty chunk. Remove `#| eval: false` and run the chunk. Write what you see under **Your finding**.
+
+## 1. Packages
+
+### 1.1 Install pacman if it is missing
+
+```{r}
+#| label: install-pacman
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+```
+
+### 1.2 Load the packages
+
+```{r}
+#| label: packages
+pacman::p_load(tidyverse, here, palmerpenguins, NHANES, ggrepel, gganimate, gifski)
+```
+
+## 2. Datasets
+
+Each dataset loads once into a named object. Every question below starts from one of these objects.
+
+### 2.1 rosling (file in the course repository)
+
+Life expectancy (`life_exp`), income per person (`income`) and population (`population`) of 142 countries every 5 years from 1952 to 2007. One row per country and year (1,704 rows).
+
+```{r}
+#| label: data-rosling
+# Google Drive link to be added here later
+rosling <- read_csv(
+  "https://raw.githubusercontent.com/sergiouribe/Data_Visualization_Course_RSU/main/data/rosling_tidy.csv",
+  show_col_types = FALSE
+)
+rosling |> head()
+```
+
+### 2.2 penguins (package `palmerpenguins`)
+
+344 penguins of three species from the Palmer Archipelago. The data come with the package, so no loading step is needed.
+
+```{r}
+#| label: data-penguins
+penguins |> head()
+```
+
+### 2.3 nhanes (package `NHANES`)
+
+10,000 people from two US survey cycles (2009_10 and 2011_12).
+
+```{r}
+#| label: data-nhanes
+nhanes <- NHANES
+nhanes |> head()
+```
+
+## 3. Relationships between two continuous variables
+
+### 3.1 Is there a relationship?
+
+#### Question 1: Does higher income go with longer life?
+
+Draw each country in 2007 as a point: income on the horizontal axis, life expectancy on the vertical axis. Describe the shape of the cloud. Then calculate the correlation r with `cor(x, y)`. The value r runs from -1 to 1.
+
+```{r}
+#| label: q1
+rosling |>                                       # all years: one point per country and year (as in class)
+  ggplot(aes(x = income,
+             y = life_exp)) +
+  geom_point() +
+  xlim(0, 60000) +                               # x axis from 0 to 60,000 USD; drops 5 Kuwait points (1952-1972)
+  labs(x = "Income per person (USD)", y = "Life expectancy (years)")
+```
+
+```{r}
+#| label: q1-2007
+rosling |>
+  filter(year == 2007) |>                        # what the question asks: one point per country in 2007
+  ggplot(aes(x = income,
+             y = life_exp)) +
+  geom_point() +
+  xlim(0, 60000) +
+  labs(x = "Income per person (USD)", y = "Life expectancy (years)")
+```
+
+```{r}
+#| label: q1-cor
+rosling |>
+  summarise(r = cor(income, life_exp))           # all years: r = 0.58
+
+rosling |>
+  filter(year == 2007) |>
+  summarise(r = cor(income, life_exp))           # 2007 only: r = 0.68
+```
+
+**Your finding:** With all years (1,699 points after `xlim()` drops the 5 very rich Kuwait points) the same curve shows up as in 2007, only denser. For all years r = 0.58, lower than in 2007, partly because the Kuwait points (very high income, life expectancy of only 55 to 68 years) pull it down. Higher income goes with longer life, but the cloud is not a straight line, it is a curve. At low incomes (below about 5,000 USD) life expectancy rises steeply and varies a lot, from about 40 to 74 years, and most countries are squeezed into this left part of the graph. At higher incomes the curve flattens: rich countries such as Norway (49,357 USD) live about 80 years, not much longer than countries with a quarter of their income. The correlation is r = 0.68, a clear positive relationship, but r measures only how close the points are to a straight line, so it underestimates this curved relationship.
+
+
+
+#### Question 2: Straighten the curve
+
+Put income on a log scale with `scale_x_log10()` and add the straight line that fits best with `geom_smooth(method = "lm")`. Calculate r again with `log10(income)`. What changes?
+
+```{r}
+#| label: q2
+rosling |>                                       # all years, as in class
+  ggplot(aes(x = income,
+             y = life_exp)) +
+  geom_point() +
+  scale_x_log10() +                              # each step on the x axis = 10 times more income
+  geom_smooth(method = "lm") +                   # the straight line that fits best
+  labs(x = "Income per person (USD, log scale)", y = "Life expectancy (years)")
+```
+
+```{r}
+#| label: q2-cor
+rosling |>
+  summarise(r = cor(log10(income), life_exp))    # all years: r = 0.81 (was 0.58)
+```
+
+**Your finding:** On the log scale the curve becomes almost a straight line: going from 1,000 to 10,000 USD adds about as many years of life as going from 10,000 to 100,000 USD. The points spread out over the whole width of the graph instead of being squeezed to the left, and the straight line now fits the cloud well. The correlation rises from r = 0.58 to r = 0.81 (in 2007 only, from 0.68 to 0.81). The data did not change, only the scale of income, so the relationship was strong all along. It was just not linear, and r only measures straight-line relationships.
+
+
+
+#### Question 3: Do all continents follow the pattern?
+
+Color the points by `continent` with `scale_color_viridis_d()`. Then calculate r for each continent (use `group_by(continent)`). Which continent sits lowest?
+
+```{r}
+#| label: q3
+rosling |>                                       # all years, as in class
+  ggplot(aes(x = income,
+             y = life_exp,
+             color = continent)) +               # one color per continent
+  geom_point() +
+  scale_x_log10() +
+  scale_color_viridis_d() +                      # color-blind friendly colors for categories
+  labs(x = "Income per person (USD, log scale)", y = "Life expectancy (years)", color = "Continent")
+```
+
+```{r}
+#| label: q3-facet
+rosling |>
+  ggplot(aes(x = income,
+             y = life_exp,
+             color = continent)) +
+  geom_point(alpha = 0.5) +                      # semi-transparent points, so overlaps show
+  scale_x_log10() +
+  scale_color_viridis_d() +
+  facet_wrap(~ continent) +                      # one panel per continent
+  theme(legend.position = "none") +              # the panel titles already name the continents
+  labs(x = "Income per person (USD, log scale)", y = "Life expectancy (years)")
+```
+
+```{r}
+#| label: q3-cor
+rosling |>
+  group_by(continent) |>
+  summarise(r = cor(log10(income), life_exp),    # r inside each continent
+            median_life_exp = median(life_exp))
+```
+
+**Your finding:** All continents follow the same pattern: higher income goes with longer life in every continent, but the strength differs. Africa sits lowest: its points are at the bottom left of the graph, with a median life expectancy of 48 years over all years, and it has the weakest relationship (r = 0.54). Many African countries have short lives even at middle incomes, so income alone explains less there. Europe (r = 0.85) and Oceania (r = 0.96, but only 2 countries) sit at the top right and follow the line most closely. The Americas (r = 0.71) and Asia (r = 0.69) lie in between and overlap. In one graph the continents hide each other, but with `facet_wrap(~ continent)` each continent gets its own panel, and we can see that every panel has the same rising shape, only shifted: Africa's cloud is lower and to the left, Europe's higher and to the right.
+
+
+
+### 3.2 Simpson's paradox
+
+#### Question 4a: Do penguins with longer bills have deeper bills?
+
+Draw `bill_length_mm` against `bill_depth_mm` for all penguins and add one line with `geom_smooth(method = "lm")`. Predict what happens inside each species. Then add `color = species` and check your prediction. Calculate r for all penguins and for each species.
+
+```{r}
+#| label: q4a
+penguins |>
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm") +                   # one line for all penguins
+  labs(x = "Bill length (mm)", y = "Bill depth (mm)")
+```
+
+```{r}
+#| label: q4a-species
+penguins |>
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm,
+             color = species)) +                 # color also splits the line: one line per species
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_color_viridis_d() +
+  labs(x = "Bill length (mm)", y = "Bill depth (mm)", color = "Species")
+```
+
+```{r}
+#| label: q4a-cor
+penguins |>
+  drop_na(bill_length_mm, bill_depth_mm) |>      # 2 penguins have no bill measurements
+  group_by(species) |>
+  summarise(r = cor(bill_length_mm, bill_depth_mm)) # r inside each species
+```
+
+```{r}
+#| label: q4a-cor-all
+penguins |>
+  drop_na(bill_length_mm, bill_depth_mm) |>
+  summarise(r = cor(bill_length_mm, bill_depth_mm)) # r for all penguins together
+```
+
+**Your finding:** For all penguins together the line goes down: longer bills seem to go with shallower bills, r = -0.24. My prediction was that inside each species the line goes up, and coloring by species confirms it: within Adelie (r = 0.39), Chinstrap (r = 0.65) and Gentoo (r = 0.64) a longer bill goes with a deeper bill. The relationship reverses because the species differ: Adelie have short, deep bills (about 39 mm long, 18 mm deep), while Gentoo have long but shallow bills (about 48 mm long, 15 mm deep). Mixing the species puts the Adelie cloud at the top left and the Gentoo cloud at the bottom right, so the single line slopes down. This is Simpson's paradox: a trend in the whole group can be the opposite of the trend inside every subgroup.
+
+
+
+#### Question 4b: Which line do we trust?
+
+Write two sentences: which line would you report to a biologist, and why? Then repeat the analysis for `flipper_length_mm` against `bill_depth_mm`.
+
+```{r}
+#| label: q4b
+#| eval: false
+penguins |>
+
+```
+
+```{r}
+#| label: q4b-cor
+#| eval: false
+penguins |>
+
+```
+
+```{r}
+#| label: q4b-cor-all
+#| eval: false
+penguins |>
+
+```
+
+**Your finding:**
+
+
+
+### 3.3 The Rosling graph (next class)
+
+#### Question 5: Does the size of a country matter?
+
+Add `size = population` and `alpha = 0.7`. Which countries have the largest circles?
+
+```{r}
+#| label: q5
+#| eval: false
+rosling |>
+
+```
+
+**Your finding:**
+
+
+
+#### Question 6: Which countries tell the story?
+
+Write the name of 5 countries next to their circle. Use `geom_text_repel()` from `ggrepel`, which moves labels apart. Choose countries from the data: highest income, lowest life expectancy, and the two largest populations.
+
+```{r}
+#| label: q6
+#| eval: false
+rosling |>
+
+```
+
+**Your finding:**
+
+
+
+#### Question 7: Has the relationship changed?
+
+Draw the graph for 1952, 1977 and 2007 in three panels with `facet_wrap(~year)`. Then calculate the median life expectancy and median income for each of the three years.
+
+```{r}
+#| label: q7
+#| eval: false
+rosling |>
+
+```
+
+```{r}
+#| label: q7-median
+#| eval: false
+rosling |>
+
+```
+
+**Your finding:**
+
+
+
+#### Question 8: Animate it
+
+Replace the panels with `transition_time(year)` from `gganimate` and put the year in the title with `labs(title = "Year: {round(frame_time)}")`. Use all years, not only 2007. Save the animation with `anim_save()`.
+
+```{r}
+#| label: q8
+#| eval: false
+rosling |>
+
+```
+
+```{r}
+#| label: q8-save
+#| eval: false
+rosling |>
+
+```
+
+**Your finding:**
+
+
+
+### 3.4 Homework: NHANES
+
+#### Question 9: Does blood pressure rise with age?
+
+Use adults only. Draw `Age` against `BPSysAve` (systolic blood pressure). Many points overlap, so use `alpha`. Add a line and calculate r.
+
+```{r}
+#| label: q9
+#| eval: false
+nhanes |>
+
+```
+
+```{r}
+#| label: q9-cor
+#| eval: false
+nhanes |>
+
+```
+
+**Your finding:**
+
+
+
+#### Question 10: Does a higher BMI go with lower HDL cholesterol?
+
+Use adults only. Draw `BMI` against `DirectChol` (HDL cholesterol). Add a line and calculate r.
+
+```{r}
+#| label: q10
+#| eval: false
+nhanes |>
+
+```
+
+```{r}
+#| label: q10-cor
+#| eval: false
+nhanes |>
+
+```
+
+**Your finding:**
+
+
+
