@@ -22,6 +22,14 @@ Put this file in the project root. Start every Claude Code session with: "Read P
 - [x] Step 1. Ask: question locked, expected message written, country-trait guess written
 - [ ] Step 2. Get the data: five files in `data-raw/`, filters recorded, each one imports
 - [ ] Step 3. Clean: five checks done for each table, notes written
+
+  Steps 2 and 3 are done table by table (load, then clean, then the next table):
+
+  - [x] Life expectancy (`demo_mlexpec`): 2.1 loaded, 3.1 cleaned. `life_expectancy_clean` has 540 rows and 5 columns, runs without errors (30 Oct)
+  - [ ] Healthy life years (`hlth_hlye`): 2.2 loaded (30 Oct), `healthy_life_years_raw` has 618 rows and 11 columns. Luxembourg has no 2023 and 2024 (536 EU rows, not 540). Next: 3.2 clean, decide on Luxembourg
+  - [ ] Deaths by cause (`hlth_cd_asdr2`)
+  - [ ] GDP per capita (`tec00114`)
+  - [ ] Education by sex (`sdg_04_20`)
 - [ ] Step 4. Combine: `data/gap_panel.csv` saved, row counts explained
 - [ ] Step 5. Explore: histograms, scatter plots, correlations, dead ends noted
 - [ ] Step 6. Story graph: final plot exported
@@ -37,6 +45,9 @@ Decisions so far:
 - Expected message (30 Oct): "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." Written after the life expectancy table was loaded, but before the other four tables.
 - Data direction: why Baltic men die earlier. Life expectancy by sex, healthy life years, deaths by cause, GDP per capita, education by sex (all Eurostat). The AI topic was dropped.
 - Tables: five, codes in section 3, filters still to confirm on download.
+- Document structure (30 Oct): `analysis.qmd` follows the wine-dine notebook. Overview with main findings, pipeline and section map. Every section opens with a sub-section table, every cleaning sub-section ends with a "found, decided" summary, and dead ends go in an appendix.
+- EU filter (30 Oct): non-EU countries and aggregates are removed in Step 3 (Cleaning), table by table, not in Step 4.
+- Columns (30 Oct): each clean table drops Eurostat's technical columns and keeps `flag`. Open for Step 4: does `flag` go into `gap_panel`, or is it dropped with `select(-flag)` before `pivot_wider()`?
 - Alcohol (29 Oct): option C. Alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4 is done, if time allows.
 
 ---
@@ -271,7 +282,7 @@ Each step has a task and a "done when", and points to the class that taught the 
 - **Done when:** each table has a short "what I found, what I decided" note, and one table is shown in the app as a quality report.
 
 ### Step 4. Manipulate (classes 5, 7, 8, 9)
-- **Task:** keep EU member states and the years 2015 to 2024, reshape (`pivot_wider()` puts women and men side by side, `pivot_longer()` does the opposite), rename to short column names, compute the gaps with `mutate()`, and join the five tables on country code and year with `join_by(country_code, year)`. After each join, check row counts (about 27 countries times 10 years, so about 270 rows) and run `anti_join()` to list country-years that did not match. Save the result to `data/gap_panel.csv`.
+- **Task:** the tables arrive already limited to the EU member states (filtered in Step 3) and to 2015 to 2024 (set in the download links). Reshape (`pivot_wider()` puts women and men side by side, `pivot_longer()` does the opposite), rename to short column names, compute the gaps with `mutate()`, and join the five tables on country code and year with `join_by(country_code, year)`. After each join, check row counts (about 27 countries times 10 years, so about 270 rows) and run `anti_join()` to list country-years that did not match. Save the result to `data/gap_panel.csv`.
 - **Core columns first:** `country_code`, `country`, `year`, `le_women`, `le_men`, `le_gap` (women minus men), `hly_women`, `hly_men`, `gdp_pps_index`, `baltic` (TRUE for EE, LV, LT). Add the rest when we reach the angles in Step 5: `death_circ_men_lt65`, `death_circ_women_lt65`, `death_cancer_men_lt65`, `death_cancer_women_lt65`, `death_ext_men_lt65`, `death_ext_women_lt65`, `death_alc_men_lt65`, `death_alc_women_lt65`, `tertiary_women_pct`, `tertiary_men_pct`.
 - **Done when:** one row per country and year, no duplicates, missing values documented, row counts explained.
 
