@@ -26,8 +26,8 @@ Put this file in the project root. Start every Claude Code session with: "Read P
   Steps 2 and 3 are done table by table (load, then clean, then the next table):
 
   - [x] Life expectancy (`demo_mlexpec`): 2.1 loaded, 3.1 cleaned. `life_expectancy_clean` has 540 rows and 5 columns, runs without errors (30 Oct)
-  - [ ] Healthy life years (`hlth_hlye`): 2.2 loaded (30 Oct), `healthy_life_years_raw` has 618 rows and 11 columns. Luxembourg has no 2023 and 2024 (536 EU rows, not 540). Next: 3.2 clean, decide on Luxembourg
-  - [ ] Deaths by cause (`hlth_cd_asdr2`)
+  - [x] Healthy life years (`hlth_hlye`): 2.2 loaded, 3.2 cleaned (31 Oct). `healthy_life_years_clean` has 536 rows and 5 columns. Luxembourg kept with 2023 and 2024 missing
+  - [ ] Deaths by cause (`hlth_cd_asdr2`). Next: look at the causes and age groups the table offers, then choose the filters for the link
   - [ ] GDP per capita (`tec00114`)
   - [ ] Education by sex (`sdg_04_20`)
 - [ ] Step 4. Combine: `data/gap_panel.csv` saved, row counts explained
@@ -47,6 +47,8 @@ Decisions so far:
 - Tables: five, codes in section 3, filters still to confirm on download.
 - Document structure (30 Oct): `analysis.qmd` follows the wine-dine notebook. Overview with main findings, pipeline and section map. Every section opens with a sub-section table, every cleaning sub-section ends with a "found, decided" summary, and dead ends go in an appendix.
 - EU filter (30 Oct): non-EU countries and aggregates are removed in Step 3 (Cleaning), table by table, not in Step 4.
+- Luxembourg (31 Oct): kept in healthy life years with 2023 and 2024 missing, not filled in. Name it in Limits.
+- Packages (31 Oct): all packages load in the setup chunk, `patchwork` added in advance.
 - Columns (30 Oct): each clean table drops Eurostat's technical columns and keeps `flag`. Open for Step 4: does `flag` go into `gap_panel`, or is it dropped with `select(-flag)` before `pivot_wider()`?
 - Alcohol (29 Oct): option C. Alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4 is done, if time allows.
 
@@ -63,6 +65,8 @@ Mode: **guided build, one small step at a time.** For every step:
 3. **After the code.** Explain each function used: what it does, why this one and not an alternative, and what its arguments mean. Describe what the output should look like.
 4. **Check my understanding.** Ask me one question (for example: what will this print? why `left_join()` and not `inner_join()`?). Wait for my answer before moving on. Correct me kindly.
 5. **Record the reason.** Add one or two sentences to `notes/decisions.md`, in my voice, so I can reuse them in the talk.
+
+**Pace (changed 31 Oct):** for each code chunk, Claude explains what it does and why *before* I run it, then asks once "Is this clear?". If yes, I run it and we move on. Outputs are only discussed when something is unexpected or I ask. No long walk-throughs of expected outputs.
 
 Rules:
 
@@ -87,6 +91,7 @@ Code style:
 - Native pipe `|>`, not `%>%`.
 - Object names: the full dataset name, then what the object holds, no short prefixes: `life_expectancy_url`, `life_expectancy_file`, `life_expectancy_raw`, `life_expectancy_clean`. Others: `healthy_life_years_`, `deaths_`, `gdp_`, `education_`. Chunk labels follow the same names, for example `show-life-expectancy-load`.
 - One comment per data quality check, written as a sentence.
+- **Comments for my future self (Sergio's rule):** every chunk starts with a header comment (section number and purpose), and every line or small group of lines has an inline comment that says what it does and why, or what result to expect. Written so that I can open the code in 10 years and still understand it.
 
 Writing style for any text Claude drafts for me (app text, titles, captions, notes):
 

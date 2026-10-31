@@ -11,5 +11,8 @@ Each new function: one-line meaning and a tiny example.
 - `geom_vline(xintercept = 65)` / `geom_hline(yintercept = 20)`: a vertical or horizontal reference line on a chart. Use `linetype = "dashed"` so it doesn't look like data.
 - `as_labeller(c(F = "Women", M = "Men"))`: gives the facet panels readable titles instead of the raw codes. Used inside `facet_wrap(~ sex, labeller = ...)`.
 - `scale_fill_viridis_d(begin, end, option)`: fills groups with colours from the viridis palette. `begin` and `end` (0 to 1) choose which part of the palette is used, `option = "plasma"` picks a sister palette. `scale_fill_viridis_d(begin = 0.25, end = 0.75)`.
+- `str_detect(text, "u")`: `TRUE` if the text contains the pattern anywhere. `str_detect("bu", "u")` gives `TRUE`. Inside `filter()` it keeps the matching rows. From `stringr`, part of the tidyverse.
+- `count(sex, name = "years")`: like `count()`, but the new column is called `years` instead of `n`. Counting twice in a row (`count(sex, year) |> count(sex)`) first lists the combinations, then counts them per group.
+- `patchwork`: puts saved ggplot charts together. `p1 + p2` side by side, `p1 / p2` one above the other. Loaded at the start with the other packages.
 - `length(x)`: how many values a vector holds. `length(eu_codes)` gives `27`.
 - `if (condition) { ... }`: runs the code inside only when the condition is `TRUE`. `if (!file.exists(f)) { download.file(u, f) }`. The `!` means "not".
