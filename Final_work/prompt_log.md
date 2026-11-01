@@ -51,6 +51,16 @@ Copied word for word, typing mistakes included.
 
 > Qhat would be jo suggestion for LUx?
 
+**Challenging the AI on data bias**
+
+> Maybe we take 10? But if we take 10, how we decide? which 10, and should not we state that in our decisions etc, that we did not use alll 93, as it is a lot of data?
+
+> But if I premptively cohoose datat that will support my hypothesis, arent I hetting biased by design?
+
+> Maybe, we goo with all 93 causes, we look on the 17 chapters first, and than, in the later data analysis, we look deeper in that?
+
+> I would not download additional data, as we dont need them
+
 **Correcting how the AI works with me**
 
 > I believe we are moving too slow, maybe, for each code chunk, you explain to me what and why we do, before I run it? and ask me do I understand it?
@@ -76,6 +86,8 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 | 1 Nov | Folder names | Rename to Sergio's template | Yes |
 | 1 Nov | Section order in the report | Keep mine, add a map to the template | Yes |
 | 1 Nov | The web app | Optional, as it is not required | Keep it as my presentation tool |
+| 1 Nov | Which causes of death to download (the table has 93) | 6 causes named by my hypotheses, or 10 with smoking, suicide and accidents added, chosen by hypothesis, not by data | I asked whether choosing causes that fit my hypotheses makes me biased by design. Decided: download all 93, look first at the non-overlapping chapters of causes without choosing anything, then deeper at my hypothesis causes. Causes that don't matter go into the dead ends |
+| 1 Nov | Which countries in the deaths table (it also has about 460 regions, 55 MB) | Put the 27 EU countries in the link (3.5 MB), as an exception to the 30 Oct rule | Yes. I don't download data I don't need |
 
 ## 4. AI mistakes I caught
 
@@ -85,4 +97,6 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 
 **3. Code before the decision.** Claude was ready to write the code that removes columns before the reason was recorded. I asked: "removing technical columns also that is in decisions first?" Since then the order is always: decide, write it down, then code.
 
-**4. Too many decisions at once.** When Sergio's template arrived, Claude listed four decisions in one message and pushed for answers. I said "Don't rush" and we now go through them one at a time.
+**4. A selection that could bias the analysis.** For the deaths table, Claude suggested downloading only 6 (or 10) of the 93 causes of death, chosen because my hypotheses name them. I asked: "But if I premptively cohoose datat that will support my hypothesis, arent I hetting biased by design?" Claude agreed that a hand-picked list has a blind spot: if the real driver were a cause I hadn't thought of, I would never see it. We changed the design: all 93 causes are downloaded, the analysis first looks at the chapters of causes without choosing anything, and only then at my hypothesis causes.
+
+**5. Too many decisions at once.** When Sergio's template arrived, Claude listed four decisions in one message and pushed for answers. I said "Don't rush" and we now go through them one at a time.

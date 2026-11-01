@@ -43,7 +43,8 @@ Sergio's final project template (published 31 Oct): https://github.com/sergiouri
 
   - [x] Life expectancy (`demo_mlexpec`): 2.1 loaded, 3.1 cleaned. `life_expectancy_clean` has 540 rows and 5 columns (30 Oct)
   - [x] Healthy life years (`hlth_hlye`): 2.2 loaded, 3.2 cleaned. `healthy_life_years_clean` has 536 rows and 5 columns, Luxembourg kept with 2023 and 2024 missing (31 Oct)
-  - [ ] Deaths by cause (`hlth_cd_asdr2`). Next: look at the causes and age groups the table offers, then choose the filters for the link
+  - [x] Deaths by cause (`hlth_cd_asdr2`): 2.3 loaded, 3.3 cleaned (1 Nov). `deaths_clean` has 43 902 rows and 7 columns, 27 EU countries, 92 causes (all causes merged into `TOTAL`), `cause_level` marks all causes, 20 chapter-level groups and 71 detailed causes, 2015 to 2023
+  - Open for Step 4: the deaths table is long (one row per cause). Decide which causes go into `gap_panel` and how (`pivot_wider()` by cause and sex)
   - [ ] GDP per capita (`tec00114`)
   - [ ] Education by sex (`sdg_04_20`)
 - [ ] Step 4. Combine: `data/clean/gap_panel.csv` saved, row counts explained
@@ -58,7 +59,7 @@ Template files:
 - [x] Folder names: `final_project.qmd`, `data/raw/`, `data/clean/`, `figures/` (1 Nov)
 - [x] YAML header with `execute:` `echo: true`, `warning: false`, `message: false` (1 Nov)
 - [x] Overview table that maps the template sections to mine (1 Nov)
-- [ ] `data/raw/SOURCE.md`: 2 of 5 tables. Add each new table when it is downloaded
+- [ ] `data/raw/SOURCE.md`: 3 of 5 tables. Add each new table when it is downloaded
 - [ ] `prompt_log.md`: draft written (1 Nov). Fill in the 29 Oct row. Add prompts, decisions and caught mistakes at the end of each session. **Before hand-in:** decide the wording of step 2 so it matches how we really work (Claude proposes the next step from the plan, I say its purpose in my own words, Claude writes it)
 - [ ] `story.md`: skeleton with the question (1 Nov). The rest after Step 6
 - [x] Render test from a clean session after the renaming (1 Nov)
@@ -71,7 +72,8 @@ Decisions so far (full reasons in `notes/decisions.md`):
 - **Alcohol (29 Oct):** alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4, if time allows.
 - **Report structure (30 Oct, 1 Nov):** `final_project.qmd` follows my wine-dine notebook and the order the work was done: overview with main findings, pipeline and section map, a sub-section table at the start of every section, a "found, decided" summary after every cleaning step, dead ends in an appendix. A table in the overview maps Sergio's template sections to mine.
 - **Names (1 Nov):** Sergio's template names. `analysis.qmd` became `final_project.qmd`, `data-raw/` became `data/raw/`, `data/` became `data/clean/`. The raw files were moved, not changed (checksums identical).
-- **EU filter (30 Oct):** non-EU countries and aggregates are removed in Step 3, table by table, using the shared `eu_codes` list.
+- **EU filter (30 Oct):** non-EU countries and aggregates are removed in Step 3, table by table, using the shared `eu_codes` list. **Exception (1 Nov):** the deaths table also has about 460 regions (55 MB in total), so its link asks for the 27 EU countries directly (3.5 MB).
+- **Causes of death (1 Nov):** all 93 causes are downloaded (women and men, under 65), to avoid choosing data that fits my hypotheses. Analysis looks first at the non-overlapping chapters of causes, then deeper at the causes my hypotheses name. I raised the bias question myself (see `prompt_log.md`). In cleaning (1 Nov): the two codes for all causes (`TOTAL`, `A-R_V-Y`) are merged into `TOTAL`, and a column `cause_level` marks "all causes", "chapter" (17 chapters + 3 COVID-19 codes, which add up to all causes) or "detail". Zeros are kept as real counts.
 - **Columns (30 Oct):** each clean table drops Eurostat's technical columns and keeps `flag`. Open for Step 4: does `flag` go into `gap_panel`, or is it dropped with `select(-flag)` before `pivot_wider()`?
 - **Luxembourg (31 Oct):** kept in healthy life years with 2023 and 2024 missing, not filled in. Name it in Limits.
 - **Germany 2022 (31 Oct):** healthy life years flagged `bu` (low reliability). Kept, check it first if Germany jumps in 2022.
@@ -177,7 +179,7 @@ Five Eurostat tables, joined on country code and year. Each one is downloaded fr
 |---|---|---|---|
 | Life expectancy | `demo_mlexpec` | Life expectancy at birth (`Y_LT1`), women and men, in years | Done. 2015 to 2024, all 27 EU countries complete |
 | Healthy life years | `hlth_hlye` | Healthy life years at birth (`HLY_Y0`), women and men | Done. 2015 to 2024, Luxembourg missing 2023 and 2024 |
-| Deaths by cause | `hlth_cd_asdr2` | Standardised death rate per 100 000 by cause (circulatory diseases, cancer, external causes, and the alcohol-related causes: alcohol abuse and chronic liver disease, labels to confirm) and sex, under 65 | Next. Latest year maybe 2022 or 2023 |
+| Deaths by cause | `hlth_cd_asdr2` | Standardised death rate per 100 000 (`RT`), all 93 causes, women and men, under 65 (`Y_LT65`), the 27 EU countries | In progress (2.3). 2015 to 2023, no 2024 yet. Large requests are queued by Eurostat, so the download must check that it got a CSV |
 | GDP per capita | `tec00114` | GDP per capita in PPS, index EU27 = 100 | To do |
 | Education by sex | `sdg_04_20` | % of people aged 25 to 34 with tertiary education, women and men | To do |
 

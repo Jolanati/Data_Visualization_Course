@@ -3,6 +3,11 @@
 Each new function: one-line meaning and a tiny example.
 
 - `paste0()`: glues pieces of text together with no space between them. `paste0("demo_", "mlexpec")` gives `"demo_mlexpec"`.
+- `paste(x, collapse = "+")`: joins all values of a vector into one text, with `+` between them. `paste(c("EE", "LV", "LT"), collapse = "+")` gives `"EE+LV+LT"`. Used to put the 27 EU codes into the deaths link.
+- `readLines(file, n = 1)`: reads lines of a text file as text, here only the first one. `readLines(deaths_file, n = 1)` gives the header line of the CSV.
+- `startsWith(text, "DATAFLOW")`: `TRUE` if the text begins with that word. `startsWith("DATAFLOW,LAST UPDATE", "DATAFLOW")` gives `TRUE`.
+- `file.remove(path)`: deletes a file. Used only to remove a failed download, never a real raw file.
+- `stop("message")`: stops the code on purpose and shows the message in red. Better than going on with broken data.
 - `download.file(url, destfile, mode = "wb")`: saves a file from the internet to my computer. `"wb"` means copy it byte for byte.
 - `file.exists(path)`: `TRUE` if the file is already there, `FALSE` if not. `file.exists(here("data", "raw", "demo_mlexpec.csv"))`.
 - `x %in% list`: `TRUE` for each value of `x` that is in the list, `FALSE` otherwise. `"LV" %in% eu_codes` gives `TRUE`, `"NO" %in% eu_codes` gives `FALSE`. Inside `filter()` it keeps the rows that match.

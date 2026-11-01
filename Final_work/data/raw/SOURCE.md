@@ -32,11 +32,22 @@ All files in this folder were downloaded from **Eurostat**, the statistical offi
 | **Last updated by Eurostat** | 17 July 2026 (column `LAST UPDATE` in the file) |
 | **Size** | 618 rows, 11 columns |
 
+## hlth_cd_asdr2.csv
+
+| | |
+|---|---|
+| **Table** | `hlth_cd_asdr2`, Causes of death, standardised death rate by NUTS 2 region of residence |
+| **Table page** | https://ec.europa.eu/eurostat/databrowser/view/hlth_cd_asdr2/default/table |
+| **Download link** | https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/hlth_cd_asdr2/A.RT.F+M.Y_LT65..AT+BE+BG+CY+CZ+DE+DK+EE+EL+ES+FI+FR+HR+HU+IE+IT+LT+LU+LV+MT+NL+PL+PT+RO+SE+SI+SK?startPeriod=2015&endPeriod=2024&format=SDMX-CSV |
+| **Filters in the link** | Annual, rate per 100 000 (`RT`), women and men, under 65 (`Y_LT65`), all 93 causes, the 27 EU member states, 2015 to 2024 (data ends in 2023) |
+| **Downloaded** | 1 November 2026 |
+| **Last updated by Eurostat** | 8 June 2026 (column `LAST UPDATE` in the file) |
+| **Size** | 43 902 rows, 12 columns |
+
 ## Still to download
 
 | File | Table | Content |
 |---|---|---|
-| `hlth_cd_asdr2.csv` | `hlth_cd_asdr2` | Death rates by cause and sex, under 65 |
 | `tec00114.csv` | `tec00114` | GDP per capita in PPS, EU27 = 100 |
 | `sdg_04_20.csv` | `sdg_04_20` | Tertiary education, age 25 to 34, by sex |
 
