@@ -7,6 +7,10 @@ format:
     code-summary: "Show the code"
     toc: true
     embed-resources: true
+execute:
+  echo: true        # show the code in the report
+  warning: false    # hide package warnings, so the report shows only results
+  message: false    # hide package loading messages
 ---
 
 # Project overview
@@ -74,7 +78,7 @@ The analysis runs as one chain. Each step uses only the output of the step befor
 ```
 Five Eurostat tables                                    (Section 2)
   life expectancy, healthy life years, deaths by cause, GDP, education
-  saved untouched to data-raw/
+  saved untouched to data/raw/
         ↓
 Cleaning                                                (Section 3)
   five data quality checks per table, then documented decisions
@@ -83,7 +87,7 @@ Cleaning                                                (Section 3)
 Combining                                               (Section 4)
   women and men side by side, the gap computed
   joined on country code and year
-  → data/gap_panel.csv, one row per country and year (about 270 rows)
+  → data/clean/gap_panel.csv, one row per country and year (about 270 rows)
         ↓
 Exploration                                             (Section 5)
   the gap against each candidate factor, the gap over time,
@@ -99,13 +103,27 @@ The story                                               (Section 6)
 | Section | Question it answers | Output |
 |------------------------------------|------------------------------------|------------------------------------|
 | 1. Environment setup | Is R ready to run the analysis? | Packages loaded, project folder found |
-| 2. Gathering data | What did Eurostat deliver? | Five raw CSV files in `data-raw/` |
+| 2. Gathering data | What did Eurostat deliver? | Five raw CSV files in `data/raw/` |
 | 3. Cleaning | Can the data be trusted, and what has to change? | One clean table per dataset |
-| 4. Combining the tables | Do the five tables fit together? | `data/gap_panel.csv` |
+| 4. Combining the tables | Do the five tables fit together? | `data/clean/gap_panel.csv` |
 | 5. Exploration | Which factors go with the gap? | Charts, correlations, dead ends |
 | 6. The story | What is the one message? | The final chart in five frames |
 | 7. Limits | What can the data not show? | A list of caveats |
 | Appendix | Which expected relationships did not hold? | Dead ends and what was done about them |
+
+## Where to find the parts of the course template
+
+The document follows the order in which the work was done, so its sections are named differently from the course's final project template. The content is the same. The table shows where each template section is found.
+
+| Template section | Where it is in this document |
+|------------------------------------|------------------------------------|
+| 1. Packages | 1.1 Packages |
+| 2. Question and data | Project overview (question, scope, expected message) and Section 2 (the five Eurostat tables). Sources, dates and licence: `data/raw/SOURCE.md` |
+| 3. Exploration | The five quality checks in Section 3 (3.1.2, 3.2.2 and so on): types, missing values, ranges with histograms, duplicates, row counts |
+| 4. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
+| 5. Graphs | Section 5, Exploration: each graph has its question above it and its finding below it |
+| 6. Final graph | Section 6, The story. Saved as `figures/final_graph.png` |
+| 7. Limits | Section 7, Limits |
 
 # 1. Environment setup
 
@@ -123,7 +141,7 @@ All packages are loaded here, at the start, so they are listed in one place. `pa
 | Package | Purpose in the analysis |
 |------------------------------------|------------------------------------|
 | `tidyverse` | Reading files (`read_csv()`), working with tables (`filter()`, `mutate()`, joins, pivots) and charts (`ggplot()`) |
-| `here` | File paths that start at the project folder, for example `here("data-raw", "demo_mlexpec.csv")` |
+| `here` | File paths that start at the project folder, for example `here("data", "raw", "demo_mlexpec.csv")` |
 | `janitor` | `clean_names()`, which makes column names short, lowercase and easy to type |
 | `gtsummary` | `tbl_summary()`, a ready-made table of missing values and ranges for the data quality checks |
 | `knitr` | `kable()`, which turns a small result table into a neat table in the rendered report. Not taught in the course, used only for display |
@@ -150,12 +168,12 @@ pacman::p_load(
 
 ## 1.2 Project folder
 
-`here()` finds the project folder by looking for the empty `.here` file in it. All paths start from there, so no full path like `C:/Users/...` is needed, and the project also works on another computer.
+`here()` finds the project folder by looking for the project file `final_project.Rproj` (or the empty `.here` file) in it. All paths start from there, so no full path like `C:/Users/...` is needed, and the project also works on another computer. The folders follow the course's final project template.
 
 | Folder | Content |
 |------------------------------------|------------------------------------|
-| `data-raw/` | The downloads from Eurostat, exactly as they arrived. These files are never edited |
-| `data/` | The clean tables created in the analysis |
+| `data/raw/` | The downloads from Eurostat, exactly as they arrived. These files are never edited. `SOURCE.md` lists where each one comes from |
+| `data/clean/` | The clean tables created in the analysis |
 | `figures/` | Exported charts |
 | `notes/` | Decisions made during the analysis and a glossary of functions |
 
@@ -178,7 +196,7 @@ Every dataset is loaded in its **original, uncleaned form**. The only selection 
 **Every dataset follows the same three steps:**
 
 1.  **Build the link:** the table code plus the selected dimensions.
-2.  **Download once:** save the file to `data-raw/`. This folder is never edited, so the original download is always available.
+2.  **Download once:** save the file to `data/raw/`. This folder is never edited, so the original download is always available.
 3.  **Load and look:** read the file into R, check its structure with `glimpse()` and inspect the first rows with `head()`.
 
 **Naming of objects:** every object created for a dataset starts with the full name of that dataset, followed by what the object holds. The names are long, but they say exactly what each object is. For life expectancy the prefix is `life_expectancy_`: `life_expectancy_url` (the download link), `life_expectancy_file` (the path to the saved file), `life_expectancy_raw` (the table as downloaded) and, in Section 3, `life_expectancy_clean` (the cleaned table). The other datasets follow the same pattern: `healthy_life_years_`, `deaths_`, `gdp_` and `education_`.
@@ -234,12 +252,12 @@ life_expectancy_url  # print the link, so it can also be opened in a browser
 
 ### 2.1.2 Download once
 
-The file is saved to `data-raw/`. The `if` check makes R download only when the file is not there yet, so rerunning this document never overwrites the original download.
+The file is saved to `data/raw/`. The `if` check makes R download only when the file is not there yet, so rerunning this document never overwrites the original download.
 
 ```{r}
 #| label: show-life-expectancy-download
-# 2.1.2 Save the raw file to data-raw/, only if it isn't there yet
-life_expectancy_file <- here("data-raw", "demo_mlexpec.csv")  # where the raw file goes
+# 2.1.2 Save the raw file to data/raw/, only if it isn't there yet
+life_expectancy_file <- here("data", "raw", "demo_mlexpec.csv")  # where the raw file goes
 
 if (!file.exists(life_expectancy_file)) {   # TRUE only on the first run
   download.file(life_expectancy_url,        # from this link
@@ -317,12 +335,12 @@ healthy_life_years_url  # print the link, so it can also be opened in a browser
 
 ### 2.2.2 Download once
 
-Same as in 2.1.2: the file is saved to `data-raw/`, and only if it is not there yet.
+Same as in 2.1.2: the file is saved to `data/raw/`, and only if it is not there yet.
 
 ```{r}
 #| label: show-healthy-life-years-download
-# 2.2.2 Save the raw file to data-raw/, only if it isn't there yet
-healthy_life_years_file <- here("data-raw", "hlth_hlye.csv")  # where the raw file goes
+# 2.2.2 Save the raw file to data/raw/, only if it isn't there yet
+healthy_life_years_file <- here("data", "raw", "hlth_hlye.csv")  # where the raw file goes
 
 if (!file.exists(healthy_life_years_file)) {   # TRUE only on the first run
   download.file(healthy_life_years_url,        # from this link
@@ -888,7 +906,7 @@ This section turns five separate tables into one panel, `gap_panel`, with one ro
 | 4.1 | Put women and men side by side with `pivot_wider()` and compute the gap |
 | 4.2 | Join the five tables on country code and year |
 | 4.3 | Check every join: row counts and `anti_join()` |
-| 4.4 | Save the panel to `data/gap_panel.csv` |
+| 4.4 | Save the panel to `data/clean/gap_panel.csv` |
 
 The tables arrive here already limited to the 27 EU member states (Section 3) and to the years 2015 to 2024 (the download links in Section 2).
 

@@ -8,6 +8,8 @@ Every choice and why, in my words.
 
 ## Setup
 
+- **Sergio's folder structure (1 Nov).** When the final project template came out, I renamed my files to match it: `final_project.qmd`, `data/raw/` for the downloads and `data/clean/` for my clean tables, plus `final_project.Rproj`. Sergio opens the zip expecting his structure, so everything is where he looks for it. The raw files were only moved, their content is identical.
+- **My own section order, with a map to the template (1 Nov).** I keep my sections, because they follow the order I actually did the work in, and that's how I'll explain it. Everything Sergio's template asks for is in there: his "Exploration" is my five checks, his "Wrangling" is my cleaning and combining. A table at the top of the file shows where each of his sections is, so he finds everything quickly.
 - **All packages at the start (31 Oct).** Every package the project will need is loaded in the setup chunk, so I never have to come back and add one in the middle. I added `patchwork` now, before I need it, to put charts side by side, for example a weak and an improved version of the same chart in the talk.
 
 ## Step 2. Gathering data

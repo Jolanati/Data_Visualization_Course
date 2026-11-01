@@ -4,7 +4,7 @@ Each new function: one-line meaning and a tiny example.
 
 - `paste0()`: glues pieces of text together with no space between them. `paste0("demo_", "mlexpec")` gives `"demo_mlexpec"`.
 - `download.file(url, destfile, mode = "wb")`: saves a file from the internet to my computer. `"wb"` means copy it byte for byte.
-- `file.exists(path)`: `TRUE` if the file is already there, `FALSE` if not. `file.exists(here("data-raw", "demo_mlexpec.csv"))`.
+- `file.exists(path)`: `TRUE` if the file is already there, `FALSE` if not. `file.exists(here("data", "raw", "demo_mlexpec.csv"))`.
 - `x %in% list`: `TRUE` for each value of `x` that is in the list, `FALSE` otherwise. `"LV" %in% eu_codes` gives `TRUE`, `"NO" %in% eu_codes` gives `FALSE`. Inside `filter()` it keeps the rows that match.
 - `knitr::kable()`: shows a small table as a neat table in the rendered report. Display only, the data stays the same. `count(df, flag) |> kable(col.names = c("Flag", "Number of values"))`.
 - `tbl_summary(missing = "always")`: adds a "Missing" row to every variable, even when the count is 0. `type = x ~ "continuous2"` lets a number show several statistics on separate lines.
