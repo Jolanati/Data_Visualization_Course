@@ -36,18 +36,19 @@ Sergio's final project template (published 31 Oct): https://github.com/sergiouri
 ## Progress (Claude Code updates this at the end of every session)
 
 - [x] Step 1. Ask: question locked, expected message written, factor guess written
-- [ ] Step 2. Get the data: five files in `data/raw/`, filters recorded, `SOURCE.md` updated, each one imports
-- [ ] Step 3. Clean: five checks done for each table, "found, decided" summary written
+- [x] Step 2. Get the data: five files in `data/raw/`, filters recorded, `SOURCE.md` updated, each one imports (1 Nov)
+- [x] Step 3. Clean: five checks done for each table, "found, decided" summary written (1 Nov)
 
   Steps 2 and 3 are done table by table (load, then clean, then the next table):
 
   - [x] Life expectancy (`demo_mlexpec`): 2.1 loaded, 3.1 cleaned. `life_expectancy_clean` has 540 rows and 5 columns (30 Oct)
   - [x] Healthy life years (`hlth_hlye`): 2.2 loaded, 3.2 cleaned. `healthy_life_years_clean` has 536 rows and 5 columns, Luxembourg kept with 2023 and 2024 missing (31 Oct)
   - [x] Deaths by cause (`hlth_cd_asdr2`): 2.3 loaded, 3.3 cleaned (1 Nov). `deaths_clean` has 43 902 rows and 7 columns, 27 EU countries, 92 causes (all causes merged into `TOTAL`), `cause_level` marks all causes, 20 chapter-level groups and 71 detailed causes, 2015 to 2023
-  - Open for Step 4: the deaths table is long (one row per cause). Decide which causes go into `gap_panel` and how (`pivot_wider()` by cause and sex)
-  - [ ] GDP per capita (`tec00114`)
-  - [ ] Education by sex (`sdg_04_20`)
+  - [x] GDP per capita (`tec00114`): 2.4 loaded, 3.4 cleaned (1 Nov). `gdp_clean` has 270 rows and 4 columns (no sex), 2015 to 2024. Luxembourg and Ireland kept, check with and without them in Step 5
+  - [x] Education by sex (`sdg_04_20`): 2.5 loaded, 3.5 cleaned (1 Nov). `education_clean` has 540 rows and 5 columns. 2021 break in series (new survey method) noted for Step 5
 - [ ] Step 4. Combine: `data/clean/gap_panel.csv` saved, row counts explained
+
+  Open for Step 4: (1) does `flag` go into `gap_panel`, or is it dropped with `select(-flag)` before `pivot_wider()`? (2) The deaths table has one row per cause: which causes go into the panel and in what shape (the chapters first, `pivot_wider()` by cause and sex)? (3) GDP has no sex, so it joins on country and year only. (4) Deaths end in 2023, healthy life years for Luxembourg end in 2022: these become `NA` in the panel, never 0
 - [ ] Step 5. Explore: at least 4 graphs in the template format, correlations, dead ends noted
 - [ ] Step 6. Final graph: refined, saved as `figures/final_graph.png`, story frames exported, report title changed to the finding
 - [ ] Step 7. Hand-in: renders from a clean session, `story.md` written, `prompt_log.md` complete, zip uploaded. App live
@@ -59,7 +60,7 @@ Template files:
 - [x] Folder names: `final_project.qmd`, `data/raw/`, `data/clean/`, `figures/` (1 Nov)
 - [x] YAML header with `execute:` `echo: true`, `warning: false`, `message: false` (1 Nov)
 - [x] Overview table that maps the template sections to mine (1 Nov)
-- [ ] `data/raw/SOURCE.md`: 3 of 5 tables. Add each new table when it is downloaded
+- [x] `data/raw/SOURCE.md`: all 5 tables (1 Nov)
 - [ ] `prompt_log.md`: draft written (1 Nov). Fill in the 29 Oct row. Add prompts, decisions and caught mistakes at the end of each session. **Before hand-in:** decide the wording of step 2 so it matches how we really work (Claude proposes the next step from the plan, I say its purpose in my own words, Claude writes it)
 - [ ] `story.md`: skeleton with the question (1 Nov). The rest after Step 6
 - [x] Render test from a clean session after the renaming (1 Nov)
@@ -76,6 +77,8 @@ Decisions so far (full reasons in `notes/decisions.md`):
 - **Causes of death (1 Nov):** all 93 causes are downloaded (women and men, under 65), to avoid choosing data that fits my hypotheses. Analysis looks first at the non-overlapping chapters of causes, then deeper at the causes my hypotheses name. I raised the bias question myself (see `prompt_log.md`). In cleaning (1 Nov): the two codes for all causes (`TOTAL`, `A-R_V-Y`) are merged into `TOTAL`, and a column `cause_level` marks "all causes", "chapter" (17 chapters + 3 COVID-19 codes, which add up to all causes) or "detail". Zeros are kept as real counts.
 - **Columns (30 Oct):** each clean table drops Eurostat's technical columns and keeps `flag`. Open for Step 4: does `flag` go into `gap_panel`, or is it dropped with `select(-flag)` before `pivot_wider()`?
 - **Luxembourg (31 Oct):** kept in healthy life years with 2023 and 2024 missing, not filled in. Name it in Limits.
+- **Luxembourg and Ireland in GDP (1 Nov):** kept as real values, far above the rest (cross-border workers, company profits). Every chart against GDP in Step 5 is checked with and without them.
+- **Education (1 Nov):** no new decision needed. 72 of the 104 `b` flags are in 2021, when the EU changed its labour force survey method, so a jump between 2020 and 2021 may be the method, not a real change.
 - **Germany 2022 (31 Oct):** healthy life years flagged `bu` (low reliability). Kept, check it first if Germany jumps in 2022.
 - **Charts in the checks (30 Oct):** viridis colours, a different pair per chart. Red (firebrick) is kept for the Baltic states only. Small tables with `knitr::kable()`.
 - **Packages (31 Oct):** all packages load in the setup chunk, `patchwork` added in advance.
@@ -179,9 +182,9 @@ Five Eurostat tables, joined on country code and year. Each one is downloaded fr
 |---|---|---|---|
 | Life expectancy | `demo_mlexpec` | Life expectancy at birth (`Y_LT1`), women and men, in years | Done. 2015 to 2024, all 27 EU countries complete |
 | Healthy life years | `hlth_hlye` | Healthy life years at birth (`HLY_Y0`), women and men | Done. 2015 to 2024, Luxembourg missing 2023 and 2024 |
-| Deaths by cause | `hlth_cd_asdr2` | Standardised death rate per 100 000 (`RT`), all 93 causes, women and men, under 65 (`Y_LT65`), the 27 EU countries | In progress (2.3). 2015 to 2023, no 2024 yet. Large requests are queued by Eurostat, so the download must check that it got a CSV |
-| GDP per capita | `tec00114` | GDP per capita in PPS, index EU27 = 100 | To do |
-| Education by sex | `sdg_04_20` | % of people aged 25 to 34 with tertiary education, women and men | To do |
+| Deaths by cause | `hlth_cd_asdr2` | Standardised death rate per 100 000 (`RT`), all 93 causes, women and men, under 65 (`Y_LT65`), the 27 EU countries selected in the link | Done. 2015 to 2023 (no 2024 yet). All causes merged into `TOTAL`, `cause_level` marks all causes, 20 chapter-level groups and 71 detailed causes |
+| GDP per capita | `tec00114` | GDP per capita in PPS, index EU27 = 100, no sex dimension | Done. 2015 to 2024, complete. Luxembourg and Ireland far above the rest, kept |
+| Education by sex | `sdg_04_20` | % of people aged 25 to 34 with tertiary education (`ED5-8`), women and men | Done. 2015 to 2024, complete. Break in series in 2021 (new survey method) |
 
 Fallback for GDP if `tec00114` gives trouble: `nama_10_pc`, unit `CP_PPS_EU27_2020_HAB`, indicator `B1GQ`.
 
@@ -549,8 +552,8 @@ Course dates come from the course README and may change. My own deadline: 16 Nov
 
 | Date | Do | Course event |
 |---|---|---|
-| 29 Oct to 1 Nov | Step 1 done. Two tables loaded and cleaned. Template structure adopted | |
-| 2 to 6 Nov | Steps 2 and 3 for the other three tables. Step 4: join | |
+| 29 Oct to 1 Nov | Steps 1, 2 and 3 done: all five tables loaded and cleaned. Template structure adopted | |
+| 2 to 6 Nov | Step 4: reshape and join into `gap_panel`. Start Step 5 | |
 | Sat 7 Nov | Clean table from a script | Class 16 |
 | 8 to 12 Nov | Step 5: explore. First draft of Step 6. Dummy app deployed by Mon 9 Nov. **Thu 12 Nov: go or no-go on the app** | |
 | Fri 13 Nov, 23:59 | Moodle checkpoint script | Moodle deadline |
@@ -566,7 +569,7 @@ If time gets short: get an ugly working version of the whole pipeline first (Ste
 
 - Data years differ by table. Death rates are often a year or two behind. Say so in the source line.
 - Join problems (country codes, aggregate rows, missing years like Luxembourg's) are likely. Budget time for them.
-- With 27 countries, one outlier can move the trend line. Show the line with and without it if it matters.
+- With 27 countries, one outlier can move the trend line. Show the line with and without it if it matters. Known from the checks: Luxembourg (GDP index 244 to 279, cross-border workers) and Ireland (178 to 237, profits of international companies) sit far to the right in any chart against GDP.
 - Cause-of-death data is coded and reported differently across countries. Mention it as a caveat.
 - The GDP index shows position relative to the EU average, not real growth. Say so.
 - App scope: JavaScript is not part of the course. Keep the app to the interactions in section 6. Every extra is a risk to the deadline.

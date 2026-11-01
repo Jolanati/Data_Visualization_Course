@@ -8,7 +8,7 @@ Why do men in the Baltic states (Estonia, Latvia, Lithuania) die so much earlier
 
 ## Data
 
-[Source, number of rows, period covered. Two sentences. Five Eurostat tables, see `data/raw/SOURCE.md`, joined into one row per country and year.]
+Five Eurostat tables for the 27 EU member states, 2015 to 2024: life expectancy, healthy life years, deaths by cause under 65 (to 2023), GDP per capita and tertiary education, all by sex except GDP (see `data/raw/SOURCE.md`). [After Step 4: joined into one table with one row per country and year, N rows.]
 
 ## Answer
 
@@ -22,4 +22,4 @@ Why do men in the Baltic states (Estonia, Latvia, Lithuania) die so much earlier
 
 ## Limits
 
-[Two or three things the data cannot tell. Candidates so far: country averages, not individuals, so the data shows association, not cause. Luxembourg has no healthy life years for 2023 and 2024. Life expectancy is a snapshot of one year's death rates, not a forecast.]
+[Two or three things the data cannot tell. Candidates so far: country averages, not individuals, so the data shows association, not cause. Luxembourg has no healthy life years for 2023 and 2024. Life expectancy is a snapshot of one year's death rates, not a forecast. Deaths by cause end in 2023. GDP overstates how well off Luxembourg and Ireland are. The education data has a break in 2021 (new survey method).]

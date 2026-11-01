@@ -66,7 +66,7 @@ With about 27 countries, the data can show which factors go together, not what c
 
 This part is written last, after Section 6, so that a reader sees the answer before the method. The expected message above stays unchanged, and the found message is placed next to it.
 
-| | Message |
+|   | Message |
 |------------------------------------|------------------------------------|
 | **Expected** (written before the data) | Baltic men die earlier, and this goes mainly with heart disease deaths before 65. |
 | **Found** (written after Section 6) | *To be written.* |
@@ -75,7 +75,7 @@ This part is written last, after Section 6, so that a reader sees the answer bef
 
 The analysis runs as one chain. Each step uses only the output of the step before it.
 
-```
+```         
 Five Eurostat tables                                    (Section 2)
   life expectancy, healthy life years, deaths by cause, GDP, education
   saved untouched to data/raw/
@@ -101,14 +101,14 @@ The story                                               (Section 6)
 ## How this document is organised
 
 | Section | Question it answers | Output |
-|------------------------------------|------------------------------------|------------------------------------|
-| 1. Environment setup | Is R ready to run the analysis? | Packages loaded, project folder found |
-| 2. Gathering data | What did Eurostat deliver? | Five raw CSV files in `data/raw/` |
-| 3. Cleaning | Can the data be trusted, and what has to change? | One clean table per dataset |
-| 4. Combining the tables | Do the five tables fit together? | `data/clean/gap_panel.csv` |
-| 5. Exploration | Which factors go with the gap? | Charts, correlations, dead ends |
-| 6. The story | What is the one message? | The final chart in five frames |
-| 7. Limits | What can the data not show? | A list of caveats |
+|------------------------|------------------------|------------------------|
+| 1\. Environment setup | Is R ready to run the analysis? | Packages loaded, project folder found |
+| 2\. Gathering data | What did Eurostat deliver? | Five raw CSV files in `data/raw/` |
+| 3\. Cleaning | Can the data be trusted, and what has to change? | One clean table per dataset |
+| 4\. Combining the tables | Do the five tables fit together? | `data/clean/gap_panel.csv` |
+| 5\. Exploration | Which factors go with the gap? | Charts, correlations, dead ends |
+| 6\. The story | What is the one message? | The final chart in five frames |
+| 7\. Limits | What can the data not show? | A list of caveats |
 | Appendix | Which expected relationships did not hold? | Dead ends and what was done about them |
 
 ## Where to find the parts of the course template
@@ -117,13 +117,13 @@ The document follows the order in which the work was done, so its sections are n
 
 | Template section | Where it is in this document |
 |------------------------------------|------------------------------------|
-| 1. Packages | 1.1 Packages |
-| 2. Question and data | Project overview (question, scope, expected message) and Section 2 (the five Eurostat tables). Sources, dates and licence: `data/raw/SOURCE.md` |
-| 3. Exploration | The five quality checks in Section 3 (3.1.2, 3.2.2 and so on): types, missing values, ranges with histograms, duplicates, row counts |
-| 4. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
-| 5. Graphs | Section 5, Exploration: each graph has its question above it and its finding below it |
-| 6. Final graph | Section 6, The story. Saved as `figures/final_graph.png` |
-| 7. Limits | Section 7, Limits |
+| 1\. Packages | 1.1 Packages |
+| 2\. Question and data | Project overview (question, scope, expected message) and Section 2 (the five Eurostat tables). Sources, dates and licence: `data/raw/SOURCE.md` |
+| 3\. Exploration | The five quality checks in Section 3 (3.1.2, 3.2.2 and so on): types, missing values, ranges with histograms, duplicates, row counts |
+| 4\. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
+| 5\. Graphs | Section 5, Exploration: each graph has its question above it and its finding below it |
+| 6\. Final graph | Section 6, The story. Saved as `figures/final_graph.png` |
+| 7\. Limits | Section 7, Limits |
 
 # 1. Environment setup
 
@@ -497,6 +497,192 @@ head(deaths_raw)   # how the file is laid out: one row per country, sex, cause a
 
 ------------------------------------------------------------------------
 
+## 2.4 GDP per capita
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `tec00114`, "GDP per capita in PPS" |
+| **What it measures** | How rich a country is per person, compared with the EU average |
+| **Unit** | Index, EU27 = 100. A value of 120 means 20% above the EU average, 70 means 30% below |
+| **Selected dimensions** | Indicator: `VI_PPS_EU27_2020_HAB` (volume index per person, in purchasing power standards). Category: `GDP`. All countries, years 2015 to 2024 |
+
+**Role in the analysis:** wealth is the factor that could explain everything else. Poorer countries may have lower life expectancy for both sexes, and the analysis checks whether the Baltic gap is larger than their income alone would suggest (hypothesis 4).
+
+**Points to note:**
+
+- **PPS (purchasing power standards)** removes the differences in price levels between countries. A euro buys more in Bulgaria than in Luxembourg, and PPS corrects for that, so the countries can be compared fairly.
+- **No sex dimension.** GDP is a figure for the whole country, so there is one value per country and year, not one for women and one for men.
+- **An index compares countries, not years.** Over time it shows whether a country catches up with the EU average or falls behind, not whether it grows in real terms.
+- **The file also contains non-EU countries** such as Norway, the United States and Japan, and aggregates such as the euro area. As in 2.1 and 2.2, they are kept for now and removed in Section 3. The file is small, so the 30 October rule (EU filter in cleaning) applies again.
+
+### 2.4.1 Build the link
+
+The same four parts as before. This table has four dimensions: frequency, indicator, category and country. The country position is left empty, which means all countries.
+
+```{r}
+#| label: show-gdp-url
+# 2.4.1 The Eurostat API link for GDP per capita
+gdp_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "tec00114/",                          # the table code
+  "A.VI_PPS_EU27_2020_HAB.GDP.",        # annual, volume index per person (EU27 = 100), GDP, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+gdp_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.4.2 Download once
+
+Same as in 2.3.2, including the check of the first line. The file is small, so Eurostat is not expected to queue it, but the check costs nothing and protects `data/raw/` in case it does.
+
+```{r}
+#| label: show-gdp-download
+# 2.4.2 Save the raw file to data/raw/, only if it isn't there yet
+gdp_file <- here("data", "raw", "tec00114.csv")   # where the raw file goes
+
+if (!file.exists(gdp_file)) {                    # TRUE only on the first run
+  download.file(gdp_url,                         # from this link
+                gdp_file,                        # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(gdp_file, n = 1)                # read only the first line of the file
+  if (!startsWith(first_line, "DATAFLOW")) {              # a real Eurostat CSV starts with DATAFLOW
+    file.remove(gdp_file)                                 # delete the waiting message, keep data/raw/ clean
+    stop("Eurostat queued the request. Wait a minute and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.4.3 Load and look
+
+Same as in 2.1.3 to 2.3.3. This table has no `sex` column, and two columns that describe the indicator: `indic_ppp` and `ppp_cat18`.
+
+```{r}
+#| label: show-gdp-load
+# 2.4.3 Read the raw file and check what arrived
+gdp_raw <- read_csv(gdp_file,
+                    na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                    show_col_types = FALSE)  # keep the output short
+
+glimpse(gdp_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-gdp-head
+# 2.4.3 The first six rows of the raw table
+head(gdp_raw)   # how the file is laid out: one row per country and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.4.
+
+- **Size:** 430 rows and 10 columns, one fewer than the first two tables, because there is no `sex` column.
+- **One row** is one geographic unit and one year, with its GDP index in `OBS_VALUE`. There is no `sex` column.
+- **Geographic units:** 43 codes: the 27 EU member states, the aggregates `EU27_2020`, `EA19`, `EA20` and `EA21` (the euro area in different years), and 12 other countries such as `NO`, `UK`, `US` and `JP`.
+- **Completeness:** every unit has all 10 years, so the EU part has 270 rows (27 × 10).
+- **Missing values and flags:** no value is missing. 9 values are marked `p` (provisional), all from 2023 or 2024. In the EU these are Germany, Greece and Spain in 2023 and 2024, and France in 2024. The Baltic states have no flags.
+- **Range in the EU:** from 49 (Bulgaria, 2015) to 279 (Luxembourg, 2015). Luxembourg is far above every other country, partly because many people work there but live in neighbouring countries, so its GDP is shared by fewer residents.
+
+------------------------------------------------------------------------
+
+## 2.5 Education by sex
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `sdg_04_20`, "Tertiary educational attainment" |
+| **What it measures** | The share of people aged 25 to 34 who have finished tertiary education (a university degree or a similar higher education) |
+| **Unit** | Percent of the age group |
+| **Selected dimensions** | Sex: `F` and `M`. Age: `Y25-34`. Unit: `PC` (percentage). Education level: `ED5-8` (tertiary, levels 5 to 8). All countries, years 2015 to 2024 |
+
+**Role in the analysis:** this table tests hypothesis 5: where women are much more educated than men, the gap in life expectancy is bigger. Education goes with income, health habits and the kind of work people do, so a large difference in education between women and men may go with a large difference in how long they live.
+
+**Points to note:**
+
+- **Ages 25 to 34 only.** This is the age when most people have finished their studies. It describes the young generation, not the people who die before 65 today, so it is a sign of how the country is changing rather than a cause of today's deaths.
+- **ED5-8** covers all tertiary levels: short tertiary courses, bachelor, master and doctorate.
+- **The file also contains non-EU countries and aggregates.** As in 2.1, 2.2 and 2.4, they are kept for now and removed in Section 3. The file is small, so the 30 October rule (EU filter in cleaning) applies.
+
+### 2.5.1 Build the link
+
+This table has six dimensions: frequency, sex, age, unit, education level and country. The country position is left empty, which means all countries.
+
+```{r}
+#| label: show-education-url
+# 2.5.1 The Eurostat API link for tertiary education by sex
+education_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "sdg_04_20/",                         # the table code
+  "A.F+M.Y25-34.PC.ED5-8.",             # annual, women and men, age 25 to 34, percent, tertiary, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+education_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.5.2 Download once
+
+Same as in 2.3.2 and 2.4.2, including the check of the first line.
+
+```{r}
+#| label: show-education-download
+# 2.5.2 Save the raw file to data/raw/, only if it isn't there yet
+education_file <- here("data", "raw", "sdg_04_20.csv")   # where the raw file goes
+
+if (!file.exists(education_file)) {              # TRUE only on the first run
+  download.file(education_url,                   # from this link
+                education_file,                  # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(education_file, n = 1)          # read only the first line of the file
+  if (!startsWith(first_line, "DATAFLOW")) {              # a real Eurostat CSV starts with DATAFLOW
+    file.remove(education_file)                           # delete the waiting message, keep data/raw/ clean
+    stop("Eurostat queued the request. Wait a minute and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.5.3 Load and look
+
+Same as in the other four tables.
+
+```{r}
+#| label: show-education-load
+# 2.5.3 Read the raw file and check what arrived
+education_raw <- read_csv(education_file,
+                          na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                          show_col_types = FALSE)  # keep the output short
+
+glimpse(education_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-education-head
+# 2.5.3 The first six rows of the raw table
+head(education_raw)   # how the file is laid out: one row per country, sex and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.5.
+
+- **Size:** 730 rows and 12 columns.
+- **One row** is one geographic unit, one sex and one year, with the share of 25 to 34 year olds with tertiary education in `OBS_VALUE`.
+- **Geographic units:** 38 codes: the 27 EU member states, the aggregates `EU27_2020` and `EA21`, and 9 other countries such as `NO`, `UK` and `RS`.
+- **Completeness:** all 27 EU member states have all 10 years for both sexes (540 rows). Three non-EU units have fewer: `UK` (10 rows), `ME` (12) and `BA` (8).
+- **Missing values:** none.
+- **Flags:** 104 values are marked `b` (break in the series), 72 of them in 2021, when the EU changed the method of its labour force survey, the source of this table. 3 values for Luxembourg (2016 and 2017) are marked `u` (low reliability), which in a survey usually means the sample was small.
+- **Range in the EU:** from 19.4% (Italian men, 2015) to 70.8% (Cypriot women, 2023).
+
+------------------------------------------------------------------------
+
 # 3. Cleaning
 
 This section checks the quality of every raw table before anything is removed or changed. Only after the checks are the cleaning decisions made, so each decision is based on what the data actually contains.
@@ -517,13 +703,13 @@ Short result tables are shown with `kable()` from `knitr`, which turns a table i
 
 Each sub-section ends with a short summary table: what each check found, and what was decided because of it.
 
-| Sub-section | Dataset | Clean object |
-|------------------|------------------|------------------|
-| 3.1 | Life expectancy at birth | `life_expectancy_clean` |
-| 3.2 | Healthy life years | `healthy_life_years_clean` |
-| 3.3 | Deaths by cause | `deaths_clean` |
-| 3.4 | GDP per capita | `gdp_clean` |
-| 3.5 | Education by sex | `education_clean` |
+| Sub-section | Dataset                  | Clean object               |
+|-------------|--------------------------|----------------------------|
+| 3.1         | Life expectancy at birth | `life_expectancy_clean`    |
+| 3.2         | Healthy life years       | `healthy_life_years_clean` |
+| 3.3         | Deaths by cause          | `deaths_clean`             |
+| 3.4         | GDP per capita           | `gdp_clean`                |
+| 3.5         | Education by sex         | `education_clean`          |
 
 **The EU member states.** Every table in this section is checked and filtered with the same list of 27 member state codes, `eu_codes`, defined at the start of Section 2.
 
@@ -711,7 +897,7 @@ life_expectancy_clean |>
 ### 3.1.3 Summary: what was found, what was decided
 
 | Check | What was found | Decision |
-|------------------|------------------------------------|------------------------------------|
+|-----------------|----------------------------|----------------------------|
 | 1 Types | `life_expectancy` and `year` are numbers, the flags did not turn them into text | No change needed |
 | 2 Missing values | No missing values. 146 of 906 values carry a flag, none in the Baltic states | Flagged values are kept |
 | 3 Units and ranges | 66.8 to 86.5 years, all inside the expected range | No change needed |
@@ -954,7 +1140,7 @@ healthy_life_years_clean |>
 ### 3.2.3 Summary: what was found, what was decided
 
 | Check | What was found | Decision |
-|------------------|------------------------------------|------------------------------------|
+|-----------------|----------------------------|----------------------------|
 | 1 Types | `healthy_life_years` and `year` are numbers, the flags did not turn them into text | No change needed |
 | 2 Missing values | No empty cells. 80 of 618 values carry a flag. Germany's two values for 2022 are marked low reliability (`bu`). In the Baltic states only Lithuania's 2024 values carry a flag (`p`) | Flagged values are kept, as in 3.1. The German 2022 values are kept and noted for Section 5 |
 | 3 Units and ranges | 50.6 to 74.6 years, all inside the expected range of 45 to 80 | No change needed |
@@ -1172,7 +1358,7 @@ deaths_clean |>
 ### 3.3.3 Summary: what was found, what was decided
 
 | Check | What was found | Decision |
-|------------------|------------------------------------|------------------------------------|
+|-----------------|----------------------------|----------------------------|
 | 1 Types | `death_rate` and `year` are numbers | No change needed |
 | 2 Missing values | No empty cells, no flags. 3 151 values are 0, real counts of no deaths | Zeros are kept, as real values |
 | 3 Units and ranges | All causes: 83 to 320 per 100 000 for women, 146 to 717 for men, all inside the expected range | No change needed |
@@ -1216,7 +1402,7 @@ deaths_clean |>
 The 17 chapters of the ICD-10 classification and the 3 COVID-19 codes are listed once, as `chapter_codes`. `case_when()` then labels every row: `TOTAL` is "all causes", the codes in the list are "chapter", and everything else is "detail".
 
 | Code | Chapter |
-|---|---|
+|------------------------------------|------------------------------------|
 | `A_B` | Infectious and parasitic diseases |
 | `C00-D48` | Neoplasms (cancer and other tumours) |
 | `D50-D89` | Diseases of the blood and the immune system |
@@ -1271,12 +1457,441 @@ glimpse(deaths_clean)   # expected: 43 902 rows, 7 columns
 
 **What it shows:** the clean table, with 43 902 rows and 7 columns: the same five columns as the first two tables, plus `cause_code` and `cause_level`. No row was removed in this section. This is the deaths table that goes into Section 4.
 
+------------------------------------------------------------------------
+
+## 3.4 GDP per capita
+
+The GDP table goes through the same four stages. It is the simplest of the five tables: one value per country and year, with no sex and no cause. As in 3.1 and 3.2, the non-EU countries and aggregates are removed in this section.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.4.1 | Tidy the column names | Readable names, same data |
+| 3.4.2 | Run the five quality checks | One result per check |
+| 3.4.3 | Summarise what was found and decide | A table of decisions |
+| 3.4.4 | Apply the decisions | `gdp_clean`, EU only, key columns only |
+
+### 3.4.1 Tidy the column names
+
+Same as before. The value column becomes `gdp_pps_index`: GDP per person, in purchasing power standards, as an index with the EU average at 100. The name is long, but it says what the number is, so it cannot be mistaken for GDP in euros.
+
+| Eurostat name | After `clean_names()` | After `rename()` |
+|---------------|-----------------------|------------------|
+| `geo`         | `geo`                 | `country_code`   |
+| `TIME_PERIOD` | `time_period`         | `year`           |
+| `OBS_VALUE`   | `obs_value`           | `gdp_pps_index`  |
+| `OBS_FLAG`    | `obs_flag`            | `flag`           |
+
+```{r}
+#| label: show-gdp-names
+# 3.4.1 Make the column names readable
+gdp_clean <- gdp_raw |>                        # start from the untouched raw table
+  clean_names() |>                             # for example TIME_PERIOD becomes time_period
+  rename(country_code  = geo,                  # new name = old name
+         year          = time_period,          # the year, a key for the join in Section 4
+         gdp_pps_index = obs_value,            # the value: GDP per person, EU27 = 100
+         flag          = obs_flag)             # p = provisional
+
+names(gdp_clean)   # list the new column names, expected: 10
+```
+
+**What it shows:** the same 10 columns. Four of them have new names: `country_code`, `year`, `gdp_pps_index` and `flag`.
+
+### 3.4.2 The five quality checks
+
+The checks run on all 430 rows, before anything is removed. The code follows 3.1.2, without `sex`, because GDP is one value per country and year.
+
+#### Check 1: types
+
+```{r}
+#| label: show-gdp-types
+# 3.4.2 Check 1: the type of every column
+glimpse(gdp_clean)   # gdp_pps_index and year should be <dbl>
+```
+
+**Result:** `gdp_pps_index` and `year` are numbers. `flag` is text, because 9 rows hold the letter `p`. `conf_status` is read as logical, because it is empty.
+
+#### Check 2: missing values
+
+```{r}
+#| label: show-gdp-missing
+# 3.4.2 Check 2: missing values and spread of the GDP index
+gdp_clean |>                                             # the renamed table, all 430 rows
+  tbl_summary(
+    include   = gdp_pps_index,                           # the one value column (no sex here)
+    type      = gdp_pps_index ~ "continuous2",           # show the number on several lines
+    statistic = gdp_pps_index ~ c("{median} ({p25} to {p75})",   # middle half
+                                  "{min} to {max}"),             # full range
+    label     = gdp_pps_index ~ "GDP per capita in PPS (EU27 = 100)",   # readable row name
+    missing      = "always",                             # a Missing row, even if it is 0
+    missing_text = "Missing"                             # the word shown in that row
+  )
+```
+
+```{r}
+#| label: show-gdp-flags
+# 3.4.2 Check 2: how many values carry a flag, and which one
+gdp_clean |>                                        # the renamed table, all 430 rows
+  count(flag, sort = TRUE) |>                       # most common flag first
+  kable(col.names = c("Flag", "Number of values"))  # NA here means "no flag"
+```
+
+**Result:** no value of `gdp_pps_index` is missing. The median is 96, close to the EU average of 100, and half of all values lie between 70 and 118. The full range runs from 30 (Albania, 2015) to 279 (Luxembourg, 2015). 9 values are marked `p` (provisional), all from 2023 or 2024, the most recent years, which Eurostat may still revise. As in the other tables, flagged values are kept.
+
+#### Check 3: units and ranges
+
+An index with the EU average at 100 is expected to lie roughly between 20 and 300 for European countries. A value far outside would point to a wrong indicator, for example GDP in euros instead of an index.
+
+```{r}
+#| label: show-gdp-range
+#| fig-height: 4
+# 3.4.2 Check 3: the distribution of the GDP index
+gdp_clean |>
+  ggplot(aes(x = gdp_pps_index)) +                   # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 10,
+                 fill = "#21908C",                   # one colour from the viridis palette (teal)
+                 color = "white") +                  # one bar per 10 index points, white gaps
+  geom_vline(xintercept = c(20, 300),
+             linetype = "dashed") +                  # the expected range
+  geom_vline(xintercept = 100) +                     # the EU average, as a solid line
+  labs(title = "All values lie inside the expected range of 20 to 300",   # the title states the finding
+       x = "GDP per capita in PPS (EU27 = 100)",
+       y = "Number of rows") +
+  theme_minimal() +                                  # white background, light grid
+  theme(panel.grid.minor = element_blank())          # fewer lines that carry no data
+```
+
+**Result:** all values lie inside the expected range of 20 to 300. Most units are close to the EU average, between about 50 and 140. The long tail on the right belongs to two EU countries and Norway: Luxembourg (244 to 279), Ireland (178 to 237) and Norway in 2021 to 2023 (up to 222, when energy prices were high). Luxembourg is high because many of the people who work there live in neighbouring countries, and Ireland because the profits of large international companies are booked there. Both are real values, but they make these two countries look richer than their residents are. This matters in Section 5: in a scatter plot against GDP, Luxembourg and Ireland will sit far to the right and can pull a trend line.
+
+#### Check 4: duplicates
+
+There is no sex in this table, so one row should be one country and one year.
+
+```{r}
+#| label: show-gdp-duplicates
+# 3.4.2 Check 4: compare all rows with distinct country and year combinations
+nrow(gdp_clean)                        # all rows, expected: 430
+
+gdp_clean |>
+  distinct(country_code, year) |>      # each combination once
+  nrow()                               # the same number means no duplicates
+```
+
+**Result:** both counts are 430. Every combination of country and year appears exactly once, so the table has no duplicates.
+
+#### Check 5: row counts
+
+With 10 years and no sex dimension, every geographic unit should have 10 rows. The same bar chart as in 3.1.2 and 3.2.2.
+
+```{r}
+#| label: show-gdp-rows
+#| fig-height: 6
+# 3.4.2 Check 5: number of rows per geographic unit, EU member states in orange
+gdp_clean |>
+  count(country_code) |>                                  # n = number of rows per unit
+  mutate(eu = country_code %in% eu_codes,                 # TRUE for the 27 member states
+         country_code = fct_reorder(country_code, n)) |>  # sort the bars by n
+  ggplot(aes(x = country_code, y = n, fill = eu)) +      # one bar per unit, coloured by EU or not
+  geom_col() +                                            # bar length = the number of rows
+  geom_hline(yintercept = 10, linetype = "dashed") +      # the expected 10 rows
+  coord_flip() +                                          # bars sideways, codes readable
+  scale_fill_viridis_d(option = "plasma",
+                       begin = 0.15, end = 0.75,                    # purple and orange, no red
+                       labels = c("Other unit", "EU member state"), # FALSE comes first, then TRUE
+                       name = NULL) +
+  labs(title = "Every unit has all 10 years",            # the title states the finding
+       x = NULL,                                         # the country codes need no axis title
+       y = "Number of rows (expected: 10)") +
+  theme_minimal() +                                       # white background, light grid
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())              # the bars need no horizontal grid
+```
+
+```{r}
+#| label: show-gdp-eu-rows
+# 3.4.2 Check 5: count the rows of the EU member states, without removing anything
+gdp_clean |>
+  filter(country_code %in% eu_codes) |>   # look at the member states only
+  nrow()                                  # expected: 27 x 10 = 270
+```
+
+```{r}
+#| label: show-gdp-constant
+# 3.4.2 Check 5: columns fixed in the link: each should have only one value
+gdp_clean |>
+  distinct(freq, indic_ppp, ppp_cat18) |>   # one row means each column has one value
+  kable()                                   # show the result as a neat table
+```
+
+**Result:** all 43 units have the full 10 rows, so no year is missing anywhere. The 27 EU member states have 270 rows together, as expected. `freq`, `indic_ppp` and `ppp_cat18` each hold a single value (`A`, `VI_PPS_EU27_2020_HAB`, `GDP`), the choices made in the link, so they can be removed.
+
+### 3.4.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|-----------------|----------------------------|----------------------------|
+| 1 Types | `gdp_pps_index` and `year` are numbers | No change needed |
+| 2 Missing values | No missing values. 9 values marked `p` (provisional), all from 2023 or 2024. None in the Baltic states | Flagged values are kept, as in the other tables |
+| 3 Units and ranges | 30 to 279, all inside the expected range. Luxembourg (244 to 279) and Ireland (178 to 237) far above all other EU countries | Both are kept as real values, and flagged for Section 5 |
+| 4 Duplicates | Every country and year appears once | No change needed |
+| 5 Row counts | All 43 units complete (10 rows each), 270 rows for the EU | Only the 27 EU member states are kept, using `eu_codes` |
+| 5 Columns fixed in the link | `freq`, `indic_ppp` and `ppp_cat18` hold one value each. `conf_status` is empty. `dataflow` and `last_update` describe the download | These six technical columns are removed. The `last_update` date is reported once, in the source line |
+
+After these decisions, `gdp_clean` keeps four columns: `country_code`, `year`, `gdp_pps_index` and `flag`. It has no `sex` column, because GDP is one value per country.
+
+**Why Luxembourg and Ireland are kept.** Their GDP index is far above the other EU countries for reasons that say little about how well off their residents are: in Luxembourg many workers live in neighbouring countries, and in Ireland the profits of large international companies are booked there. The values are still correct Eurostat data, so they are not changed or removed. Removing the two countries would also drop them from every other comparison, where their values are ordinary. Instead, every chart against GDP in Section 5 is checked with and without them, and if the trend line changes, both versions are shown.
+
+### 3.4.4 Apply the decisions
+
+The same two steps as in 3.1.4 and 3.2.4, with the row count checked after each one.
+
+#### Keep only the EU member states
+
+```{r}
+#| label: show-gdp-eu
+# 3.4.4 Keep only the 27 EU member states
+nrow(gdp_clean)   # before: 430 rows
+
+gdp_clean <- gdp_clean |>                   # overwrite the table with the filtered version
+  filter(country_code %in% eu_codes)        # drop non-EU countries and aggregates such as EU27_2020
+
+nrow(gdp_clean)   # after: expected 27 x 10 = 270
+```
+
+**What it shows:** 430 rows before and 270 after. The 160 removed rows are 16 units with 10 years each: the four aggregates (`EU27_2020`, `EA19`, `EA20`, `EA21`) and 12 non-EU countries.
+
+#### Remove the technical columns
+
+```{r}
+#| label: show-gdp-select
+# 3.4.4 Keep the four columns the analysis uses
+gdp_clean <- gdp_clean |>                                   # overwrite the table again
+  select(country_code, year, gdp_pps_index, flag)           # everything else is dropped
+
+glimpse(gdp_clean)   # expected: 270 rows, 4 columns
+```
+
+**What it shows:** the clean table, with 270 rows and 4 columns: `country_code`, `year`, `gdp_pps_index` and `flag`. One row per EU country and year, with no `sex` column. This is the GDP table that goes into Section 4.
+
+------------------------------------------------------------------------
+
+## 3.5 Education by sex
+
+The education table goes through the same four stages. Its structure is the same as the life expectancy table: one value per country, sex and year. As in 3.1, 3.2 and 3.4, the non-EU countries and aggregates are removed in this section.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.5.1 | Tidy the column names | Readable names, same data |
+| 3.5.2 | Run the five quality checks | One result per check |
+| 3.5.3 | Summarise what was found and decide | A table of decisions |
+| 3.5.4 | Apply the decisions | `education_clean`, EU only, key columns only |
+
+### 3.5.1 Tidy the column names
+
+Same as before. The value column becomes `tertiary_pct`: the percentage of 25 to 34 year olds with tertiary education.
+
+| Eurostat name | After `clean_names()` | After `rename()` |
+|---------------|-----------------------|------------------|
+| `geo`         | `geo`                 | `country_code`   |
+| `TIME_PERIOD` | `time_period`         | `year`           |
+| `OBS_VALUE`   | `obs_value`           | `tertiary_pct`   |
+| `OBS_FLAG`    | `obs_flag`            | `flag`           |
+
+```{r}
+#| label: show-education-names
+# 3.5.1 Make the column names readable
+education_clean <- education_raw |>            # start from the untouched raw table
+  clean_names() |>                             # for example TIME_PERIOD becomes time_period
+  rename(country_code = geo,                   # new name = old name
+         year         = time_period,           # the year, a key for the join in Section 4
+         tertiary_pct = obs_value,             # the value: % of 25 to 34 year olds with tertiary education
+         flag         = obs_flag)              # b = break in series, u = low reliability
+
+names(education_clean)   # list the new column names, expected: 12
+```
+
+**What it shows:** the same 12 columns. Four of them have new names: `country_code`, `year`, `tertiary_pct` and `flag`.
+
+### 3.5.2 The five quality checks
+
+The checks run on all 730 rows, before anything is removed. The code is the same as in 3.1.2, because the two tables have the same structure.
+
+#### Check 1: types
+
+```{r}
+#| label: show-education-types
+# 3.5.2 Check 1: the type of every column
+glimpse(education_clean)   # tertiary_pct and year should be <dbl>
+```
+
+**Result:** `tertiary_pct` and `year` are numbers. `flag` is text, because it holds the letters `b` and `u`. `conf_status` is read as logical, because it is empty.
+
+#### Check 2: missing values
+
+```{r}
+#| label: show-education-missing
+# 3.5.2 Check 2: missing values and spread of the key columns
+education_clean |>                                       # the renamed table, all 730 rows
+  tbl_summary(
+    include   = c(tertiary_pct, sex),                    # the two columns to check
+    type      = tertiary_pct ~ "continuous2",            # show the number on several lines
+    statistic = tertiary_pct ~ c("{median} ({p25} to {p75})",   # middle half
+                                 "{min} to {max}"),             # full range
+    label     = list(tertiary_pct ~ "Tertiary education, age 25 to 34 (%)",   # readable row names
+                     sex ~ "Sex"),
+    missing      = "always",                             # a Missing row, even if it is 0
+    missing_text = "Missing"                             # the word shown in that row
+  )
+```
+
+```{r}
+#| label: show-education-flags
+# 3.5.2 Check 2: how many values carry a flag, and which one
+education_clean |>                                  # the renamed table, all 730 rows
+  count(flag, sort = TRUE) |>                       # most common flag first
+  kable(col.names = c("Flag", "Number of values"))  # NA here means "no flag"
+```
+
+**Result:** no value of `tertiary_pct` is missing, and `sex` holds only `F` and `M`, with 365 rows each. The median is 41%, and half of all values lie between 34% and 51%. The full range runs from 19% (Italian men, 2015) to 71% (Cypriot women, 2023). 104 values are marked `b` (break in the series), 72 of them in 2021, when the EU changed the method of its labour force survey. 3 values for Luxembourg in 2016 and 2017 are marked `u` (low reliability). As in the other tables, flagged values are kept. The 2021 break means that a jump between 2020 and 2021 can come from the new method, not from real change, which matters when the education gap is looked at over time in Section 5.
+
+#### Check 3: units and ranges
+
+A percentage must lie between 0 and 100. For young adults in Europe, the share with tertiary education is expected to lie roughly between 10% and 80%.
+
+```{r}
+#| label: show-education-range
+#| fig-height: 4
+# 3.5.2 Check 3: the distribution of the tertiary education share, women and men apart
+education_clean |>
+  ggplot(aes(x = tertiary_pct, fill = sex)) +        # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 2,
+                 color = "white") +                  # one bar per 2 percentage points, white gaps
+  scale_fill_viridis_d(begin = 0.25, end = 0.75) +   # same colours as before: blue women, green men
+  geom_vline(xintercept = c(10, 80),
+             linetype = "dashed") +                  # the expected range
+  facet_wrap(~ sex,
+             labeller = as_labeller(c(F = "Women", M = "Men"))) +   # one panel per sex
+  labs(title = "All values lie inside the expected range of 10% to 80%",   # the title states the finding
+       x = "Share of 25 to 34 year olds with tertiary education (%)",
+       y = "Number of rows") +
+  theme_minimal() +                                  # white background, light grid
+  theme(legend.position = "none",                    # the panel titles already name the sexes
+        panel.grid.minor = element_blank())          # fewer lines that carry no data
+```
+
+**Result:** all values lie inside the expected range of 10% to 80%. The two panels are clearly shifted: most values for women lie between about 40% and 60%, most values for men between about 25% and 45%. In nearly every country, young women are more likely to have a tertiary degree than young men. How large that difference is, and whether it goes with the life expectancy gap, is examined in Section 5.
+
+#### Check 4: duplicates
+
+```{r}
+#| label: show-education-duplicates
+# 3.5.2 Check 4: compare all rows with distinct country, sex and year combinations
+nrow(education_clean)                        # all rows, expected: 730
+
+education_clean |>
+  distinct(country_code, sex, year) |>       # each combination once
+  nrow()                                     # the same number means no duplicates
+```
+
+**Result:** both counts are 730. Every combination of country, sex and year appears exactly once, so the table has no duplicates.
+
+#### Check 5: row counts
+
+With 10 years and 2 sexes, every unit should have 20 rows. The same bar chart as in 3.1.2.
+
+```{r}
+#| label: show-education-rows
+#| fig-height: 6
+# 3.5.2 Check 5: number of rows per geographic unit, EU member states in orange
+education_clean |>
+  count(country_code) |>                                  # n = number of rows per unit
+  mutate(eu = country_code %in% eu_codes,                 # TRUE for the 27 member states
+         country_code = fct_reorder(country_code, n)) |>  # sort the bars by n
+  ggplot(aes(x = country_code, y = n, fill = eu)) +      # one bar per unit, coloured by EU or not
+  geom_col() +                                            # bar length = the number of rows
+  geom_hline(yintercept = 20, linetype = "dashed") +      # the expected 20 rows
+  coord_flip() +                                          # bars sideways, codes readable
+  scale_fill_viridis_d(option = "plasma",
+                       begin = 0.15, end = 0.75,                    # purple and orange, no red
+                       labels = c("Other unit", "EU member state"), # FALSE comes first, then TRUE
+                       name = NULL) +
+  labs(title = "Every EU member state has all 20 rows",   # the title states the finding
+       x = NULL,                                         # the country codes need no axis title
+       y = "Number of rows (expected: 20)") +
+  theme_minimal() +                                       # white background, light grid
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())              # the bars need no horizontal grid
+```
+
+```{r}
+#| label: show-education-eu-rows
+# 3.5.2 Check 5: count the rows of the EU member states, without removing anything
+education_clean |>
+  filter(country_code %in% eu_codes) |>   # look at the member states only
+  nrow()                                  # expected: 27 x 2 x 10 = 540
+```
+
+```{r}
+#| label: show-education-constant
+# 3.5.2 Check 5: columns fixed in the link: each should have only one value
+education_clean |>
+  distinct(freq, age, unit, isced11) |>   # one row means each column has one value
+  kable()                                 # show the result as a neat table
+```
+
+**Result:** all 27 EU member states have the full 20 rows, 540 rows together, as expected. The incomplete units are all outside the EU: `ME` (12 rows), `UK` (10, no data after 2019, the year before it left the EU) and `BA` (8). `freq`, `age`, `unit` and `isced11` each hold a single value (`A`, `Y25-34`, `PC`, `ED5-8`), the choices made in the link, so they can be removed.
+
+### 3.5.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|------------------|------------------------------------|------------------------------------|
+| 1 Types | `tertiary_pct` and `year` are numbers | No change needed |
+| 2 Missing values | No missing values. 104 values marked `b`, 72 of them in 2021 (new survey method). 3 values for Luxembourg (2016, 2017) marked `u` (low reliability) | Flagged values are kept, as in all tables. The 2021 break is kept in mind when the education gap is followed over time in Section 5 |
+| 3 Units and ranges | 19% to 71%, all inside the expected range. Women clearly higher than men | No change needed |
+| 4 Duplicates | Every country, sex and year appears once | No change needed |
+| 5 Row counts | All 27 EU member states complete (540 rows). The incomplete units are all outside the EU | Only the 27 EU member states are kept, using `eu_codes` |
+| 5 Columns fixed in the link | `freq`, `age`, `unit` and `isced11` hold one value each. `conf_status` is empty. `dataflow` and `last_update` describe the download | These six technical columns are removed. The `last_update` date is reported once, in the source line |
+
+No new decision was needed for this table: every finding was already covered by a decision made for an earlier table. After these decisions, `education_clean` keeps five columns: `country_code`, `sex`, `year`, `tertiary_pct` and `flag`, the same structure as `life_expectancy_clean`.
+
+### 3.5.4 Apply the decisions
+
+The same two steps as in 3.1.4, with the row count checked after each one.
+
+#### Keep only the EU member states
+
+```{r}
+#| label: show-education-eu
+# 3.5.4 Keep only the 27 EU member states
+nrow(education_clean)   # before: 730 rows
+
+education_clean <- education_clean |>         # overwrite the table with the filtered version
+  filter(country_code %in% eu_codes)          # drop non-EU countries and aggregates such as EU27_2020
+
+nrow(education_clean)   # after: expected 27 x 2 x 10 = 540
+```
+
+**What it shows:** 730 rows before and 540 after. The 190 removed rows are the aggregates `EU27_2020` and `EA21` and nine non-EU countries.
+
+#### Remove the technical columns
+
+```{r}
+#| label: show-education-select
+# 3.5.4 Keep the five columns the analysis uses
+education_clean <- education_clean |>                          # overwrite the table again
+  select(country_code, sex, year, tertiary_pct, flag)          # everything else is dropped
+
+glimpse(education_clean)   # expected: 540 rows, 5 columns
+```
+
+**What it shows:** the clean table, with 540 rows and 5 columns: `country_code`, `sex`, `year`, `tertiary_pct` and `flag`. The same structure as `life_expectancy_clean`. This is the education table that goes into Section 4.
+
 # 4. Combining the tables
 
 This section turns five separate tables into one panel, `gap_panel`, with one row per EU country and year. *Introduction to be written in Step 4.*
 
 | Sub-section | What it does |
-|------------------|------------------------------------|
+|------------------------|-----------------------------------------------|
 | 4.1 | Put women and men side by side with `pivot_wider()` and compute the gap |
 | 4.2 | Join the five tables on country code and year |
 | 4.3 | Check every join: row counts and `anti_join()` |
@@ -1289,7 +1904,7 @@ The tables arrive here already limited to the 27 EU member states (Section 3) an
 This section looks for the factors that go with the gap. *Introduction to be written in Step 5.*
 
 | Sub-section | Question |
-|------------------|------------------------------------|
+|------------------------|-----------------------------------------------|
 | 5.1 | What does each variable look like on its own? (histograms) |
 | 5.2 | Which factors go with the gap? (scatter plots, correlations) |
 | 5.3 | Do the factors only stand in for wealth? |
@@ -1302,12 +1917,12 @@ This section looks for the factors that go with the gap. *Introduction to be wri
 
 This section builds the final chart in frames, one layer at a time. *Introduction to be written in Step 6.*
 
-| Sub-section | What it does |
-|------------------|------------------------------------|
-| 6.1 | Plan the frames: what appears and what is said |
-| 6.2 | Build the frames |
-| 6.3 | Check the final chart against Ask, Show, Cut, Focus, Tell |
-| 6.4 | Export the frames |
+| Sub-section | What it does                                              |
+|-------------|-----------------------------------------------------------|
+| 6.1         | Plan the frames: what appears and what is said            |
+| 6.2         | Build the frames                                          |
+| 6.3         | Check the final chart against Ask, Show, Cut, Focus, Tell |
+| 6.4         | Export the frames                                         |
 
 # 7. Limits
 

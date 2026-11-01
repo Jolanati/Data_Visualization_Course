@@ -88,6 +88,9 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 | 1 Nov | The web app | Optional, as it is not required | Keep it as my presentation tool |
 | 1 Nov | Which causes of death to download (the table has 93) | 6 causes named by my hypotheses, or 10 with smoking, suicide and accidents added, chosen by hypothesis, not by data | I asked whether choosing causes that fit my hypotheses makes me biased by design. Decided: download all 93, look first at the non-overlapping chapters of causes without choosing anything, then deeper at my hypothesis causes. Causes that don't matter go into the dead ends |
 | 1 Nov | Which countries in the deaths table (it also has about 460 regions, 55 MB) | Put the 27 EU countries in the link (3.5 MB), as an exception to the 30 Oct rule | Yes. I don't download data I don't need |
+| 1 Nov | Two codes for "all causes" in the deaths table (`TOTAL` and `A-R_V-Y` in different years) | Merge them into `TOTAL`, the safest of three options | Yes |
+| 1 Nov | How to mark the chapters of causes | A column `cause_level` (all causes, chapter, detail), keeping all rows | Yes, after Claude checked that the chapters add up to all causes |
+| 1 Nov | Luxembourg and Ireland far above all others in GDP | Keep both as real values, check every GDP chart with and without them | Yes |
 
 ## 4. AI mistakes I caught
 
@@ -99,4 +102,6 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 
 **4. A selection that could bias the analysis.** For the deaths table, Claude suggested downloading only 6 (or 10) of the 93 causes of death, chosen because my hypotheses name them. I asked: "But if I premptively cohoose datat that will support my hypothesis, arent I hetting biased by design?" Claude agreed that a hand-picked list has a blind spot: if the real driver were a cause I hadn't thought of, I would never see it. We changed the design: all 93 causes are downloaded, the analysis first looks at the chapters of causes without choosing anything, and only then at my hypothesis causes.
 
-**5. Too many decisions at once.** When Sergio's template arrived, Claude listed four decisions in one message and pushed for answers. I said "Don't rush" and we now go through them one at a time.
+**5. A misleading quiz question about `case_when()`.** In 3.3.4, Claude asked me what would happen if `.default = "detail"` came first in `case_when()`. The question was wrong: `.default` is always used last, for rows no rule matched, wherever it is written. What matters is the order of the rules with `~`, because the first true rule wins. This time Claude noticed the mistake itself, in the next step, and corrected it before I answered. It reminded me that the AI's questions can be wrong too, not only its answers.
+
+**6. Too many decisions at once.** When Sergio's template arrived, Claude listed four decisions in one message and pushed for answers. I said "Don't rush" and we now go through them one at a time.

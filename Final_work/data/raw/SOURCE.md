@@ -44,11 +44,26 @@ All files in this folder were downloaded from **Eurostat**, the statistical offi
 | **Last updated by Eurostat** | 8 June 2026 (column `LAST UPDATE` in the file) |
 | **Size** | 43 902 rows, 12 columns |
 
-## Still to download
+## tec00114.csv
 
-| File | Table | Content |
-|---|---|---|
-| `tec00114.csv` | `tec00114` | GDP per capita in PPS, EU27 = 100 |
-| `sdg_04_20.csv` | `sdg_04_20` | Tertiary education, age 25 to 34, by sex |
+| | |
+|---|---|
+| **Table** | `tec00114`, GDP per capita in PPS |
+| **Table page** | https://ec.europa.eu/eurostat/databrowser/view/tec00114/default/table |
+| **Download link** | https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/tec00114/A.VI_PPS_EU27_2020_HAB.GDP.?startPeriod=2015&endPeriod=2024&format=SDMX-CSV |
+| **Filters in the link** | Annual, volume index of GDP per capita in purchasing power standards (`VI_PPS_EU27_2020_HAB`, EU27 = 100), GDP, all countries, 2015 to 2024 |
+| **Downloaded** | 1 November 2026 |
+| **Last updated by Eurostat** | 9 July 2026 (column `LAST UPDATE` in the file) |
+| **Size** | 430 rows, 10 columns |
 
-Each one gets its own section above when it is downloaded.
+## sdg_04_20.csv
+
+| | |
+|---|---|
+| **Table** | `sdg_04_20`, Tertiary educational attainment by sex |
+| **Table page** | https://ec.europa.eu/eurostat/databrowser/view/sdg_04_20/default/table |
+| **Download link** | https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/sdg_04_20/A.F+M.Y25-34.PC.ED5-8.?startPeriod=2015&endPeriod=2024&format=SDMX-CSV |
+| **Filters in the link** | Annual, women and men, age 25 to 34 (`Y25-34`), percent (`PC`), tertiary education (`ED5-8`), all countries, 2015 to 2024 |
+| **Downloaded** | 1 November 2026 |
+| **Last updated by Eurostat** | 30 October 2026 (column `LAST UPDATE` in the file) |
+| **Size** | 730 rows, 12 columns |
