@@ -8,7 +8,7 @@ Why do men in the Baltic states (Estonia, Latvia, Lithuania) die so much earlier
 
 ## Data
 
-Five Eurostat tables for the 27 EU member states, 2015 to 2024: life expectancy, healthy life years, deaths by cause under 65 (to 2023), GDP per capita and tertiary education, all by sex except GDP (see `data/raw/SOURCE.md`). [After Step 4: joined into one table with one row per country and year, N rows.]
+Five Eurostat tables for the 27 EU member states, 2015 to 2024: life expectancy, healthy life years, deaths by cause under 65 (to 2023), GDP per capita and tertiary education, all by sex except GDP (see `data/raw/SOURCE.md`). They are joined into one table with one row per country and year: 270 rows (27 countries, 10 years).
 
 ## Answer
 

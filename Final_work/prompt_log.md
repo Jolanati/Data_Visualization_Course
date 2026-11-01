@@ -91,6 +91,11 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 | 1 Nov | Two codes for "all causes" in the deaths table (`TOTAL` and `A-R_V-Y` in different years) | Merge them into `TOTAL`, the safest of three options | Yes |
 | 1 Nov | How to mark the chapters of causes | A column `cause_level` (all causes, chapter, detail), keeping all rows | Yes, after Claude checked that the chapters add up to all causes |
 | 1 Nov | Luxembourg and Ireland far above all others in GDP | Keep both as real values, check every GDP chart with and without them | Yes |
+| 1 Nov | The `flag` column before reshaping | Drop it, the flags are already described in Section 3 | Yes |
+| 1 Nov | Deaths: 92 causes in one panel, or two tables | Two tables: `gap_panel` with all causes, `deaths_by_cause` for the detail | Two tables |
+| 1 Nov | The gap in deaths: difference or ratio | Difference, men minus women, because a ratio breaks when women have 0 deaths | Difference |
+| 1 Nov | Which join | `left_join()` onto life expectancy, so no country-year is lost | `left_join()` |
+| 1 Nov | Country names | Add English names, written once in a small table | Yes |
 
 ## 4. AI mistakes I caught
 
