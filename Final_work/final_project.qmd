@@ -2231,17 +2231,790 @@ here("data", "clean", "gap_panel.csv") |>    # the path to the saved file
 
 # 5. Exploration
 
-This section looks for the factors that go with the gap. *Introduction to be written in Step 5.*
+This section looks at the gap from several sides, one question per graph. It starts with the gap itself (where is it largest, how has it changed), then looks at what makes it up (causes of death), and only then at the factors that may go with it (wealth, education). Each graph has its question above it and one finding with a number below it, as the course template asks. Each chart type is chosen for the type of question (class 10).
 
-| Sub-section | Question |
-|------------------------|-----------------------------------------------|
-| 5.1 | What does each variable look like on its own? (histograms) |
-| 5.2 | Which factors go with the gap? (scatter plots, correlations) |
-| 5.3 | Do the factors only stand in for wealth? |
-| 5.4 | How has the gap changed between 2015 and 2024? |
-| 5.5 | How do the Baltic states compare with the rest of the EU? |
-| 5.6 | Do Baltic men fall below the EU pattern while Baltic women do not? (the Rosling chart) |
-| 5.7 | Summary: strongest factor, weakest factor, one surprise |
+| Sub-section | Question | Graph | Chart type |
+|------------------|------------------------------------|------------------|------------------|
+| 5.0 | Starting from the saved files | | |
+| 5.1 | Where is the gap largest? | Graph 1 | Ranked bar chart (a number for each category) |
+| 5.2 | How has the gap changed between 2015 and 2024? | Graph 2 | Lines over time |
+| 5.3 | Which causes of death make up the extra deaths of men? | Graphs 3 and 4 | Grouped bar charts: chapters, then specific causes |
+| 5.4 | Which factors go with the gap? | Graphs 5 to 9, one per factor | Scatter plots with a trend line, correlations |
+| 5.5 | Do Baltic men fall below the EU pattern while Baltic women do not? | Graph 10 | Comparison with countries of similar income, women and men |
+| 5.6 | Is the gap about the men? | Graph 11 | Two dots per country, women and men |
+| 5.7 | Which causes changed in Lithuania and Latvia? | Graph 12 | Lines over time, one panel per cause |
+| 5.8 | Do Baltic men also lose healthy years? | Graph 13 | Stacked bars: healthy years and years with limitations |
+| 5.9 | Summary: strongest factor, weakest factor, one surprise | | Text |
+
+The question whether the factors only stand in for wealth, first planned as a separate step, is answered within 5.4 by Graph 8: the Baltic gaps are about two years larger than their income would predict.
+
+Each sub-section ends with a short **What this means**: the answer to its question in one or two sentences, and why it leads to the next one.
+
+The order may change as the findings come in. Relationships that were expected but turn out weak are kept in the appendix, not deleted.
+
+## 5.0 Starting from the saved files
+
+Section 5 starts from the two files saved in 4.5, not from the objects in memory. This way the exploration depends only on the clean data, and it can be rerun on its own.
+
+```{r}
+#| label: show-explore-load
+# 5.0 Load the two clean tables saved in Section 4
+gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"),              # one row per country and year
+                      show_col_types = FALSE)
+deaths_by_cause <- read_csv(here("data", "clean", "deaths_by_cause.csv"),  # one row per country, year and cause
+                            show_col_types = FALSE)
+
+dim(gap_panel)         # expected: 270 rows, 17 columns
+dim(deaths_by_cause)   # expected: 21 951 rows, 9 columns
+```
+
+## 5.1 Where is the gap largest?
+
+### 5.1.1 Graph 1: In which EU countries do women outlive men by the most years?
+
+A number for each of 27 countries is a comparison of categories, so the chart is a bar chart (class 10_2), sorted by length so the ranking can be read at once, and turned sideways so the country names are readable. The Baltic states are highlighted in red, all other countries are gray (gray plus one colour, class 11). A dashed line marks the EU average of the 27 gaps. The latest year, 2024, is shown.
+
+```{r}
+#| label: show-graph-1
+#| fig-height: 6
+# 5.1.1 Graph 1: the life expectancy gap in 2024, country by country
+gap_2024 <- gap_panel |>
+  filter(year == 2024)                                       # the latest year only, one row per country
+
+gap_2024 |>
+  mutate(country = fct_reorder(country, le_gap)) |>          # sort the countries by their gap
+  ggplot(aes(x = country, y = le_gap, fill = baltic)) +      # one bar per country, coloured by Baltic or not
+  geom_col() +                                               # bar length = the gap in years
+  geom_hline(yintercept = mean(gap_2024$le_gap),
+             linetype = "dashed") +                          # the EU average of the 27 gaps
+  coord_flip() +                                             # bars sideways, names readable
+  scale_fill_manual(values = c("TRUE" = "firebrick",         # Baltic states in red
+                               "FALSE" = "gray70")) +        # all other countries in gray
+  labs(title = "Women outlive men by the most years in the three Baltic states",   # the title states the finding
+       x = NULL,                                             # the country names need no axis title
+       y = "Life expectancy gap in 2024, women minus men (years)",
+       caption = "Dashed line: EU average of the 27 countries. Source: Eurostat, demo_mlexpec") +
+  theme_minimal() +                                          # white background, light grid
+  theme(legend.position = "none",                            # red and gray are explained in the title
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())                # the bars need no horizontal grid
+```
+
+**Finding:** in 2024 women outlive men by 5.5 years on average across the 27 EU countries, but by 9.8 years in Latvia, 8.6 in Lithuania and 8.3 in Estonia, the three largest gaps in the EU. Latvia's gap is almost twice the EU average and three and a half times the smallest gap, in the Netherlands (2.8 years). The 12 countries above the average are all in central and eastern Europe, plus France and Portugal: the gap is not only a Baltic pattern, but the Baltic states are its most extreme case.
+
+**What this means:** the Baltic states have the largest gaps in the EU in 2024, nearly twice the average. One year could be an exception, so the next question is whether this has been the case over the whole period.
+
+## 5.2 How has the gap changed?
+
+### 5.2.1 Graph 2: Did the gap narrow between 2015 and 2024, and did the Baltic states move differently from the rest of the EU?
+
+Change over time is shown as lines (class 3: time means a line chart), one line per country. The 24 other countries are thin gray lines, the three Baltic states thicker red lines with their names at the end. The y axis does not start at zero, because the question is about change, and lines may leave zero when the range is stated (course rule). The COVID-19 years 2020 and 2021 are part of the data and are not removed.
+
+```{r}
+#| label: show-graph-2
+#| fig-height: 5
+# 5.2.1 Graph 2: the life expectancy gap over time, one line per country
+gap_panel |>
+  ggplot(aes(x = year, y = le_gap, group = country,         # one line per country
+             colour = baltic)) +                            # red for the Baltic states, gray for the rest
+  geom_line(aes(linewidth = baltic)) +                      # thicker lines for the Baltic states
+  geom_text_repel(data = gap_panel |>
+                    filter(baltic, year == 2024),           # labels only for the Baltic states, at the last year
+                  aes(label = country),
+                  nudge_x = 0.6, direction = "y",           # labels to the right of the lines, spread up and down
+                  hjust = 0, segment.colour = NA) +         # no connecting line, the label sits next to its line
+  scale_colour_manual(values = c("TRUE" = "firebrick",      # Baltic states in red
+                                 "FALSE" = "gray70")) +     # all other countries in gray
+  scale_linewidth_manual(values = c("TRUE" = 1.2,           # thick Baltic lines
+                                    "FALSE" = 0.4)) +       # thin lines for the others
+  scale_x_continuous(breaks = 2015:2024,                    # one tick per year
+                     limits = c(2015, 2025.5)) +            # room on the right for the labels
+  labs(title = "Lithuania narrowed its gap the most, while Latvia's gap did not shrink",   # the title states the finding
+       x = NULL,
+       y = "Life expectancy gap, women minus men (years)",
+       caption = "The y axis does not start at zero. Source: Eurostat, demo_mlexpec") +
+  theme_minimal() +                                         # white background, light grid
+  theme(legend.position = "none",                           # the labels name the red lines
+        panel.grid.minor = element_blank())                 # fewer lines that carry no data
+```
+
+**Finding:** the three Baltic states had the largest gaps in every year from 2015 to 2024, well above all other countries. Their paths differ: Lithuania's gap fell from 10.4 years in 2015 to 8.6 in 2024, the largest narrowing in the EU, with big steps in 2017 and 2022. Latvia's gap stayed around 9.6, dipped to 9.1 in 2019 and then rose to 10.0 in 2023, so Latvia overtook Lithuania in 2021 and has had the largest gap since. Estonia stayed between 8.3 and 8.7 throughout. Most gray lines move little and drift slightly down.
+
+### 5.2.2 The change in numbers
+
+To put a number on the change, each country's gap in 2024 is compared with its gap in 2015. `group_by(country)` and `summarise()` (class 09) do this once per country.
+
+```{r}
+#| label: show-gap-change
+# 5.2.2 The change in the gap from 2015 to 2024, country by country
+gap_change <- gap_panel |>
+  group_by(country, baltic) |>                                   # one group per country
+  summarise(gap_2015 = le_gap[year == 2015],                     # the gap in the first year
+            gap_2024 = le_gap[year == 2024],                     # the gap in the last year
+            .groups = "drop") |>                                 # remove the grouping afterwards
+  mutate(change = gap_2024 - gap_2015) |>                        # negative = the gap narrowed
+  arrange(change)                                                # the largest narrowing first
+
+gap_change |>
+  filter(baltic | row_number() <= 3 | row_number() > n() - 3) |> # Baltic states, the top 3 and the bottom 3
+  kable(digits = 1)                                              # show the result as a neat table
+```
+
+**What it shows:** in 22 of the 27 countries the gap narrowed between 2015 and 2024, and in Czechia it stayed the same. It narrowed most in Lithuania (-1.8 years), followed by Slovenia and Sweden (-0.7 each). It grew in only four countries: Cyprus and Bulgaria (+0.4 each), Romania (+0.3) and Latvia (+0.2). Estonia narrowed by 0.4 years, about as much as most countries.
+
+**What this means:** the Baltic gap is not a one-year exception: the three countries have had the largest gaps in every year since 2015, even though Lithuania has narrowed its gap the most. Life expectancy only shows that men die earlier, not of what. The next question is which causes of death make up the extra deaths of men.
+
+## 5.3 Which causes of death make up the extra deaths of men?
+
+### 5.3.1 Graph 3: Which chapters of causes account for the extra deaths of men under 65, in the Baltic states and in the rest of the EU?
+
+This is the overview without choosing any cause (see 2.3): all chapter-level groups, which together cover every death. For each chapter, the gap in deaths (men minus women, per 100 000, under 65) is averaged over the three Baltic states and over the other 24 countries, in 2023, the latest year. Comparing a number across categories and two groups is a grouped bar chart (class 10_2): red for the Baltic states, gray for the rest. The averages are simple averages of the countries, so each country counts once, whatever its population.
+
+The three COVID-19 codes are combined into one group, and the codes get short readable names with `case_when()`.
+
+```{r}
+#| label: show-graph-3
+#| fig-height: 6
+# 5.3.1 Graph 3: the extra deaths of men by chapter of causes, Baltic states and rest of the EU, 2023
+chapter_gap <- deaths_by_cause |>
+  filter(cause_level == "chapter", year == 2023) |>                    # the chapters, latest year
+  mutate(chapter = case_when(                                          # short readable names
+    cause_code == "I"       ~ "Circulatory (heart, stroke)",
+    cause_code == "V01-Y89" ~ "External (accidents, suicide)",
+    cause_code == "C00-D48" ~ "Cancer and other tumours",
+    cause_code == "K"       ~ "Digestive (incl. liver)",
+    cause_code == "J"       ~ "Respiratory",
+    cause_code == "R"       ~ "Ill-defined causes",
+    cause_code == "A_B"     ~ "Infectious",
+    cause_code == "G_H"     ~ "Nervous system",
+    cause_code == "E"       ~ "Endocrine (incl. diabetes)",
+    cause_code == "F"       ~ "Mental (incl. alcohol use)",
+    cause_code %in% c("U071", "U072", "U_COV19_OTH") ~ "COVID-19",
+    .default = "Other chapters"                                        # the small chapters together
+  )) |>
+  group_by(country, baltic, chapter) |>                                # first add up per country
+  summarise(death_gap = sum(death_gap), .groups = "drop") |>           # (COVID and the small chapters have several codes)
+  group_by(baltic, chapter) |>                                         # then average per group
+  summarise(death_gap = mean(death_gap), .groups = "drop") |>          # simple average of the countries
+  mutate(group = if_else(baltic, "Baltic states", "Rest of the EU"))   # readable group names
+
+chapter_gap |>
+  mutate(chapter = fct_reorder(chapter, death_gap, .fun = max)) |>     # sort the chapters by their larger bar
+  ggplot(aes(x = chapter, y = death_gap, fill = group)) +
+  geom_col(position = "dodge") +                                       # the two groups side by side
+  coord_flip() +                                                       # bars sideways, names readable
+  scale_fill_manual(values = c("Baltic states" = "firebrick",          # Baltic states in red
+                               "Rest of the EU" = "gray70")) +         # the rest in gray
+  labs(title = "Heart and external causes lead the extra deaths of Baltic men",   # the finding, short enough to fit
+       subtitle = "Extra deaths of men under 65 compared with women, by chapter of causes, 2023",   # what is shown
+       x = NULL,
+       y = "Extra deaths of men under 65 per 100 000 (men minus women), 2023",
+       fill = NULL,
+       caption = "Average of the countries in each group. Source: Eurostat, hlth_cd_asdr2") +
+  theme_minimal() +                                                    # white background, light grid
+  theme(legend.position = "top",                                       # two groups, so a legend is needed
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())                          # the bars need no horizontal grid
+```
+
+**Finding:** in 2023, men under 65 in the Baltic states have on average 322 more deaths per 100 000 than women, against 132 in the rest of the EU. Baltic men are worse off in every large chapter. The largest is circulatory diseases (118 extra deaths per 100 000, against 45 elsewhere, about 2.6 times as many), followed by external causes such as accidents and suicide (77 against 28), cancer (42 against 16) and digestive diseases, which include chronic liver disease (31 against 14). This supports the expected message that heart and circulatory diseases matter most, and shows that external causes come second.
+
+### 5.3.2 Graph 4: Inside the largest chapters, which specific causes carry the extra deaths of Baltic men?
+
+Graph 3 points to three chapters: circulatory diseases, external causes and digestive diseases. This graph looks inside them. To avoid choosing causes by their results, a rule decides: every specific cause inside these three chapters is shown, at one level only, so that nothing is counted twice. The causes at this level add up exactly to their chapter (for example, for Latvian men in 2023, the four circulatory causes add up to 216.08 deaths per 100 000 against 216.09 for the whole chapter, a difference from rounding). Two causes from other chapters are added because the hypotheses name them: mental and behavioural disorders due to alcohol (`F10`) and lung cancer (`C33_C34`).
+
+| Chapter | Specific causes shown |
+|---|---|
+| Circulatory (`I`) | Ischaemic heart disease (`I20-I25`), heart failure and other heart disease (`I30-I51`), stroke (`I60-I69`), blood pressure, artery and vein diseases (`I_OTH`, the rest of the chapter) |
+| External (`V01-Y89`) | Transport accidents (`V_Y85`), falls (`W00-W19`), drowning (`W65-W74`), accidental poisoning (`X40-X49`), other accidents such as fire, cold or machinery (`ACC_OTH`), suicide (`X60-X84_Y870`), assault (`X85-Y09_Y871`), injury of unclear intent (`Y10-Y34_Y872`), other external causes (`V01-Y89_OTH`) |
+| Digestive (`K`) | Ulcers (`K25-K28`), chronic liver disease (`K70_K73_K74`), other digestive diseases (`K_OTH`) |
+| From the hypotheses | Alcohol disorders (`F10`), lung cancer (`C33_C34`) |
+
+```{r}
+#| label: show-graph-4
+#| fig-height: 8
+# 5.3.2 Graph 4: the extra deaths of men by specific cause, Baltic states and rest of the EU, 2023
+detail_gap <- deaths_by_cause |>
+  filter(year == 2023) |>                                              # the latest year
+  mutate(cause = case_when(                                            # the 18 causes, with readable names
+    cause_code == "I20-I25"      ~ "Ischaemic heart disease",
+    cause_code == "I30-I51"      ~ "Heart failure and other heart disease",
+    cause_code == "I60-I69"      ~ "Stroke",
+    cause_code == "I_OTH"        ~ "Blood pressure, artery and vein diseases",
+    cause_code == "V_Y85"        ~ "Transport accidents",
+    cause_code == "W00-W19"      ~ "Falls",
+    cause_code == "W65-W74"      ~ "Drowning",
+    cause_code == "X40-X49"      ~ "Accidental poisoning",
+    cause_code == "ACC_OTH"      ~ "Other accidents (fire, cold, machinery)",
+    cause_code == "X60-X84_Y870" ~ "Suicide",
+    cause_code == "X85-Y09_Y871" ~ "Assault",
+    cause_code == "Y10-Y34_Y872" ~ "Injury of unclear intent",
+    cause_code == "V01-Y89_OTH"  ~ "Other external causes",
+    cause_code == "K25-K28"      ~ "Ulcers",
+    cause_code == "K70_K73_K74"  ~ "Chronic liver disease",
+    cause_code == "K_OTH"        ~ "Other digestive diseases",
+    cause_code == "F10"          ~ "Alcohol disorders",
+    cause_code == "C33_C34"      ~ "Lung cancer"
+    # every other code gets NA and is removed in the next step
+  )) |>
+  filter(!is.na(cause)) |>                                             # keep only the 18 causes
+  group_by(baltic, cause) |>                                           # one group per cause and country group
+  summarise(death_gap = mean(death_gap), .groups = "drop") |>          # simple average of the countries
+  mutate(group = if_else(baltic, "Baltic states", "Rest of the EU"))   # readable group names
+
+detail_gap |>
+  mutate(cause = fct_reorder(cause, death_gap, .fun = max)) |>         # sort the causes by their larger bar
+  ggplot(aes(x = cause, y = death_gap, fill = group)) +
+  geom_col(position = "dodge") +                                       # the two groups side by side
+  coord_flip() +                                                       # bars sideways, names readable
+  scale_fill_manual(values = c("Baltic states" = "firebrick",          # Baltic states in red
+                               "Rest of the EU" = "gray70")) +         # the rest in gray
+  labs(title = "Ischaemic heart disease is the largest single cause",   # the finding, short enough to fit
+       subtitle = "Extra deaths of men under 65 compared with women, by specific cause, 2023",   # what is shown
+       x = NULL,
+       y = "Extra deaths of men under 65 per 100 000 (men minus women), 2023",
+       fill = NULL,
+       caption = "Average of the countries in each group. Source: Eurostat, hlth_cd_asdr2") +
+  theme_minimal() +                                                    # white background, light grid
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())                          # the bars need no horizontal grid
+```
+
+**Finding:** ischaemic heart disease is the largest single cause of the extra deaths of Baltic men under 65: 58 more deaths per 100 000 than women, against 23 in the rest of the EU, about 2.6 times as many. Heart failure and other heart disease (26 against 10) and stroke (15 against 6) add to the circulatory excess. Among the other causes, accidental poisoning stands out most: 18 extra deaths per 100 000 against 3, six times the EU level. This group includes alcohol poisoning. Chronic liver disease (19 against 10) also points to alcohol, while deaths coded as alcohol disorders (`F10`) are barely higher (4 against 3), so alcohol seems to show up through poisoning, the liver and the heart rather than under its own name. Violent and risky deaths are also much more frequent: drowning about 4 times, assault almost 5 times and suicide almost twice the EU level. Lung cancer is about twice the EU level (17 against 8).
+
+**What this means:** the extra deaths of Baltic men under 65 come mainly from heart disease, followed by external causes such as poisoning, suicide and drowning, and liver disease. Several of these point to alcohol. But this compares only two groups, and three countries could be an exception. The next question is whether the same causes go with the gap across all 27 countries.
+
+## 5.4 Which factors go with the gap?
+
+Graphs 3 and 4 compared two groups, the Baltic states and the rest. With only three countries in one group, a difference could be a coincidence of those three. The hypotheses are about a pattern across countries: where a factor is larger, the gap is larger. This is tested with all 27 countries, one dot per country, in 2023, the latest year with deaths data.
+
+Five factors are compared, one for each hypothesis: men's extra deaths (men minus women, per 100 000, under 65) from circulatory diseases, from external causes and from alcohol-related causes, and GDP per capita and the education gap from `gap_panel`. The alcohol-related causes are chronic liver disease and accidental poisoning, the two causes in Graph 4 that point to alcohol.
+
+### 5.4.1 One table with the five factors
+
+The death factors come from `deaths_by_cause` and are put side by side with `pivot_wider()`, then joined onto `gap_panel` for 2023. `pivot_longer()` (class 05) then stacks the five factors into one column, so that the five correlations can be computed together in 5.4.7. It is the opposite of `pivot_wider()`. Each graph in 5.4.2 to 5.4.6 uses the wide table, `factors_2023`, and looks at one factor.
+
+```{r}
+#| label: show-factors-2023
+# 5.4.1 The five candidate factors and the gap, one row per country, 2023
+death_factors_2023 <- deaths_by_cause |>
+  filter(year == 2023,
+         cause_code %in% c("I", "V01-Y89", "K70_K73_K74", "X40-X49")) |>   # the causes behind three factors
+  mutate(factor = case_when(
+    cause_code == "I"       ~ "death_circulatory",                         # hypothesis 1
+    cause_code == "V01-Y89" ~ "death_external",                            # hypothesis 2
+    .default                = "death_alcohol"                              # hypothesis 3: liver + poisoning
+  )) |>
+  group_by(country_code, factor) |>
+  summarise(value = sum(death_gap), .groups = "drop") |>                  # liver and poisoning are added up
+  pivot_wider(names_from = factor, values_from = value)                    # one column per factor
+
+factors_2023 <- gap_panel |>
+  filter(year == 2023) |>                                                  # the same year as the deaths
+  select(country_code, country, baltic, le_gap,
+         gdp_pps_index, tertiary_gap) |>                                   # the gap and the two other factors
+  left_join(death_factors_2023, by = join_by(country_code))                # add the three death factors
+
+factors_long <- factors_2023 |>
+  pivot_longer(cols = c(death_circulatory, death_external, death_alcohol,
+                        gdp_pps_index, tertiary_gap),                      # the five factors
+               names_to  = "factor",                                       # their names go into one column
+               values_to = "value") |>                                     # their numbers into another
+  mutate(factor = case_when(                                               # readable panel titles
+    factor == "death_circulatory" ~ "1 Circulatory deaths, men's excess",
+    factor == "death_external"    ~ "2 External deaths, men's excess",
+    factor == "death_alcohol"     ~ "3 Alcohol-related deaths, men's excess",
+    factor == "gdp_pps_index"     ~ "4 GDP per capita (EU27 = 100)",
+    factor == "tertiary_gap"      ~ "5 Education gap (women minus men, % points)"
+  ))
+
+dim(factors_2023)   # expected: 27 rows, 9 columns
+dim(factors_long)   # expected: 135 rows (27 countries x 5 factors), 6 columns
+```
+
+**What it shows:** `factors_2023` has 27 rows, one per country, and 9 columns: the code, name and Baltic mark, the gap, and the five factors. `factors_long` has the same information stacked: 135 rows, five per country, one for each factor.
+
+
+### 5.4.2 Graph 5: Heart and circulatory deaths
+
+**Question:** do countries where more men than women die early of heart and circulatory diseases have a larger life expectancy gap?
+
+**How to read the chart.** Each dot is one country in 2023. Left to right is the factor, here the extra deaths of men from circulatory diseases (men minus women, per 100 000, under 65). Bottom to top is the life expectancy gap. If the dots rise from bottom left to top right, more of the factor goes with a larger gap. The straight line through the dots (`geom_smooth(method = "lm")`, class 10_3) shows that direction in one stroke. The Baltic states are red.
+
+**How to read the number.** `cor()` is not part of the course. It measures, in one number between -1 and 1, how closely the dots follow a straight line: 1 means exactly on a rising line, 0 means no straight-line pattern, -1 exactly on a falling line. As a rough guide, above 0.7 is a strong pattern, around 0.5 a moderate one, below 0.3 a weak one. A correlation says that two things go together, not that one causes the other. Because three countries can pull a line on their own, it is also computed without the Baltic states.
+
+**A caution for the three death factors.** The life expectancy gap is calculated from death rates: when more men than women die before 65, men's life expectancy is lower and the gap is larger. A strong correlation between men's extra early deaths and the gap is therefore expected by design. It shows which deaths make up the gap, not why they happen. GDP and education, which are not part of the calculation, are the real tests of what goes with the gap (Graphs 8 and 9).
+
+```{r}
+#| label: show-graph-5
+#| fig-height: 4.5
+# 5.4.2 Graph 5: the gap against men's extra deaths from circulatory diseases, 2023
+factors_2023 |>
+  ggplot(aes(x = death_circulatory, y = le_gap)) +          # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +         # the straight trend line (y depends on x), without a band
+  geom_point(aes(colour = baltic), size = 2.5) +            # the countries, Baltic states in red
+  geom_text_repel(data = factors_2023 |> filter(baltic),    # names only for the Baltic states
+                  aes(label = country), colour = "firebrick",
+                  nudge_y = -0.4) +                         # labels slightly below the dots, away from the top edge
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                           # let the labels go past the edge of the panel
+  labs(title = "Where more men die early of heart disease, the gap is larger",   # the title states the pattern
+       x = "Extra deaths of men from circulatory diseases, under 65 (per 100 000, men minus women)",
+       y = "Life expectancy gap (years)",
+       caption = "One dot per EU country, 2023. Source: Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-5
+# 5.4.2 The correlation for Graph 5, with and without the Baltic states
+factors_2023 |>
+  summarise(r_all        = cor(death_circulatory, le_gap),                          # all 27 countries
+            r_not_baltic = cor(death_circulatory[!baltic], le_gap[!baltic])) |>     # the 24 other countries
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states"))
+```
+
+**Finding:** countries where more men than women die early of heart and circulatory diseases have larger gaps (correlation 0.87, and 0.81 without the Baltic states). Latvia has both the most extra deaths (165 per 100 000) and the largest gap (10.0 years). All three Baltic states lie above the line: their gaps are larger than heart deaths alone would predict, so other causes add to them. Bulgaria and Romania, with almost as many extra heart deaths, lie below the line, with smaller gaps (7.6 years).
+
+### 5.4.3 Graph 6: External causes
+
+**Question:** do countries where more men than women die early of external causes (accidents, poisoning, suicide, violence) have a larger life expectancy gap? And does this explain why the Baltic states lie above the line in Graph 5?
+
+The chart is read in the same way as Graph 5, with the extra deaths of men from external causes from left to right. The same caution applies: these deaths are part of what makes up the gap.
+
+```{r}
+#| label: show-graph-6
+#| fig-height: 4.5
+# 5.4.3 Graph 6: the gap against men's extra deaths from external causes, 2023
+factors_2023 |>
+  ggplot(aes(x = death_external, y = le_gap)) +             # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +         # the straight trend line (y depends on x), without a band
+  geom_point(aes(colour = baltic), size = 2.5) +            # the countries, Baltic states in red
+  geom_text_repel(data = factors_2023 |> filter(baltic),    # names only for the Baltic states
+                  aes(label = country), colour = "firebrick",
+                  nudge_y = -0.4) +                         # labels slightly below the dots
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                           # let the labels go past the edge of the panel
+  labs(title = "Where more men die early of external causes, the gap is larger",   # the title states the pattern
+       x = "Extra deaths of men from external causes, under 65 (per 100 000, men minus women)",
+       y = "Life expectancy gap (years)",
+       caption = "External causes: accidents, poisoning, suicide, violence. One dot per EU country, 2023. Source: Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-6
+# 5.4.3 The correlation for Graph 6, with and without the Baltic states
+factors_2023 |>
+  summarise(r_all        = cor(death_external, le_gap),                          # all 27 countries
+            r_not_baltic = cor(death_external[!baltic], le_gap[!baltic])) |>     # the 24 other countries
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states"))
+```
+
+**Finding:** countries where more men than women die early of external causes have larger gaps (correlation 0.91, and 0.85 without the Baltic states), the closest pattern so far. Latvia has the most extra external deaths in the EU (92 per 100 000, against 16 in the Netherlands). Unlike in Graph 5, the three Baltic states lie on the line: together with heart disease, external causes account for their large gaps. Bulgaria and Romania now lie far above the line, with large gaps but few extra external deaths, so their gaps come mainly from heart disease. The Baltic gap is the largest because Baltic men die early from both at once.
+
+### 5.4.4 Graph 7: Alcohol-related causes
+
+**Question:** do countries where more men than women die early of alcohol-related causes have a larger life expectancy gap? The alcohol-related causes are chronic liver disease and accidental poisoning (which includes alcohol poisoning), the two causes that pointed to alcohol in Graph 4. The same caution applies as in Graphs 5 and 6, and two more: accidental poisoning is also part of the external causes of Graph 6, and not every liver death or poisoning is caused by alcohol.
+
+```{r}
+#| label: show-graph-7
+#| fig-height: 4.5
+# 5.4.4 Graph 7: the gap against men's extra deaths from alcohol-related causes, 2023
+factors_2023 |>
+  ggplot(aes(x = death_alcohol, y = le_gap)) +              # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +         # the straight trend line (y depends on x), without a band
+  geom_point(aes(colour = baltic), size = 2.5) +            # the countries, Baltic states in red
+  geom_text_repel(data = factors_2023 |> filter(baltic),    # names only for the Baltic states
+                  aes(label = country), colour = "firebrick",
+                  nudge_y = -0.4) +                         # labels slightly below the dots
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                           # let the labels go past the edge of the panel
+  labs(title = "Where more men die early of alcohol-related causes, the gap is larger",   # the title states the pattern
+       x = "Extra deaths of men from liver disease and poisoning, under 65 (per 100 000)",   # short enough to fit
+       y = "Life expectancy gap (years)",
+       caption = "Extra deaths: men minus women. Liver: chronic liver disease. Poisoning: accidental, incl. alcohol. 2023. Source: Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-7
+# 5.4.4 The correlation for Graph 7, with and without the Baltic states
+factors_2023 |>
+  summarise(r_all        = cor(death_alcohol, le_gap),                          # all 27 countries
+            r_not_baltic = cor(death_alcohol[!baltic], le_gap[!baltic])) |>     # the 24 other countries
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states"))
+```
+
+**Finding:** countries where more men than women die early of liver disease and accidental poisoning have larger gaps (correlation 0.88, and 0.83 without the Baltic states). Estonia has the most of these extra deaths in the EU (46 per 100 000), ahead of Latvia (37) and Lithuania (28), but it lies below the line, with a smaller gap than this would predict. Latvia and Lithuania lie above it. Alcohol-related deaths matter in all three Baltic states, but they do not line up with the gap in the same way in each. Because accidental poisoning is also part of the external causes in Graph 6, this graph is not a fully separate piece of evidence.
+
+### 5.4.5 Graph 8: GDP per capita
+
+**Question:** do poorer countries have larger life expectancy gaps, and are the Baltic gaps larger than their income would predict?
+
+Unlike the death factors, GDP is not part of how the gap is calculated, so this is a real test of something outside the deaths. A falling line means that richer countries have smaller gaps. Luxembourg and Ireland are far to the right for reasons that say little about how well off their residents are (see 3.4.3), so, as decided in Section 3, the trend line is drawn twice: with all 27 countries (solid) and without these two (dashed). Both countries are labelled in gray.
+
+```{r}
+#| label: show-graph-8
+#| fig-height: 4.5
+# 5.4.5 Graph 8: the gap against GDP per capita, with and without Luxembourg and Ireland, 2023
+factors_without_lu_ie <- factors_2023 |>
+  filter(!country_code %in% c("LU", "IE"))                    # the 25 countries without the two outliers
+
+factors_2023 |>
+  ggplot(aes(x = gdp_pps_index, y = le_gap)) +                # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +           # trend line, all 27 countries
+  geom_smooth(data = factors_without_lu_ie,
+              method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6,
+              linetype = "dashed") +                          # trend line without Luxembourg and Ireland
+  geom_point(aes(colour = baltic), size = 2.5) +              # the countries, Baltic states in red
+  geom_text_repel(data = factors_2023 |> filter(baltic),      # names of the Baltic states
+                  aes(label = country), colour = "firebrick") +
+  geom_text_repel(data = factors_2023 |>
+                    filter(country_code %in% c("LU", "IE", "EL")),   # names of the two outliers and Greece
+                  aes(label = country), colour = "gray40") +
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                             # let the labels go past the edge of the panel
+  labs(title = "The Baltic gaps are far larger than their income would predict",   # the title states the finding
+       x = "GDP per capita in PPS (EU27 = 100)",
+       y = "Life expectancy gap (years)",
+       caption = "Solid line: all 27 countries. Dashed line: without Luxembourg and Ireland. 2023. Source: Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-8
+# 5.4.5 The correlation for Graph 8: all countries, without the Baltic states, without Luxembourg and Ireland
+factors_2023 |>
+  summarise(r_all        = cor(gdp_pps_index, le_gap),                                   # all 27 countries
+            r_not_baltic = cor(gdp_pps_index[!baltic], le_gap[!baltic]),                 # without the Baltic states
+            r_not_lu_ie  = cor(gdp_pps_index[!country_code %in% c("LU", "IE")],
+                               le_gap[!country_code %in% c("LU", "IE")])) |>             # without Luxembourg and Ireland
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states",
+                                  "Without Luxembourg and Ireland"))
+```
+
+**Finding:** richer countries have smaller gaps (correlation -0.61). Luxembourg and Ireland flatten the line: without them the pattern is clearly stronger (-0.75, the dashed line), which confirms the decision in 3.4.3 to check them separately. Most importantly, the three Baltic states lie far above both lines: their gaps are about 2 to 2.7 years larger than their income would predict. Latvia and Greece are about equally rich (GDP index 70 and 68), but Latvia's gap is twice as large (10.0 years against 5.1). Being poorer is part of the picture, but it does not explain the Baltic gap.
+
+### 5.4.6 Graph 9: The education gap
+
+**Question:** do countries where young women are much more educated than young men have a larger life expectancy gap (hypothesis 5)?
+
+Like GDP, education is not part of how the gap is calculated. The education gap is measured among 25 to 34 year olds, a younger generation than the men who die before 65 today, so it describes how a country is changing rather than the people whose deaths make up the gap.
+
+```{r}
+#| label: show-graph-9
+#| fig-height: 4.5
+# 5.4.6 Graph 9: the gap against the education gap between young women and men, 2023
+factors_2023 |>
+  ggplot(aes(x = tertiary_gap, y = le_gap)) +               # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +         # the straight trend line, without a band
+  geom_point(aes(colour = baltic), size = 2.5) +            # the countries, Baltic states in red
+  geom_text_repel(data = factors_2023 |> filter(baltic),    # names of the Baltic states
+                  aes(label = country), colour = "firebrick") +
+  geom_text_repel(data = factors_2023 |>
+                    filter(country_code == "SI"),           # Slovenia, the useful comparison
+                  aes(label = country), colour = "gray40") +
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                           # let the labels go past the edge of the panel
+  labs(title = "Without the Baltic states, education barely goes with the gap",   # the title states the finding
+       x = "Education gap, age 25 to 34 (women minus men, percentage points)",
+       y = "Life expectancy gap (years)",
+       caption = "One dot per EU country, 2023. Source: Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-9
+# 5.4.6 The correlation for Graph 9, with and without the Baltic states
+factors_2023 |>
+  summarise(r_all        = cor(tertiary_gap, le_gap),                          # all 27 countries
+            r_not_baltic = cor(tertiary_gap[!baltic], le_gap[!baltic])) |>     # the 24 other countries
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states"))
+```
+
+**Finding:** across all 27 countries, a larger education gap goes moderately with a larger life expectancy gap (correlation 0.52). Without the three Baltic states, the pattern almost disappears (0.22). The Baltic states have both large education gaps (Estonia 24.2, Latvia 23.7, Lithuania 20.6 percentage points) and large life expectancy gaps, and they alone pull the line up. Slovenia has almost the same education gap as Latvia (23.6) but a much smaller life expectancy gap (5.8 years against 10.0). Hypothesis 5 is therefore not supported across Europe, and it is kept as a dead end in the appendix.
+
+### 5.4.7 The five factors side by side
+
+The five correlations in one table, from the stacked table `factors_long` of 5.4.1. `group_by(factor)` computes them once per factor.
+
+```{r}
+#| label: show-correlations
+# 5.4.7 The correlation of each factor with the gap, with and without the Baltic states
+factors_long |>
+  group_by(factor) |>                                                   # once per factor
+  summarise(r_all         = cor(value, le_gap),                         # all 27 countries
+            r_not_baltic  = cor(value[!baltic], le_gap[!baltic]),       # the 24 other countries
+            .groups = "drop") |>
+  kable(digits = 2,                                                     # two decimals for correlations
+        col.names = c("Factor", "Correlation, all 27", "Without the Baltic states"))
+```
+
+**What it shows:** the three death factors go closely with the gap (0.87 to 0.91), and stay strong without the Baltic states (0.81 to 0.85). GDP goes with it in the opposite direction (-0.61, richer countries have smaller gaps). The education gap goes with it only through the Baltic states (0.52, but 0.22 without them).
+
+**What this means:** the life expectancy gap is made up mainly of men's early deaths from heart and circulatory diseases and from external causes, with alcohol-related deaths overlapping both. This pattern holds across Europe, not only in the Baltic states. Wealth goes with smaller gaps, but the Baltic gaps are about two years larger than their income would predict, and education does not explain them. The next question is whether Baltic men fall below the European pattern while Baltic women do not.
+
+## 5.5 Do Baltic men fall below the European pattern?
+
+### 5.5.1 Graph 10: Baltic women and men against countries of similar income
+
+**Question:** do Baltic women live about as long as women in EU countries of similar income, while Baltic men live much shorter lives than men there?
+
+**Countries of similar income.** In 2024 the GDP index of the Baltic states lies between 69 (Latvia) and 87 (Lithuania). The comparison group is every other EU country with a GDP index between 60 and 90: Bulgaria, Croatia, Czechia, Greece, Hungary, Poland, Portugal, Romania, Slovakia and Slovenia, ten countries. Comparing with equally rich countries takes income out of the comparison: what is left is the difference that income does not explain. The latest year, 2024, is used, because neither life expectancy nor GDP needs the deaths data.
+
+First the averages of the two groups, for women and for men.
+
+```{r}
+#| label: show-similar-income
+# 5.5.1 Average life expectancy of women and men: the Baltic states and countries of similar income, 2024
+gap_2024 <- gap_panel |>
+  filter(year == 2024)                                          # the latest year, one row per country
+
+similar_income <- gap_2024 |>
+  filter(!baltic,                                               # not a Baltic state
+         gdp_pps_index >= 60, gdp_pps_index <= 90)              # but about as rich: GDP index 60 to 90
+
+similar_income |> pull(country)                                 # the ten comparison countries
+
+similar_women <- mean(similar_income$le_women)                  # their average, women
+similar_men   <- mean(similar_income$le_men)                    # their average, men
+
+gap_2024 |>
+  filter(baltic) |>                                             # the three Baltic states
+  summarise(women = mean(le_women), men = mean(le_men)) |>      # their averages
+  mutate(group = "Baltic states") |>
+  bind_rows(tibble(group = "Countries of similar income",       # add the comparison row
+                   women = similar_women, men = similar_men)) |>
+  select(group, women, men) |>
+  kable(digits = 1, col.names = c("Group", "Women (years)", "Men (years)"))
+```
+
+**What it shows:** the ten comparison countries are Bulgaria, Croatia, Czechia, Greece, Hungary, Poland, Portugal, Romania, Slovakia and Slovenia. Baltic women live on average 82.1 years, as long as women in the countries of similar income (82.3). Baltic men live 73.2 years, 2.8 years shorter than men there (76.0).
+
+Then each Baltic country on its own: how many years longer or shorter its women and men live than the average women and men in the countries of similar income. A bar to the left (negative) means shorter lives.
+
+```{r}
+#| label: show-graph-10
+#| fig-height: 3.5
+# 5.5.1 Graph 10: years longer or shorter than in countries of similar income, each Baltic state, 2024
+gap_2024 |>
+  filter(baltic) |>                                             # the three Baltic states
+  mutate(Women = le_women - similar_women,                      # difference from the comparison group, women
+         Men   = le_men   - similar_men) |>                     # and men
+  select(country, Women, Men) |>
+  pivot_longer(cols = c(Women, Men),                            # women and men into one column
+               names_to = "sex", values_to = "difference") |>
+  mutate(sex = factor(sex, levels = c("Women", "Men"))) |>      # women in the left panel, men in the right
+  mutate(country = fct_reorder(country, difference,
+                               .fun = min, .desc = TRUE)) |>    # sort by the men's (lowest) value, largest shortfall on top
+  ggplot(aes(x = country, y = difference)) +
+  geom_col(fill = "firebrick") +                                # bar length = years longer (+) or shorter (-)
+  geom_hline(yintercept = 0) +                                  # 0 = the same as in countries of similar income
+  geom_text(aes(label = sprintf("%.1f", difference),           # the number at the end of each bar, always one decimal
+                hjust = if_else(difference < 0, 1.2, -0.2))) +  # outside the bar, left or right
+  coord_flip() +                                                # bars sideways, names readable
+  facet_wrap(~ sex) +                                           # one panel for women, one for men
+  scale_y_continuous(limits = c(-5.5, 2)) +                     # room for the numbers
+  labs(title = "Latvian men live 4.6 years shorter than men in equally rich countries",   # the finding
+       subtitle = "Life expectancy compared with the average of ten EU countries of similar income, 2024",
+       x = NULL,
+       y = "Years longer (+) or shorter (-) than in countries of similar income",
+       caption = "Similar income: GDP per capita in PPS between 60 and 90 (EU27 = 100). Source: Eurostat") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())
+```
+
+**Finding:** compared with equally rich EU countries, Baltic women live about as long: between 1.1 years shorter (Latvia) and 1.1 years longer (Estonia). Baltic men live shorter lives in all three countries: 4.6 years shorter in Latvia, 3.0 in Lithuania and 0.9 in Estonia. Income does not explain the Baltic gap: at the same level of income, it is the men, not the women, who fall behind. This supports hypothesis 4.
+
+**What this means:** the Baltic life expectancy gap is a gap of men. Baltic women live as long as women in other EU countries of the same income, while Baltic men, especially in Latvia and Lithuania, die years earlier. Their extra early deaths come mainly from heart disease and external causes such as poisoning, suicide and drowning, several of them linked to alcohol (5.3 and 5.4).
+
+## 5.6 The gap is about the men
+
+### 5.6.1 Graph 11: Women's and men's life expectancy, country by country
+
+**Question:** does the life expectancy of men differ more between EU countries than that of women?
+
+Each country is one row, with two dots: an open circle for women and a filled dot for men, joined by a gray line, the gap. The rows are sorted by men's life expectancy. If women's dots stay in a narrow band while men's dots spread far, the differences in the gap come mainly from the men. `geom_segment()` (not part of the course) draws the line from one value to the other.
+
+```{r}
+#| label: show-graph-11
+#| fig-height: 6.5
+# 5.6.1 Graph 11: women's and men's life expectancy in each country, sorted by men, 2024
+gap_2024 |>
+  mutate(country = fct_reorder(country, le_men)) |>                     # sort the countries by men's life expectancy
+  ggplot(aes(y = country)) +
+  geom_segment(aes(x = le_men, xend = le_women,
+                   yend = country), colour = "gray80", linewidth = 1) +  # the gap, from men to women
+  geom_point(aes(x = le_women), shape = 21, fill = "white",
+             colour = "gray40", size = 2.5) +                           # women: open circles
+  geom_point(aes(x = le_men, colour = baltic), size = 2.5) +            # men: filled dots, Baltic states in red
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray40")) +
+  labs(title = "Men's life expectancy differs far more between EU countries than women's",   # the finding
+       subtitle = "Life expectancy at birth, 2024. Open circles: women. Filled dots: men",
+       x = "Life expectancy at birth (years)",
+       y = NULL,
+       caption = "Gray line: the gap between women and men. Red: Baltic men. Source: Eurostat, demo_mlexpec") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())
+```
+
+```{r}
+#| label: show-spread
+# 5.6.1 How far women and men spread across the 27 countries, and how each goes with the gap
+gap_2024 |>
+  summarise(spread_women = sd(le_women),                 # standard deviation: the typical distance from the average
+            spread_men   = sd(le_men),
+            r_gap_women  = cor(le_women, le_gap),        # how women's life expectancy goes with the gap
+            r_gap_men    = cor(le_men, le_gap)) |>       # how men's life expectancy goes with the gap
+  kable(digits = 2, col.names = c("Spread, women (years)", "Spread, men (years)",
+                                  "Correlation with gap, women", "Correlation with gap, men"))
+```
+
+**Finding:** women's life expectancy stays in a narrow band, from 79.5 years (Bulgaria) to 86.5 (Spain), while men's spreads much wider, from 71.4 (Latvia) to 82.3 (Sweden). The typical distance from the average is 1.9 years for women and 3.4 years for men, almost twice as much. The gap goes much more closely with men's life expectancy (correlation -0.90) than with women's (-0.65): where the gap is large, it is mainly because men live short lives, not because women live long ones. Latvian men have the lowest life expectancy in the EU, Lithuanian men the fourth lowest, while Latvian and Lithuanian women (81.2 and 81.6 years) are in the lower half of the women's band, but not at its bottom.
+
+## 5.7 Two neighbours, two paths
+
+### 5.7.1 Graph 12: Men's early deaths in the Baltic states over time
+
+**Question:** Lithuania narrowed its gap more than any other EU country, while Latvia's gap did not shrink (Graph 2). Which causes of death changed among men under 65 in the three Baltic states between 2015 and 2023?
+
+The chart shows men's death rates under 65 (per 100 000), not the gap between men and women, so that the change among men can be followed directly. One panel per cause: all causes, circulatory diseases, external causes, accidental poisoning and chronic liver disease. The three Baltic states are three lines in clearly different colours (purple and teal from the viridis palette, plus orange, because the third viridis colour, yellow, is hard to see on white), and the average of the other 24 EU countries is a dashed gray line for comparison.
+
+```{r}
+#| label: show-graph-12
+#| fig-height: 7
+# 5.7.1 Graph 12: men's death rates under 65 by cause, Baltic states and the rest of the EU, 2015 to 2023
+causes_over_time <- c("TOTAL"       = "All causes",
+                      "I"           = "Circulatory diseases",
+                      "V01-Y89"     = "External causes",
+                      "X40-X49"     = "Accidental poisoning",
+                      "K70_K73_K74" = "Chronic liver disease")             # code = readable name
+
+men_over_time <- deaths_by_cause |>
+  filter(cause_code %in% names(causes_over_time)) |>                     # the five causes
+  mutate(cause = causes_over_time[cause_code],                           # look up the readable name
+         cause = factor(cause, levels = causes_over_time))               # panels in this order
+
+rest_of_eu <- men_over_time |>
+  filter(!baltic) |>                                                     # the 24 other countries
+  group_by(year, cause) |>
+  summarise(death_men = mean(death_men), .groups = "drop") |>           # their average, year by year
+  mutate(country = "Rest of the EU (average)")
+
+men_over_time |>
+  filter(baltic) |>                                                      # the three Baltic states
+  select(year, cause, death_men, country) |>
+  bind_rows(rest_of_eu) |>                                               # add the comparison line
+  ggplot(aes(x = year, y = death_men, colour = country, linetype = country)) +
+  geom_line(linewidth = 0.9) +                                           # one line per country
+  facet_wrap(~ cause, scales = "free_y", ncol = 2) +                     # one panel per cause, own y axis
+  scale_colour_manual(values = c("Estonia" = "#440154", "Latvia" = "#21908C",
+                                 "Lithuania" = "#E8A33B",                # three distinct colours
+                                 "Rest of the EU (average)" = "gray50")) +
+  scale_linetype_manual(values = c("Estonia" = "solid", "Latvia" = "solid", "Lithuania" = "solid",
+                                   "Rest of the EU (average)" = "dashed")) +
+  scale_x_continuous(breaks = c(2015, 2017, 2019, 2021, 2023)) +
+  labs(title = "Lithuanian men's early deaths fell sharply, Latvian men's did not",   # the finding
+       subtitle = "Death rates of men under 65 per 100 000, 2015 to 2023",
+       x = NULL, y = "Deaths per 100 000", colour = NULL, linetype = NULL,
+       caption = "Each panel has its own y axis, and the axes do not start at zero. Source: Eurostat, hlth_cd_asdr2") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank())
+```
+
+**Finding:** in all five panels, Baltic men under 65 die far more often than the average man in the rest of the EU, whose rates stay almost flat. The three countries moved differently. Lithuanian men's death rate from all causes fell by about a quarter, from 663 per 100 000 in 2015 to 485 in 2023, with the largest fall in external causes (from 160 to 96, from the highest of the three to below Latvia) and accidental poisoning, which halved (from 29 to 15). The fall starts in 2017, the year in which Lithuania's life expectancy gap first narrowed (Graph 2). Latvian men's death rate barely changed and rose sharply in 2021, a COVID-19 year, to 717. Their deaths from accidental poisoning have almost tripled since 2021 (from 10 to 27). In Estonia, deaths from chronic liver disease rose from 34 in 2019 to 49 in 2022. The data shows when the rates changed, not why. Whether changes in alcohol policy played a part would need a source outside this data.
+
+## 5.8 Baltic men lose healthy years too
+
+### 5.8.1 Graph 13: Years in good health and years with limitations
+
+**Question:** do Baltic men, besides living shorter lives, also spend fewer of their years in good health?
+
+Life expectancy is split into two parts: the healthy life years (years without limitations in daily activities) and the rest, the years lived with limitations. The two parts are stacked, so the whole bar is the life expectancy. The three Baltic states are compared with the average of the ten countries of similar income from 5.5. The latest year, 2024, is used.
+
+```{r}
+#| label: show-graph-13
+#| fig-height: 4.5
+# 5.8.1 Graph 13: healthy years and years with limitations, Baltic states and countries of similar income, 2024
+healthy_groups <- gap_2024 |>
+  filter(baltic) |>                                                       # the three Baltic states
+  select(country, hly_women, hly_men, le_women, le_men) |>
+  bind_rows(similar_income |>                                             # plus the average of the comparison group
+              summarise(across(c(hly_women, hly_men, le_women, le_men), mean)) |>
+              mutate(country = "Similar income (average)"))
+
+healthy_groups |>
+  pivot_longer(cols = -country,                                           # all columns except the country
+               names_to = c(".value", "sex"),                             # split hly_men into hly and men
+               names_sep = "_") |>
+  mutate(sex = if_else(sex == "women", "Women", "Men"),
+         sex = factor(sex, levels = c("Women", "Men")),
+         limited = le - hly) |>                                           # years with limitations
+  pivot_longer(cols = c(hly, limited),
+               names_to = "part", values_to = "years") |>
+  mutate(part = if_else(part == "hly", "Healthy years", "Years with limitations"),
+         part = factor(part, levels = c("Years with limitations", "Healthy years"))) |>
+  ggplot(aes(x = country, y = years, fill = part)) +
+  geom_col() +                                                            # the two parts stacked: the whole bar is life expectancy
+  coord_flip() +
+  facet_wrap(~ sex) +
+  scale_fill_manual(values = c("Healthy years" = "#21908C",              # teal from viridis
+                               "Years with limitations" = "gray80")) +
+  labs(title = "Latvian men have the fewest healthy years, 51 of their 71",   # the finding
+       subtitle = "Healthy life years and years with limitations, 2024",
+       x = NULL, y = "Years", fill = NULL,
+       caption = "The whole bar is life expectancy at birth. Similar income: GDP index 60 to 90. Source: Eurostat, hlth_hlye, demo_mlexpec") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())
+```
+
+**Finding:** Latvian men have the fewest healthy years: 51.1 of their 71.4 years of life, about 13 fewer healthy years than men in countries of similar income (63.7 of 76.0). But the healthy years of Latvian women are just as low compared with other women: 53.9 of 81.2, almost 12 fewer than in countries of similar income (65.7). Estonia shows the same pattern in a milder form, for women and men. Lithuania is close to the comparison group for both sexes (67.0 for women, 61.6 for men), although its 2024 values are provisional. So poor health affects women and men in Latvia alike, while dying early before 65 is mainly a problem of men. The life expectancy gap and the healthy years tell two different stories.
+
+## 5.9 Summary of the exploration
+
+| Question from the project plan | Answer |
+|------------------|------------------------------------|
+| Where do the Baltic states sit? | They have the three largest gaps in the EU in every year from 2015 to 2024. In 2024: Latvia 9.8 years, Lithuania 8.6, Estonia 8.3, against an EU average of 5.5 (Graphs 1 and 2) |
+| How has the gap changed? | It narrowed in 22 of 27 countries. Lithuania narrowed most (-1.8 years), Latvia's gap grew slightly (+0.2) and has been the largest since 2021 (Graph 2) |
+| Strongest factor | Men's extra early deaths from external causes (correlation 0.91) and from heart and circulatory diseases (0.87). Circulatory diseases are the largest part of the extra deaths, external causes follow the gap most closely. Ischaemic heart disease is the largest single cause (Graphs 3 to 6) |
+| Weakest factor | The education gap: 0.52 across all countries, but only 0.22 without the Baltic states (Graph 9, dead end) |
+| Does income explain the pattern? | In part: richer countries have smaller gaps (-0.61, and -0.75 without Luxembourg and Ireland). But the Baltic gaps are about two years larger than their income would predict, and at the same income Baltic women live as long as other women while Baltic men live up to 4.6 years shorter (Graphs 8 and 10) |
+| One surprise | Deaths coded as alcohol disorders are barely higher among Baltic men, while accidental poisoning is six times the EU level and chronic liver disease twice. Alcohol shows up through other causes, not under its own name (Graph 4) |
+| Which angle has the clearest message? | The comparison with countries of similar income (Graph 10): it takes income out of the picture and shows in one chart that the Baltic gap is a gap of men |
+
+**The expected message and what was found.** The expected message, written before the data was explored, was: "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." The exploration supports it, with two additions. Heart and circulatory diseases are indeed the largest part of the extra deaths of Baltic men, but external causes such as poisoning, suicide and drowning come close behind and follow the gap even more closely. And the gap is not explained by lower income: at the same income, Baltic women live as long as other European women, and only the men fall behind.
+
+**Caution.** All results are associations between country averages, not causes. The death factors are partly built into the gap, because life expectancy is calculated from death rates. The deaths data ends in 2023.
 
 # 6. The story
 
@@ -2260,4 +3033,9 @@ This section builds the final chart in frames, one layer at a time. *Introductio
 
 # Appendix: dead ends
 
-Relationships that were expected but turned out weak, and what was done about them. They are kept here, not deleted, because a weak result is also a result. *To be filled in during Step 5.*
+Relationships that were expected but turned out weak, and what was done about them. They are kept here, not deleted, because a weak result is also a result.
+
+| Expected (hypothesis) | What the data showed | Where | What was done |
+|---|---|---|---|
+| Where women are much more educated than men, the life expectancy gap is larger (hypothesis 5) | Moderate across all 27 countries (correlation 0.52), but weak without the Baltic states (0.22). Slovenia has the same education gap as Latvia, with a gap of 5.8 years instead of 10.0 | Graph 9, 5.4.6 | Kept as a result, not used as an explanation of the Baltic gap |
+| Deaths coded as alcohol disorders (`F10`) are much higher among Baltic men | Barely higher than in the rest of the EU (3.9 against 3.2 extra deaths per 100 000). Alcohol shows up instead through accidental poisoning and liver disease | Graph 4, 5.3.2 | The alcohol factor in Graph 7 uses liver disease and poisoning instead |

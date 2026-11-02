@@ -35,3 +35,39 @@ Each new function: one-line meaning and a tiny example.
 - `sum(is.na(x))`: counts the missing values in a column. `is.na()` gives `TRUE` for each `NA`, and `sum()` counts them.
 - `df$column`: takes one column out of a table. `gap_panel$country` is the `country` column.
 - `write_csv(table, path)`: saves a table as a CSV file. Missing values are written as `NA`. `write_csv(gap_panel, here("data", "clean", "gap_panel.csv"))`.
+- `dim(table)`: the number of rows and columns, in that order. `dim(gap_panel)` gives `270 17`.
+- `mean(x)`: the average of a column. `mean(gap_2024$le_gap)` gives the EU average gap.
+- `scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "gray70"))`: chooses the fill colours by hand, one per group. The course way to highlight one group in red and keep the rest gray.
+- `labs(caption = ...)`: a small line under the chart, used for the source and notes.
+- `geom_line(aes(group = country))`: one line per country. `group` tells ggplot which points belong to the same line.
+- `geom_text_repel(data = ..., aes(label = country))`: writes labels that push away from each other. `data =` lets the labels use only some rows, here the Baltic states in 2024.
+- `scale_linewidth_manual()`: line thickness chosen by hand per group, like `scale_colour_manual()` does for colour.
+- `group_by(country)` + `summarise()`: does the calculation once per country and gives one row per country. `.groups = "drop"` removes the grouping afterwards.
+- `le_gap[year == 2015]`: the square brackets pick the value of `le_gap` where the year is 2015.
+- `row_number()`, `n()`: the position of a row and the number of rows. `row_number() <= 3` keeps the first three rows.
+- `geom_col(position = "dodge")`: puts the bars of two groups side by side instead of on top of each other.
+- `if_else(condition, "yes", "no")`: one value when the condition is `TRUE`, another when `FALSE`. `if_else(baltic, "Baltic states", "Rest of the EU")`.
+- `group_by()` twice: first `summarise()` per country, then per group, so that each country counts once in the average.
+- `fct_reorder(x, y, .fun = max)`: sorts the categories by the largest value of `y` in each, instead of the median (the default). Useful when each category has two bars.
+- `labs(subtitle = ...)`: a second, smaller line under the title. Keeps the title short and the details readable.
+- `pivot_longer(cols = c(a, b), names_to = "factor", values_to = "value")`: the opposite of `pivot_wider()`. Several columns are stacked into two: one with their names, one with their numbers. Needed so `facet_wrap()` can make one panel per factor.
+- `geom_smooth(method = "lm", se = FALSE)`: draws a straight trend line through the dots. `se = FALSE` hides the grey uncertainty band.
+- `facet_wrap(~ factor, scales = "free_x")`: one panel per factor, each with its own x axis, the same y axis.
+- `cor(x, y)`: the correlation, one number from -1 to 1. Near 1: dots on a rising line. Near -1: on a falling line. Near 0: no straight-line pattern. It shows that two things go together, not that one causes the other.
+- `value[!baltic]`: the square brackets keep only the values where `baltic` is `FALSE`. `!` means "not".
+- `geom_smooth(formula = y ~ x)`: says the line is "y depends on x" (a straight line). Writing it out stops the message R prints otherwise.
+- `coord_cartesian(clip = "off")`: lets labels go beyond the edge of the chart area, so a dot in the corner keeps its full name.
+- `scale_shape_manual(values = c("Women" = 16, "Men" = 17))`: chooses the dot shape per group by hand. 16 is a filled circle, 17 a filled triangle.
+- `scale_colour_manual(..., guide = "none")`: sets the colours but shows no legend for them.
+- `geom_smooth(aes(linetype = sex))`: one trend line per group, drawn as solid or dashed.
+- `pull(column)`: takes one column out of a table as a plain list. Used to get the country names in a chosen order.
+- `factor(x, levels = ...)`: fixes the order of categories, for example the order of the bars, or which panel comes first.
+- `bind_rows(a, b)`: puts two tables with the same columns on top of each other, one table under the other.
+- `geom_text(aes(label = ...))`: writes a number or word at each bar or dot.
+- `sprintf("%.1f", x)`: writes a number as text with exactly one decimal, so -3 becomes "-3.0".
+- `geom_segment(aes(x, xend, y, yend))`: draws a line from one point to another. Used to join a country's women and men.
+- `sd(x)`: standard deviation, the typical distance of the values from their average. Larger means more spread.
+- `causes[cause_code]`: looks up a name in a named list, like a small dictionary: `c("I" = "Circulatory")["I"]` gives "Circulatory".
+- `facet_wrap(~ cause, scales = "free_y")`: one panel per cause, each with its own y axis.
+- `summarise(across(c(a, b), mean))`: the same function (here `mean`) for several columns at once.
+- `pivot_longer(names_to = c(".value", "sex"), names_sep = "_")`: splits column names like `hly_men` at the `_` into a value (`hly`) and a group (`men`).

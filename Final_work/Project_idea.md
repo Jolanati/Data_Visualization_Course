@@ -49,7 +49,18 @@ Sergio's final project template (published 31 Oct): https://github.com/sergiouri
 - [x] Step 4. Combine: `data/clean/gap_panel.csv` saved, row counts explained (1 Nov). `gap_panel`: 270 rows, 17 columns. `deaths_by_cause`: 21 951 rows. Only `NA`: deaths 2024 (27 rows), healthy life years Luxembourg 2023 and 2024 (2 rows)
 
   Open for Step 4: (1) decided 1 Nov: `flag` is dropped before `pivot_wider()`. (2) decided 1 Nov: two tables, `gap_panel` with deaths from all causes, and `deaths_by_cause` with one row per country, year and cause. (3) GDP has no sex, so it joins on country and year only. (4) Deaths end in 2023, healthy life years for Luxembourg end in 2022: these become `NA` in the panel, never 0 Also decided 1 Nov: the deaths gap is a difference, men minus women, per 100 000. Join (1 Nov): `left_join()` onto life expectancy, 270 rows after every join.
-- [ ] Step 5. Explore: at least 4 graphs in the template format, correlations, dead ends noted
+- [ ] Step 5. Explore: at least 4 graphs in the template format, correlations, dead ends noted. Done so far (2 Nov): Graphs 1 to 13 with findings, dead ends appendix (education, alcohol disorders F10), draft summary in 5.9
+
+  Open for Step 5, from the scientific check (2 Nov):
+  - [ ] A. Hypothesis 7 (overlap of factors): the three death factors correlate with each other at 0.77 to 0.84, so their effects cannot be separated with 27 countries. Show the overlap in a small correlation table and say so
+  - [ ] B. Statistical uncertainty: add p-values or confidence intervals with `cor.test()` (new function). Checked: all five p < 0.01, education without the Baltic states p = 0.30
+  - [ ] C. Robustness across years: show 2019 next to 2023. Checked: 2019 correlations are almost the same (circulatory 0.85, external 0.91, alcohol 0.80, GDP -0.53, education 0.47)
+  - A, B and C together as a new sub-section "How robust are the results?" before the summary
+  - [ ] D, E, G into Section 7, Limits: the death factors are built into the gap; only deaths under 65 were analysed (older men's deaths also add to the gap); country averages, not individuals (ecological fallacy)
+  - [ ] F (optional, only if time allows): direct alcohol consumption from WHO as a sixth table
+  - [ ] Update the 5.9 summary with Graphs 11 to 13 (the gap is about the men; Lithuania's fall and Latvia's stagnation; poor health in Latvia for both sexes)
+  - [ ] Graph 13 title: maybe "In Latvia, women and men alike live far fewer years in good health"
+  - [ ] Lithuania alcohol policy around 2017 to 2018: find a citable source or leave it out. The data only shows when deaths fell, not why
 - [ ] Step 6. Final graph: refined, saved as `figures/final_graph.png`, story frames exported, report title changed to the finding
 - [ ] Step 7. Hand-in: renders from a clean session, `story.md` written, `prompt_log.md` complete, zip uploaded. App live
 - [ ] Step 8. Rehearse: the 5-minute talk and the defence
@@ -97,7 +108,7 @@ The steps below are the same nine as in `prompt_log.md`, section 1, with the sam
 1. **First, my project idea.** I wrote this plan. Claude reads it at the start of every session and continues from the Progress section (it first read it when I asked it to get acquainted with my project).
 2. **I say what it needs to do, Claude writes it.** For each chunk I say its purpose in my own words, for example: "Now we need to keep only the EU countries." If I'm not sure what comes next, Claude names the next step from the plan, and I put its purpose in my words. Claude writes the chunk: small, a few lines, never a whole script at once.
 3. **Claude explains the technical side: which functions it uses.** What each function does, what its arguments mean, why this one and not an alternative, the approach, which class topic it connects to, and what the output should look like. If I don't understand, Claude explains again in simpler words or with an everyday analogy.
-4. **Claude checks that I understood, with a question.** One question per chunk, before I run it, for example: "If Eurostat had written Greece as `GR` instead of `EL`, what would the row count print?" If my answer is wrong, Claude corrects me kindly and explains why. Then I run the chunk. We only discuss the output when something is unexpected or I ask.
+4. **Claude checks that I understood, with a question.** One question per chunk, before I run it, for example: "If Eurostat had written Greece as `GR` instead of `EL`, what would the row count print?" If my answer is wrong, Claude corrects me kindly and explains why. Then I run the chunk. We only discuss the output when something is unexpected or I ask. **From Section 5 on (2 Nov):** after each chunk Claude also gives one interesting finding from the output and a suggested next step.
 5. **I decide, the AI suggests.** Claude never makes an analysis decision silently (which year, which filter, what to do with an outlier, which factor wins). It gives the options with a recommendation, and I choose. One decision at a time, don't rush me.
 6. **Every decision is written down twice.** In `final_project.qmd` (academic voice) and in `notes/decisions.md` (my voice, for the talk). Decide first, then write it down, then code.
 7. **New functions go into a glossary.** `notes/glossary.md`: each new function with a one-line meaning and a tiny example.
