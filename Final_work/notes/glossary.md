@@ -71,3 +71,12 @@ Each new function: one-line meaning and a tiny example.
 - `facet_wrap(~ cause, scales = "free_y")`: one panel per cause, each with its own y axis.
 - `summarise(across(c(a, b), mean))`: the same function (here `mean`) for several columns at once.
 - `pivot_longer(names_to = c(".value", "sex"), names_sep = "_")`: splits column names like `hly_men` at the `_` into a value (`hly`) and a group (`men`).
+- `cor.test(x, y)`: the correlation with its 95% confidence interval (`$conf.int`) and p-value (`$p.value`). A narrow interval far from 0 and a small p-value (below 0.05) mean the pattern is unlikely to be chance.
+- `inner_join(x, y, ...)`: keeps only the rows that exist in both tables. Used when rows without a partner should be dropped on purpose.
+- `cor(table)`: with several columns, gives the correlation of every pair at once, a correlation matrix. The diagonal is always 1.
+- `geom_histogram(binwidth = 0.5, boundary = 0)`: `boundary = 0` makes the bands start at round numbers (2.5 to 3, 3 to 3.5), not at odd values.
+- `geom_boxplot()`: the box holds the middle half of the values, the line inside is the median, the whiskers reach the lowest and highest values that are not far out. `outlier.shape = NA` hides the outlier dots when all dots are drawn anyway.
+- `geom_jitter(width = 0.15, height = 0)`: draws every dot, moved sideways a little at random so they do not hide each other. `height = 0` keeps the values exact.
+- `stat_summary(fun = mean, geom = "point")`: adds a summary, here the mean of each group, as one point.
+- `alpha = 0.3`: transparency, from 0 (invisible) to 1 (solid).
+- `slice_max(x, n = 5)`: keeps the 5 rows with the largest values of `x`, largest first. Shorter than `arrange(desc(x)) |> head(5)` and from the course (class 10_2).

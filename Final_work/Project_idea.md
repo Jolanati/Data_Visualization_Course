@@ -49,17 +49,17 @@ Sergio's final project template (published 31 Oct): https://github.com/sergiouri
 - [x] Step 4. Combine: `data/clean/gap_panel.csv` saved, row counts explained (1 Nov). `gap_panel`: 270 rows, 17 columns. `deaths_by_cause`: 21 951 rows. Only `NA`: deaths 2024 (27 rows), healthy life years Luxembourg 2023 and 2024 (2 rows)
 
   Open for Step 4: (1) decided 1 Nov: `flag` is dropped before `pivot_wider()`. (2) decided 1 Nov: two tables, `gap_panel` with deaths from all causes, and `deaths_by_cause` with one row per country, year and cause. (3) GDP has no sex, so it joins on country and year only. (4) Deaths end in 2023, healthy life years for Luxembourg end in 2022: these become `NA` in the panel, never 0 Also decided 1 Nov: the deaths gap is a difference, men minus women, per 100 000. Join (1 Nov): `left_join()` onto life expectancy, 270 rows after every join.
-- [ ] Step 5. Explore: at least 4 graphs in the template format, correlations, dead ends noted. Done so far (2 Nov): Graphs 1 to 13 with findings, dead ends appendix (education, alcohol disorders F10), draft summary in 5.9
+- [ ] Step 5. Explore: at least 4 graphs in the template format, correlations, dead ends noted. Done so far (2 Nov): Graphs 1 to 15 with findings, dead ends appendix (education, alcohol disorders F10), draft summary in 5.9
 
   Open for Step 5, from the scientific check (2 Nov):
-  - [ ] A. Hypothesis 7 (overlap of factors): the three death factors correlate with each other at 0.77 to 0.84, so their effects cannot be separated with 27 countries. Show the overlap in a small correlation table and say so
-  - [ ] B. Statistical uncertainty: add p-values or confidence intervals with `cor.test()` (new function). Checked: all five p < 0.01, education without the Baltic states p = 0.30
-  - [ ] C. Robustness across years: show 2019 next to 2023. Checked: 2019 correlations are almost the same (circulatory 0.85, external 0.91, alcohol 0.80, GDP -0.53, education 0.47)
-  - A, B and C together as a new sub-section "How robust are the results?" before the summary
+  - [x] A. Hypothesis 7 (overlap of factors): the three death factors correlate with each other at 0.77 to 0.84, so their effects cannot be separated with 27 countries. Show the overlap in a small correlation table and say so
+  - [x] B. Statistical uncertainty: add p-values or confidence intervals with `cor.test()` (new function). Checked: all five p < 0.01, education without the Baltic states p = 0.30
+  - [x] C. Robustness across years: show 2019 next to 2023. Checked: 2019 correlations are almost the same (circulatory 0.85, external 0.91, alcohol 0.80, GDP -0.53, education 0.47)
+  - A, B and C done 3 Nov as 5.9 "How robust are the results?". Summary is now 5.10
   - [ ] D, E, G into Section 7, Limits: the death factors are built into the gap; only deaths under 65 were analysed (older men's deaths also add to the gap); country averages, not individuals (ecological fallacy)
   - [ ] F (optional, only if time allows): direct alcohol consumption from WHO as a sixth table
-  - [ ] Update the 5.9 summary with Graphs 11 to 13 (the gap is about the men; Lithuania's fall and Latvia's stagnation; poor health in Latvia for both sexes)
-  - [ ] Graph 13 title: maybe "In Latvia, women and men alike live far fewer years in good health"
+  - [x] Update the summary (now 5.10) with Graphs 13 to 15 and 5.9 (the gap is about the men; Lithuania's fall and Latvia's stagnation; poor health in Latvia for both sexes)
+  - [ ] Graph 15 title: maybe "In Latvia, women and men alike live far fewer years in good health"
   - [ ] Lithuania alcohol policy around 2017 to 2018: find a citable source or leave it out. The data only shows when deaths fell, not why
 - [ ] Step 6. Final graph: refined, saved as `figures/final_graph.png`, story frames exported, report title changed to the finding
 - [ ] Step 7. Hand-in: renders from a clean session, `story.md` written, `prompt_log.md` complete, zip uploaded. App live
@@ -74,7 +74,7 @@ Template files:
 - [x] `data/raw/SOURCE.md`: all 5 tables (1 Nov)
 - [ ] `prompt_log.md`: draft written (1 Nov). Fill in the 29 Oct row. Add prompts, decisions and caught mistakes at the end of each session. **Before hand-in:** decide the wording of step 2 so it matches how we really work (Claude proposes the next step from the plan, I say its purpose in my own words, Claude writes it)
 - [ ] `story.md`: skeleton with the question (1 Nov). The rest after Step 6
-- [x] Render test from a clean session after the renaming (1 Nov)
+- [x] Render test from a clean session after the renaming (1 Nov), and again with Section 5 and its 15 graphs (3 Nov)
 
 Decisions so far (full reasons in `notes/decisions.md`):
 
