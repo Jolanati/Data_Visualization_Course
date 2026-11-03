@@ -1,0 +1,21 @@
+```{r}
+#| label: setup-limits
+#| include: false
+# Setup for working in this file on its own: loads the packages.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+```
+
+# 7. Limits
+
+*To be written in Step 6.*
+
+# Appendix: dead ends
+
+Relationships that were expected but turned out weak, and what was done about them. They are kept here, not deleted, because a weak result is also a result.
+
+| Expected (hypothesis) | What the data showed | Where | What was done |
+|---|---|---|---|
+| Where women are much more educated than men, the life expectancy gap is larger (hypothesis 5) | Moderate across all 27 countries (correlation 0.52), but weak without the Baltic states (0.22). Slovenia has the same education gap as Latvia, with a gap of 5.8 years instead of 10.0 | Graph 11, 5.4.6 | Kept as a result, not used as an explanation of the Baltic gap |
+| Deaths coded as alcohol disorders (`F10`) are much higher among Baltic men | Barely higher than in the rest of the EU (3.9 against 3.2 extra deaths per 100 000). Alcohol shows up instead through accidental poisoning and liver disease | Graph 6, 5.3.2 | The alcohol factor in Graph 9 uses liver disease and poisoning instead |

@@ -1,0 +1,59 @@
+# 1. Environment setup
+
+This section prepares R before any data is loaded. It has to be run first, every time the project is opened. Every later section depends on it.
+
+**Two steps:**
+
+1.  **Packages:** load the R packages used in the analysis, and install any that are missing.
+2.  **Project folder:** check that R finds the project folder, so every file path works on any computer.
+
+## 1.1 Packages
+
+All packages are loaded here, at the start, so they are listed in one place. `pacman::p_load()` loads each package and installs it first if it is missing. This way the file also runs on a computer that has never seen this project.
+
+| Package | Purpose in the analysis |
+|------------------------------------|------------------------------------|
+| `tidyverse` | Reading files (`read_csv()`), working with tables (`filter()`, `mutate()`, joins, pivots) and charts (`ggplot()`) |
+| `here` | File paths that start at the project folder, for example `here("data", "raw", "demo_mlexpec.csv")` |
+| `janitor` | `clean_names()`, which makes column names short, lowercase and easy to type |
+| `gtsummary` | `tbl_summary()`, a ready-made table of missing values and ranges for the data quality checks |
+| `knitr` | `kable()`, which turns a small result table into a neat table in the rendered report. Not taught in the course, used only for display |
+| `scales` | Readable axis labels, for example `label_percent()` for the education shares |
+| `ggrepel` | Country labels on charts that push away from each other, so they do not overlap (`geom_text_repel()`) |
+| `patchwork` | Places several charts side by side or on top of each other, for example a weak and an improved version of the same chart (`p1 + p2`). Not taught in the course |
+
+```{r}
+#| label: setup
+# 1.1 Load every package the analysis uses, installing any that are missing
+pacman::p_load(
+  tidyverse,   # read_csv(), dplyr verbs, pivots, joins, ggplot2
+  here,        # file paths that start at the project folder
+  janitor,     # clean_names()
+  gtsummary,   # tbl_summary() for the data quality tables
+  knitr,       # kable() for neat result tables
+  scales,     # axis labels such as percentages
+  ggrepel,     # country labels that don't overlap
+  patchwork    # several charts side by side, for example p1 + p2
+)
+```
+
+**What it shows:** nothing if all goes well. A message only appears if a package had to be installed.
+
+## 1.2 Project folder
+
+`here()` finds the project folder by looking for the project file `final_project.Rproj` (or the empty `.here` file) in it. All paths start from there, so no full path like `C:/Users/...` is needed, and the project also works on another computer. The folders follow the course's final project template.
+
+| Folder | Content |
+|------------------------------------|------------------------------------|
+| `data/raw/` | The downloads from Eurostat, exactly as they arrived. These files are never edited. `SOURCE.md` lists where each one comes from |
+| `data/clean/` | The clean tables created in the analysis |
+| `figures/` | Exported charts |
+| `notes/` | Decisions made during the analysis and a glossary of functions |
+
+```{r}
+#| label: show-here
+# 1.2 Check where R thinks the project folder is
+here()  # should end in Final_work
+```
+
+**What it shows:** the path to the project folder. If it ends somewhere else, the `.here` file is missing.

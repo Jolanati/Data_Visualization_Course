@@ -82,6 +82,7 @@ Decisions so far (full reasons in `notes/decisions.md`):
 - **Expected message (30 Oct):** "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." Written after the life expectancy table was loaded, but before the other four tables.
 - **Data:** five Eurostat tables (section 3), 2015 to 2024, one row per country and year after the join.
 - **Alcohol (29 Oct):** alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4, if time allows.
+- **Files (3 Nov):** the report is split into `final_project.qmd` (overview and includes) and one file per section, `_1_setup.qmd` to `_7_limits.qmd`, because Positron's inline output hung on the 3 200-line file. Same single report when rendered. Each section file has a hidden setup chunk. Section 3 now saves the five clean tables to `data/clean/` (3.6), so Section 4 can run on its own. Work with `Final_work` opened as the folder.
 - **Report structure (30 Oct, 1 Nov):** `final_project.qmd` follows my wine-dine notebook and the order the work was done: overview with main findings, pipeline and section map, a sub-section table at the start of every section, a "found, decided" summary after every cleaning step, dead ends in an appendix. A table in the overview maps Sergio's template sections to mine.
 - **Names (1 Nov):** Sergio's template names. `analysis.qmd` became `final_project.qmd`, `data-raw/` became `data/raw/`, `data/` became `data/clean/`. The raw files were moved, not changed (checksums identical).
 - **EU filter (30 Oct):** non-EU countries and aggregates are removed in Step 3, table by table, using the shared `eu_codes` list. **Exception (1 Nov):** the deaths table also has about 460 regions (55 MB in total), so its link asks for the 27 EU countries directly (3.5 MB).
@@ -230,7 +231,8 @@ What to expect in cleaning (learned so far, and still to watch):
 ```
 Final_work/                # Sergio's project_template structure
 ├── final_project.Rproj    # RStudio project file, sets the project root
-├── final_project.qmd      # the whole analysis: text that explains, then code
+├── final_project.qmd      # the overview, puts the seven section files together when rendered
+├── _1_setup.qmd ... _7_limits.qmd   # one file per section, each with a hidden setup chunk
 ├── story.md               # one page: question, answer, final graph (required)
 ├── prompt_log.md          # AI workflow, prompts, decisions, AI mistakes (required)
 ├── data/

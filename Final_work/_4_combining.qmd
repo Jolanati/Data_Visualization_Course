@@ -1,0 +1,354 @@
+```{r}
+#| label: setup-combining
+#| include: false
+# Setup for working in this file on its own: loads the packages and the clean tables saved in 3.6.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+read_clean <- function(file) read_csv(here("data", "clean", file), show_col_types = FALSE)   # read a table saved in 3.6
+life_expectancy_clean    <- read_clean("life_expectancy_clean.csv")     # the five clean tables of Section 3
+healthy_life_years_clean <- read_clean("healthy_life_years_clean.csv")
+deaths_clean             <- read_clean("deaths_clean.csv")
+gdp_clean                <- read_clean("gdp_clean.csv")
+education_clean          <- read_clean("education_clean.csv")
+```
+
+# 4. Combining the tables
+
+This section turns five separate tables into one panel, `gap_panel`, with one row per EU country and year: 27 countries times 10 years, 270 rows. Each column holds one thing known about that country in that year. The research question is about relationships, for example whether a larger gap goes with lower GDP, and a chart can only show such a relationship when both numbers sit in the same row.
+
+Life expectancy is complete for all 27 countries and 10 years, so it is the backbone: every other table is joined onto it. Values that a table does not have, such as the deaths of 2024 or Luxembourg's healthy life years for 2023 and 2024, become `NA` in the panel, never 0.
+
+| Step | What happens | Check |
+|------------------|------------------------------------|------------------|
+| 4.1 | Put women and men side by side with `pivot_wider()` and compute the gap with `mutate()`, one table at a time | The number of rows halves, the gaps lie in a plausible range |
+| 4.2 | Deaths: women and men side by side for every cause (`deaths_by_cause`), and deaths from all causes for the panel | 21 951 rows, then 243 rows for all causes |
+| 4.3 | Join the tables on country code and year | 270 rows after every join, `anti_join()` lists what did not match |
+| 4.4 | Mark the Baltic states | 30 rows marked |
+| 4.5 | Save the panel to `data/clean/gap_panel.csv` | The saved file loads again with the same rows and columns |
+
+The tables arrive here already limited to the 27 EU member states (Section 3) and to the years 2015 to 2024 (the download links in Section 2). The `flag` column is dropped before the tables are reshaped: the flags are counted and described table by table in Section 3, and keeping them would add two flag columns per table to the panel.
+
+## 4.1 Women and men side by side
+
+### 4.1.1 Life expectancy
+
+`pivot_wider()` (class 07) turns the values of one column into column names. Here the column `sex` holds `F` and `M`, so the two rows per country and year, one for women and one for men, become one row with two columns, `F` and `M`. `rename()` then gives them names that say what they hold, and `mutate()` computes the gap: women minus men, in years.
+
+```{r}
+#| label: show-life-expectancy-wide
+# 4.1.1 Life expectancy: women and men side by side, then the gap
+life_expectancy_wide <- life_expectancy_clean |>   # start from the clean table of 3.1
+  select(-flag) |>                                 # drop the flags, they are described in Section 3
+  pivot_wider(names_from  = sex,                   # the values F and M become column names
+              values_from = life_expectancy) |>    # the numbers fill the new columns
+  rename(le_women = F,                             # new name = old name
+         le_men   = M) |>
+  mutate(le_gap = le_women - le_men)               # the gap: women minus men, in years
+
+glimpse(life_expectancy_wide)   # expected: 270 rows, 5 columns
+```
+
+**What it shows:** 270 rows, half of the 540 rows of `life_expectancy_clean`, because the two rows per country and year (women and men) became one. Five columns: `country_code`, `year`, `le_women`, `le_men` and `le_gap`.
+
+**Check of the gap.** The gap is the first number in the analysis that is calculated, not downloaded, so it is checked before it is used. Women are expected to live roughly 3 to 11 years longer than men in every EU country. A negative gap would mean that women and men were swapped. The five largest gaps in 2024 are also compared with the press figures quoted in the Background (Latvia 9.8 years, Lithuania 8.6, Estonia 8.5).
+
+```{r}
+#| label: show-life-expectancy-gap-check
+# 4.1.1 Check: the range of the gap, then the five largest gaps in 2024
+life_expectancy_wide |>
+  summarise(smallest_gap = min(le_gap),     # expected: around 3, never below 0
+            largest_gap  = max(le_gap)) |>  # expected: around 11 at most
+  kable(digits = 1)                         # one decimal, as in the data
+
+life_expectancy_wide |>
+  filter(year == 2024) |>                   # the latest year
+  slice_max(le_gap, n = 5) |>               # the five largest gaps, largest first (class 10_2)
+  kable(digits = 1)                         # show the result as a neat table
+```
+
+**What it shows:** the gap runs from 2.8 to 10.4 years, always positive, so women and men were not swapped. In 2024 the three Baltic states have the largest gaps in the EU: Latvia 9.8 years, Lithuania 8.6 and Estonia 8.3, followed by Romania (7.5) and Poland (7.4). Latvia and Lithuania match the press figures exactly. Estonia is 0.2 years lower than the 8.5 quoted in the press, probably because Eurostat revised the figure after the article was written. The analysis uses the Eurostat data. The table also shows where the gap comes from: Baltic women live about as long as women in Romania or Poland, but Baltic men, especially in Latvia (71.4 years), live shorter lives.
+
+### 4.1.2 Healthy life years
+
+The same three steps as in 4.1.1. The table has 536 rows, not 540, because Luxembourg has no values for 2023 and 2024, so the wide table is expected to have 268 rows. The two missing rows come back as `NA` when the tables are joined in 4.3.
+
+```{r}
+#| label: show-healthy-life-years-wide
+# 4.1.2 Healthy life years: women and men side by side, then the gap
+healthy_life_years_wide <- healthy_life_years_clean |>   # start from the clean table of 3.2
+  select(-flag) |>                                       # drop the flags, they are described in Section 3
+  pivot_wider(names_from  = sex,                         # the values F and M become column names
+              values_from = healthy_life_years) |>       # the numbers fill the new columns
+  rename(hly_women = F,                                  # new name = old name
+         hly_men   = M) |>
+  mutate(hly_gap = hly_women - hly_men)                  # the gap: women minus men, in healthy years
+
+glimpse(healthy_life_years_wide)   # expected: 268 rows, 5 columns
+```
+
+**What it shows:** 268 rows, half of the 536 rows of `healthy_life_years_clean`, and five columns: `country_code`, `year`, `hly_women`, `hly_men` and `hly_gap`. Already in Austria the gap is small and sometimes negative, for example -0.6 in 2017.
+
+**Check of the gap.** Unlike life expectancy, the gap in healthy life years can be negative. Women live longer, but they often spend more of those years with limitations in daily activities, so in some countries men have more healthy years than women. A negative value is therefore not an error. The check looks at the range and at how many country-years have a negative gap.
+
+```{r}
+#| label: show-healthy-life-years-gap-check
+# 4.1.2 Check: the range of the gap, and how often it is negative
+healthy_life_years_wide |>
+  summarise(smallest_gap  = min(hly_gap),        # can be below 0: men with more healthy years
+            largest_gap   = max(hly_gap),        # expected: a few years at most
+            negative_gaps = sum(hly_gap < 0)) |> # number of country-years where men have more healthy years
+  kable(digits = 1)                              # one decimal, as in the data
+
+healthy_life_years_wide |>
+  filter(year == 2024) |>                        # the latest year
+  slice_max(hly_gap, n = 5) |>                   # the five largest gaps, largest first (class 10_2)
+  kable(digits = 1)                              # show the result as a neat table
+```
+
+**What it shows:** the gap in healthy life years runs from -5.0 to 5.4 years. In 76 of the 268 country-years it is negative, so men have more healthy years than women, as expected for this measure. In 2024 the largest gaps are in Lithuania (5.4 years), Bulgaria (4.6), Estonia (3.8), Poland (3.0) and Latvia (2.8). Latvia has the largest gap in life expectancy, but only the fifth largest in healthy life years, because Latvian women also have few healthy years (53.9, the lowest of the five). In the Baltic states, men live both shorter lives and fewer healthy years, but healthy years are low for women too.
+
+### 4.1.3 Education
+
+The same steps once more. The gap is again women minus men, here in percentage points: a gap of 20 means that the share of young women with a tertiary degree is 20 percentage points higher than the share of young men.
+
+```{r}
+#| label: show-education-wide
+# 4.1.3 Education: women and men side by side, then the gap
+education_wide <- education_clean |>                     # start from the clean table of 3.5
+  select(-flag) |>                                       # drop the flags, they are described in Section 3
+  pivot_wider(names_from  = sex,                         # the values F and M become column names
+              values_from = tertiary_pct) |>             # the numbers fill the new columns
+  rename(tertiary_women_pct = F,                         # new name = old name
+         tertiary_men_pct   = M) |>
+  mutate(tertiary_gap = tertiary_women_pct - tertiary_men_pct)   # the gap: women minus men, in percentage points
+
+glimpse(education_wide)   # expected: 270 rows, 5 columns
+```
+
+**What it shows:** 270 rows, half of the 540 rows of `education_clean`, and five columns: `country_code`, `year`, `tertiary_women_pct`, `tertiary_men_pct` and `tertiary_gap`. Education is complete for all 27 countries and 10 years.
+
+**Check of the gap.** From Check 3 in 3.5.2, women are expected to be ahead in nearly every country, so the gap should be positive almost everywhere and at most around 30 percentage points.
+
+```{r}
+#| label: show-education-gap-check
+# 4.1.3 Check: the range of the gap, and the five largest gaps in 2024
+education_wide |>
+  summarise(smallest_gap  = min(tertiary_gap),         # expected: just above 0
+            largest_gap   = max(tertiary_gap),         # expected: around 30 at most
+            negative_gaps = sum(tertiary_gap < 0)) |>  # country-years where men are ahead
+  kable(digits = 1)                                    # one decimal, as in the data
+
+education_wide |>
+  filter(year == 2024) |>                              # the latest year
+  slice_max(tertiary_gap, n = 5) |>                    # the five largest gaps, largest first (class 10_2)
+  kable(digits = 1)                                    # show the result as a neat table
+```
+
+**What it shows:** the education gap runs from 1.9 to 28.4 percentage points and is never negative: in every EU country and every year, a larger share of young women than of young men has a tertiary degree. The largest gap of all is Latvia in 2015 (28.4). In 2024 the largest gaps are in Slovenia (23.7), Latvia (22.9), Estonia (21.6), Croatia (20.5) and Slovakia (18.9). Two Baltic states are in the top three, but Slovenia, whose life expectancy gap is much smaller, is first, so a large education gap alone does not come with a large life expectancy gap. Whether the two go together across all countries is examined in Section 5.
+
+## 4.2 Deaths: women and men side by side
+
+The deaths table has 92 causes. Putting every cause into `gap_panel` would add about 180 columns. The deaths are therefore kept in two forms:
+
+- **`deaths_by_cause`:** one row per country, year and cause, with women and men side by side. It is used in Section 5 for the overview of the chapters of causes and for the deeper look at the causes named in the hypotheses.
+- **Deaths from all causes** go into `gap_panel`, as one more set of columns for each country and year.
+
+The gap in deaths is defined the other way round from the other gaps: **men minus women**, in deaths per 100 000. Men under 65 die more often, so this way a positive number means, as for life expectancy, that men are worse off. A difference is used instead of a ratio (men divided by women), because a ratio cannot be computed when women have no deaths from a cause, which happens 3 151 times in the data. Both rates are kept, so a ratio can still be calculated where it is useful.
+
+### 4.2.1 Every cause side by side
+
+```{r}
+#| label: show-deaths-by-cause
+# 4.2.1 Deaths: women and men side by side for every cause, then the gap
+deaths_by_cause <- deaths_clean |>                 # start from the clean table of 3.3
+  select(-flag) |>                                 # drop the flags, the deaths table has none anyway
+  pivot_wider(names_from  = sex,                   # the values F and M become column names
+              values_from = death_rate) |>         # the numbers fill the new columns
+  rename(death_women = F,                          # new name = old name
+         death_men   = M) |>
+  mutate(death_gap = death_men - death_women)      # the gap: men minus women, deaths per 100 000
+
+glimpse(deaths_by_cause)   # expected: 21 951 rows, 7 columns
+```
+
+**What it shows:** 21 951 rows, half of the 43 902 rows of `deaths_clean`, and seven columns: `country_code`, `year`, `cause_code`, `cause_level`, `death_women`, `death_men` and `death_gap`. In 2 992 rows the gap is negative, meaning more women than men die of that cause, for example from breast cancer. For most causes and for all causes together, men die more often.
+
+### 4.2.2 Deaths from all causes, for the panel
+
+From `deaths_by_cause`, only the rows for all causes are kept, and the columns get names that say so. This is the part of the deaths data that goes into `gap_panel`.
+
+```{r}
+#| label: show-deaths-all-causes
+# 4.2.2 Deaths from all causes, one row per country and year, ready for the join
+deaths_all_causes <- deaths_by_cause |>
+  filter(cause_level == "all causes") |>                  # only the TOTAL rows
+  select(country_code, year,                              # the two keys for the join
+         death_all_women = death_women,                   # select() can rename too: new name = old name
+         death_all_men   = death_men,
+         death_all_gap   = death_gap)
+
+glimpse(deaths_all_causes)   # expected: 243 rows (27 countries x 9 years), 5 columns
+
+deaths_all_causes |>
+  summarise(smallest_gap = min(death_all_gap),     # expected: positive, men die more in every country
+            largest_gap  = max(death_all_gap)) |>  # expected: a few hundred per 100 000
+  kable(digits = 1)                                # one decimal
+```
+
+**What it shows:** 243 rows, one per country and year from 2015 to 2023, and five columns. The gap in deaths from all causes is positive everywhere: in every EU country and year, more men than women die before 65. It ranges from 44 more deaths per 100 000 (Netherlands, 2019) to 455 more (Latvia, 2021). The rows are not sorted by year, because the code for all causes was `A-R_V-Y` for 2018 to 2021 before it was merged into `TOTAL`. The order does not matter for the join, which matches rows by country and year, not by position.
+
+## 4.3 Joining the tables
+
+The tables are joined one at a time onto the life expectancy table, with `left_join()` (class 08). `left_join()` keeps every row of the first table and adds the columns of the second where `country_code` and `year` match. Where there is no match, the new columns get `NA`. `inner_join()` was not used, because it keeps only rows that exist in every table: all of 2024 (no deaths data yet) and Luxembourg in 2023 would disappear, 28 of 270 rows, including their life expectancy, the main measure.
+
+After every join, two checks follow. The number of rows must still be 270: more rows would mean that a country and year matched twice. And `anti_join()` lists the rows of the panel that found no partner in the new table, so every `NA` is explained.
+
+### 4.3.1 Healthy life years
+
+```{r}
+#| label: show-join-healthy-life-years
+# 4.3.1 Add healthy life years to the life expectancy table
+gap_panel <- life_expectancy_wide |>                       # the backbone: 270 rows
+  left_join(healthy_life_years_wide,                       # add the healthy life years columns
+            by = join_by(country_code, year))              # match on country and year
+
+nrow(gap_panel)   # must still be 270
+
+life_expectancy_wide |>
+  anti_join(healthy_life_years_wide,                       # rows of the backbone with no partner
+            by = join_by(country_code, year)) |>
+  select(country_code, year) |>                            # only the keys are needed here
+  kable()                                                  # expected: Luxembourg 2023 and 2024
+```
+
+**What it shows:** the panel still has 270 rows, so no country and year matched twice. Only two rows found no healthy life years: Luxembourg in 2023 and 2024, the two years missing from the Eurostat table (see 3.2). In these two rows, `hly_women`, `hly_men` and `hly_gap` are `NA`.
+
+### 4.3.2 GDP per capita
+
+GDP has no `sex`, so it joins on `country_code` and `year` like the others, and the same GDP value sits next to the values for women and men.
+
+```{r}
+#| label: show-join-gdp
+# 4.3.2 Add GDP per capita
+gap_panel <- gap_panel |>                                  # the panel so far
+  left_join(gdp_clean |> select(-flag),                    # GDP without its flag column
+            by = join_by(country_code, year))              # match on country and year
+
+nrow(gap_panel)   # must still be 270
+
+gap_panel |>
+  anti_join(gdp_clean, by = join_by(country_code, year)) |>   # rows with no GDP
+  nrow()                                                      # expected: 0, GDP is complete
+```
+
+**What it shows:** still 270 rows, and every row found its GDP value (0 rows without a partner). The panel now has one more column, `gdp_pps_index`.
+
+### 4.3.3 Education
+
+```{r}
+#| label: show-join-education
+# 4.3.3 Add tertiary education
+gap_panel <- gap_panel |>                                  # the panel so far
+  left_join(education_wide,                                # add the education columns
+            by = join_by(country_code, year))              # match on country and year
+
+nrow(gap_panel)   # must still be 270
+
+gap_panel |>
+  anti_join(education_wide, by = join_by(country_code, year)) |>   # rows with no education data
+  nrow()                                                           # expected: 0, education is complete
+```
+
+**What it shows:** still 270 rows, and every row found its education values (0 rows without a partner). The panel now has three more columns: `tertiary_women_pct`, `tertiary_men_pct` and `tertiary_gap`.
+
+### 4.3.4 Deaths from all causes
+
+```{r}
+#| label: show-join-deaths
+# 4.3.4 Add deaths from all causes
+gap_panel <- gap_panel |>                                  # the panel so far
+  left_join(deaths_all_causes,                             # add the deaths columns
+            by = join_by(country_code, year))              # match on country and year
+
+nrow(gap_panel)   # must still be 270
+
+gap_panel |>
+  anti_join(deaths_all_causes, by = join_by(country_code, year)) |>   # rows with no deaths data
+  count(year)                                                         # expected: only 2024, 27 rows
+```
+
+**What it shows:** still 270 rows. The 27 rows without deaths data are exactly the 27 countries in 2024, the year the deaths table does not yet cover. In these rows the three death columns are `NA`. After the four joins, `gap_panel` has 270 rows and 15 columns, and its only missing values are these 27 rows of deaths and the two rows of healthy life years for Luxembourg.
+
+## 4.4 Country names and the Baltic states
+
+Two columns make the panel easier to read and to chart. `country` holds the English name of each country, because codes such as `EL` (Greece) or `SI` (Slovenia) are not known to every reader. `baltic` is `TRUE` for Estonia, Latvia and Lithuania and `FALSE` for the other 24 countries, so that every chart can highlight the three countries with one line of code.
+
+The names are written once, in a small table with one row per country, and joined onto the panel by `country_code`, in the same way as the data tables.
+
+```{r}
+#| label: show-country-names
+# 4.4 The English name of each EU member state, one row per country
+country_names <- tibble(
+  country_code = c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",
+                   "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+                   "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK"),
+  country      = c("Austria", "Belgium", "Bulgaria", "Cyprus", "Czechia",        # same order as the codes above
+                   "Germany", "Denmark", "Estonia", "Greece",
+                   "Spain", "Finland", "France", "Croatia", "Hungary",
+                   "Ireland", "Italy", "Lithuania", "Luxembourg",
+                   "Latvia", "Malta", "Netherlands", "Poland", "Portugal",
+                   "Romania", "Sweden", "Slovenia", "Slovakia")
+)
+
+nrow(country_names)   # should be 27
+```
+
+```{r}
+#| label: show-baltic
+# 4.4 Add the country names and mark the Baltic states
+gap_panel <- gap_panel |>                                   # the panel after the four joins
+  left_join(country_names, by = join_by(country_code)) |>   # add the name, matched on the code only
+  mutate(baltic = country_code %in% c("EE", "LV", "LT")) |> # TRUE for Estonia, Latvia, Lithuania
+  select(country_code, country, baltic, everything())       # put the three columns first, then all others
+
+nrow(gap_panel)          # must still be 270
+sum(is.na(gap_panel$country))   # expected: 0, every code found its name
+
+gap_panel |>
+  count(baltic) |>                                          # rows per group
+  kable(col.names = c("Baltic state", "Rows"))              # expected: FALSE 240, TRUE 30
+```
+
+**What it shows:** still 270 rows, and every country code found its name (0 missing). 30 rows are marked as Baltic (3 countries times 10 years) and 240 as not Baltic. `gap_panel` now has 17 columns: code, name and Baltic mark first, then `year` and the 13 measures.
+
+## 4.5 Saving the panel
+
+The two combined tables are saved to `data/clean/`: `gap_panel.csv`, one row per country and year, and `deaths_by_cause.csv`, one row per country, year and cause, with the country names and the Baltic mark added so it can be charted on its own. `write_csv()` writes a table to a CSV file, and missing values are written as `NA`. The files in `data/clean/` are created by this code and can always be recreated by running the document again, unlike the files in `data/raw/`.
+
+```{r}
+#| label: show-save
+# 4.5 Save the two combined tables to data/clean/
+write_csv(gap_panel,                                        # the panel: one row per country and year
+          here("data", "clean", "gap_panel.csv"))
+
+deaths_by_cause <- deaths_by_cause |>                       # the deaths: one row per country, year and cause
+  left_join(country_names, by = join_by(country_code)) |>   # add the names, as in the panel
+  mutate(baltic = country_code %in% c("EE", "LV", "LT"))    # and the Baltic mark
+
+write_csv(deaths_by_cause,
+          here("data", "clean", "deaths_by_cause.csv"))
+```
+
+**Check: the saved panel loads again.** This is also the five-line check of the course checkpoint: load the clean data from its file and look at it, without any of the code above.
+
+```{r}
+#| label: show-checkpoint
+# 4.5 Check: load the saved panel from the file, as anyone else would
+here("data", "clean", "gap_panel.csv") |>    # the path to the saved file
+  read_csv(show_col_types = FALSE) |>        # read it back
+  glimpse() |>                               # show columns and types
+  nrow()                                     # expected: 270
+```
+
+**What it shows:** the saved file loads with 270 rows and 17 columns, the same as `gap_panel` in memory. The types survived the round trip: `country_code` and `country` are text, `baltic` is logical (`TRUE` or `FALSE`), and all measures are numbers. `gap_panel.csv` is the table that Section 5 starts from.
