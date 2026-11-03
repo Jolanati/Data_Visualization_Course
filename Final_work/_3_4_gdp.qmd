@@ -1,0 +1,239 @@
+```{r}
+#| label: setup-cleaning-gdp
+#| include: false
+# Setup for working in this file on its own: loads the packages, the EU codes and this table's raw file.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+read_raw <- function(file) read_csv(here("data", "raw", file),          # read a raw file as in Section 2
+                                    na = c("", ":", "NA"), show_col_types = FALSE)
+gdp_raw                <- read_raw("tec00114.csv")        # the raw table of 2.4
+```
+
+## 3.4 GDP per capita
+
+The GDP table goes through the same four stages. It is the simplest of the five tables: one value per country and year, with no sex and no cause. As in 3.1 and 3.2, the non-EU countries and aggregates are removed in this section.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.4.1 | Tidy the column names | Readable names, same data |
+| 3.4.2 | Run the five quality checks | One result per check |
+| 3.4.3 | Summarise what was found and decide | A table of decisions |
+| 3.4.4 | Apply the decisions | `gdp_clean`, EU only, key columns only |
+
+### 3.4.1 Tidy the column names
+
+Same as before. The value column becomes `gdp_pps_index`: GDP per person, in purchasing power standards, as an index with the EU average at 100. The name is long, but it says what the number is, so it cannot be mistaken for GDP in euros.
+
+| Eurostat name | After `clean_names()` | After `rename()` |
+|---------------|-----------------------|------------------|
+| `geo`         | `geo`                 | `country_code`   |
+| `TIME_PERIOD` | `time_period`         | `year`           |
+| `OBS_VALUE`   | `obs_value`           | `gdp_pps_index`  |
+| `OBS_FLAG`    | `obs_flag`            | `flag`           |
+
+```{r}
+#| label: show-gdp-names
+# 3.4.1 Make the column names readable
+gdp_clean <- gdp_raw |>                        # start from the untouched raw table
+  clean_names() |>                             # for example TIME_PERIOD becomes time_period
+  rename(country_code  = geo,                  # new name = old name
+         year          = time_period,          # the year, a key for the join in Section 4
+         gdp_pps_index = obs_value,            # the value: GDP per person, EU27 = 100
+         flag          = obs_flag)             # p = provisional
+
+names(gdp_clean)   # list the new column names, expected: 10
+```
+
+**What it shows:** the same 10 columns. Four of them have new names: `country_code`, `year`, `gdp_pps_index` and `flag`.
+
+### 3.4.2 The five quality checks
+
+The checks run on all 430 rows, before anything is removed. The code follows 3.1.2, without `sex`, because GDP is one value per country and year.
+
+#### Check 1: types
+
+```{r}
+#| label: show-gdp-types
+# 3.4.2 Check 1: the type of every column
+glimpse(gdp_clean)   # gdp_pps_index and year should be <dbl>
+```
+
+**Result:** `gdp_pps_index` and `year` are numbers. `flag` is text, because 9 rows hold the letter `p`. `conf_status` is read as logical, because it is empty.
+
+#### Check 2: missing values
+
+```{r}
+#| label: show-gdp-missing
+# 3.4.2 Check 2: missing values and spread of the GDP index
+gdp_clean |>                                             # the renamed table, all 430 rows
+  tbl_summary(
+    include   = gdp_pps_index,                           # the one value column (no sex here)
+    type      = gdp_pps_index ~ "continuous2",           # show the number on several lines
+    statistic = gdp_pps_index ~ c("{median} ({p25} to {p75})",   # middle half
+                                  "{min} to {max}"),             # full range
+    label     = gdp_pps_index ~ "GDP per capita in PPS (EU27 = 100)",   # readable row name
+    missing      = "always",                             # a Missing row, even if it is 0
+    missing_text = "Missing"                             # the word shown in that row
+  )
+```
+
+```{r}
+#| label: show-gdp-flags
+# 3.4.2 Check 2: how many values carry a flag, and which one
+gdp_clean |>                                        # the renamed table, all 430 rows
+  count(flag, sort = TRUE) |>                       # most common flag first
+  kable(col.names = c("Flag", "Number of values"))  # NA here means "no flag"
+```
+
+**Result:** no value of `gdp_pps_index` is missing. The median is 96, close to the EU average of 100, and half of all values lie between 70 and 118. The full range runs from 30 (Albania, 2015) to 279 (Luxembourg, 2015). 9 values are marked `p` (provisional), all from 2023 or 2024, the most recent years, which Eurostat may still revise. As in the other tables, flagged values are kept.
+
+#### Check 3: units and ranges
+
+An index with the EU average at 100 is expected to lie roughly between 20 and 300 for European countries. A value far outside would point to a wrong indicator, for example GDP in euros instead of an index.
+
+```{r}
+#| label: show-gdp-range
+#| fig-height: 4
+# 3.4.2 Check 3: the distribution of the GDP index
+gdp_clean |>
+  ggplot(aes(x = gdp_pps_index)) +                   # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 10,
+                 fill = "#21908C",                   # one colour from the viridis palette (teal)
+                 color = "white") +                  # one bar per 10 index points, white gaps
+  geom_vline(xintercept = c(20, 300),
+             linetype = "dashed") +                  # the expected range
+  geom_vline(xintercept = 100) +                     # the EU average, as a solid line
+  labs(title = "All values lie inside the expected range of 20 to 300",   # the title states the finding
+       x = "GDP per capita in PPS (EU27 = 100)",
+       y = "Number of rows") +
+  theme_minimal() +                                  # white background, light grid
+  theme(panel.grid.minor = element_blank())          # fewer lines that carry no data
+```
+
+**Result:** all values lie inside the expected range of 20 to 300. Most units are close to the EU average, between about 50 and 140. The long tail on the right belongs to two EU countries and Norway: Luxembourg (244 to 279), Ireland (178 to 237) and Norway in 2021 to 2023 (up to 222, when energy prices were high). Luxembourg is high because many of the people who work there live in neighbouring countries, and Ireland because the profits of large international companies are booked there. Both are real values, but they make these two countries look richer than their residents are. This matters in Section 5: in a scatter plot against GDP, Luxembourg and Ireland will sit far to the right and can pull a trend line.
+
+#### Check 4: duplicates
+
+There is no sex in this table, so one row should be one country and one year.
+
+```{r}
+#| label: show-gdp-duplicates
+# 3.4.2 Check 4: compare all rows with distinct country and year combinations
+nrow(gdp_clean)                        # all rows, expected: 430
+
+gdp_clean |>
+  distinct(country_code, year) |>      # each combination once
+  nrow()                               # the same number means no duplicates
+```
+
+**Result:** both counts are 430. Every combination of country and year appears exactly once, so the table has no duplicates.
+
+#### Check 5: row counts
+
+With 10 years and no sex dimension, every geographic unit should have 10 rows. The same bar chart as in 3.1.2 and 3.2.2.
+
+```{r}
+#| label: show-gdp-rows
+#| fig-height: 6
+# 3.4.2 Check 5: number of rows per geographic unit, EU member states in orange
+gdp_clean |>
+  count(country_code) |>                                  # n = number of rows per unit
+  mutate(eu = country_code %in% eu_codes,                 # TRUE for the 27 member states
+         country_code = fct_reorder(country_code, n)) |>  # sort the bars by n
+  ggplot(aes(x = country_code, y = n, fill = eu)) +      # one bar per unit, coloured by EU or not
+  geom_col() +                                            # bar length = the number of rows
+  geom_hline(yintercept = 10, linetype = "dashed") +      # the expected 10 rows
+  coord_flip() +                                          # bars sideways, codes readable
+  scale_fill_viridis_d(option = "plasma",
+                       begin = 0.15, end = 0.75,                    # purple and orange, no red
+                       labels = c("Other unit", "EU member state"), # FALSE comes first, then TRUE
+                       name = NULL) +
+  labs(title = "Every unit has all 10 years",            # the title states the finding
+       x = NULL,                                         # the country codes need no axis title
+       y = "Number of rows (expected: 10)") +
+  theme_minimal() +                                       # white background, light grid
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())              # the bars need no horizontal grid
+```
+
+```{r}
+#| label: show-gdp-eu-rows
+# 3.4.2 Check 5: count the rows of the EU member states, without removing anything
+gdp_clean |>
+  filter(country_code %in% eu_codes) |>   # look at the member states only
+  nrow()                                  # expected: 27 x 10 = 270
+```
+
+```{r}
+#| label: show-gdp-constant
+# 3.4.2 Check 5: columns fixed in the link: each should have only one value
+gdp_clean |>
+  distinct(freq, indic_ppp, ppp_cat18) |>   # one row means each column has one value
+  kable()                                   # show the result as a neat table
+```
+
+**Result:** all 43 units have the full 10 rows, so no year is missing anywhere. The 27 EU member states have 270 rows together, as expected. `freq`, `indic_ppp` and `ppp_cat18` each hold a single value (`A`, `VI_PPS_EU27_2020_HAB`, `GDP`), the choices made in the link, so they can be removed.
+
+### 3.4.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|-----------------|----------------------------|----------------------------|
+| 1 Types | `gdp_pps_index` and `year` are numbers | No change needed |
+| 2 Missing values | No missing values. 9 values marked `p` (provisional), all from 2023 or 2024. None in the Baltic states | Flagged values are kept, as in the other tables |
+| 3 Units and ranges | 30 to 279, all inside the expected range. Luxembourg (244 to 279) and Ireland (178 to 237) far above all other EU countries | Both are kept as real values, and flagged for Section 5 |
+| 4 Duplicates | Every country and year appears once | No change needed |
+| 5 Row counts | All 43 units complete (10 rows each), 270 rows for the EU | Only the 27 EU member states are kept, using `eu_codes` |
+| 5 Columns fixed in the link | `freq`, `indic_ppp` and `ppp_cat18` hold one value each. `conf_status` is empty. `dataflow` and `last_update` describe the download | These six technical columns are removed. The `last_update` date is reported once, in the source line |
+
+After these decisions, `gdp_clean` keeps four columns: `country_code`, `year`, `gdp_pps_index` and `flag`. It has no `sex` column, because GDP is one value per country.
+
+**Why Luxembourg and Ireland are kept.** Their GDP index is far above the other EU countries for reasons that say little about how well off their residents are: in Luxembourg many workers live in neighbouring countries, and in Ireland the profits of large international companies are booked there. The values are still correct Eurostat data, so they are not changed or removed. Removing the two countries would also drop them from every other comparison, where their values are ordinary. Instead, every chart against GDP in Section 5 is checked with and without them, and if the trend line changes, both versions are shown.
+
+### 3.4.4 Apply the decisions
+
+The same two steps as in 3.1.4 and 3.2.4, with the row count checked after each one.
+
+#### Keep only the EU member states
+
+```{r}
+#| label: show-gdp-eu
+# 3.4.4 Keep only the 27 EU member states
+nrow(gdp_clean)   # before: 430 rows
+
+gdp_clean <- gdp_clean |>                   # overwrite the table with the filtered version
+  filter(country_code %in% eu_codes)        # drop non-EU countries and aggregates such as EU27_2020
+
+nrow(gdp_clean)   # after: expected 27 x 10 = 270
+```
+
+**What it shows:** 430 rows before and 270 after. The 160 removed rows are 16 units with 10 years each: the four aggregates (`EU27_2020`, `EA19`, `EA20`, `EA21`) and 12 non-EU countries.
+
+#### Remove the technical columns
+
+```{r}
+#| label: show-gdp-select
+# 3.4.4 Keep the four columns the analysis uses
+gdp_clean <- gdp_clean |>                                   # overwrite the table again
+  select(country_code, year, gdp_pps_index, flag)           # everything else is dropped
+
+glimpse(gdp_clean)   # expected: 270 rows, 4 columns
+```
+
+**What it shows:** the clean table, with 270 rows and 4 columns: `country_code`, `year`, `gdp_pps_index` and `flag`. One row per EU country and year, with no `sex` column. This is the GDP table that goes into Section 4.
+
+### 3.4.5 Save the clean table
+
+The clean GDP table is saved to `data/clean/` at the end of this sub-section, right after it is created. Section 4 starts from this file, so each part of the analysis can be rerun on its own. Like the panel in 4.5, the file is created by the code and can always be recreated by running this sub-section again.
+
+```{r}
+#| label: show-save-gdp
+# 3.4.5 Save the clean GDP table to data/clean/
+write_csv(gdp_clean, here("data", "clean", "gdp_clean.csv"))   # 270 rows
+```
+
+**What it shows:** nothing on screen. The file `data/clean/gdp_clean.csv` is created or replaced.

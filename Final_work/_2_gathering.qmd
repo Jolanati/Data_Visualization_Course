@@ -543,4 +543,28 @@ alcohol_url  # print the link, so it can also be opened in a browser
 
 **What it shows:** one web address. Pasted into a browser, it downloads the same CSV file.
 
+### 2.6.2 Download once
+
+Same as in 2.3.2, with a different first-line check. An Our World in Data file starts with the column name `entity` (the country name), not `DATAFLOW` like a Eurostat file. If the first line is anything else, for example an error page, the file is deleted and the chunk stops with a message.
+
+```{r}
+#| label: show-alcohol-download
+# 2.6.2 Save the raw file to data/raw/, only if it isn't there yet
+alcohol_file <- here("data", "raw", "total_alcohol_consumption_per_capita.csv")   # where the raw file goes
+
+if (!file.exists(alcohol_file)) {                # TRUE only on the first run
+  download.file(alcohol_url,                     # from this link
+                alcohol_file,                    # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(alcohol_file, n = 1)            # read only the first line of the file
+  if (!startsWith(first_line, "entity")) {                # an Our World in Data CSV starts with entity
+    file.remove(alcohol_file)                             # delete the wrong file, keep data/raw/ clean
+    stop("The download did not return the alcohol table. Check the link and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size (about 100 KB). After that, nothing, because the file already exists.
+
 ------------------------------------------------------------------------

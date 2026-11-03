@@ -110,3 +110,9 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 **5. A misleading quiz question about `case_when()`.** In 3.3.4, Claude asked me what would happen if `.default = "detail"` came first in `case_when()`. The question was wrong: `.default` is always used last, for rows no rule matched, wherever it is written. What matters is the order of the rules with `~`, because the first true rule wins. This time Claude noticed the mistake itself, in the next step, and corrected it before I answered. It reminded me that the AI's questions can be wrong too, not only its answers.
 
 **6. Too many decisions at once.** When Sergio's template arrived, Claude listed four decisions in one message and pushed for answers. I said "Don't rush" and we now go through them one at a time.
+
+**7. A save step that depended on other files (3 Nov).** When Section 3 was split into one file per table, Claude put the saving of all five clean tables into a separate last file, `_3_6_save.qmd`. That file only worked if all five cleaning files had been run in the same R session first. I ran it and got the error "Run 3.1 to 3.5 first", even though I had run them. My observation: each table should save itself at the end of its own file. I wrote:
+
+> Save is not working despite fact that I did run them, so save must be part of each section?
+
+Now each cleaning file ends with its own save step (3.1.5 to 3.5.5), and the separate save file is gone. Every file runs and saves on its own, and the report renders as before.

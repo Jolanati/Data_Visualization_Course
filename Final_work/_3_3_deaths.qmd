@@ -1,0 +1,297 @@
+```{r}
+#| label: setup-cleaning-deaths
+#| include: false
+# Setup for working in this file on its own: loads the packages, the EU codes and this table's raw file.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+read_raw <- function(file) read_csv(here("data", "raw", file),          # read a raw file as in Section 2
+                                    na = c("", ":", "NA"), show_col_types = FALSE)
+deaths_raw             <- read_raw("hlth_cd_asdr2.csv")   # the raw table of 2.3
+```
+
+## 3.3 Deaths by cause
+
+The deaths table goes through the same four stages as the first two tables. It is larger and has one more dimension, the cause of death, so the checks also look at the causes. The first look in 2.3.3 already showed one new problem: "all causes" is coded `TOTAL` in some years and `A-R_V-Y` in others.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.3.1 | Tidy the column names | Readable names, same data |
+| 3.3.2 | Run the five quality checks | One result per check |
+| 3.3.3 | Summarise what was found and decide, including the two "all causes" codes and the chapters of causes | A table of decisions |
+| 3.3.4 | Apply the decisions | `deaths_clean` |
+
+### 3.3.1 Tidy the column names
+
+Same as in 3.1.1 and 3.2.1. The value column becomes `death_rate`. The extra column `icd10` becomes `cause_code`, because it holds the code of the cause of death, and the name should say what it holds, not which classification system it comes from.
+
+| Eurostat name | After `clean_names()` | After `rename()` |
+|---------------|-----------------------|------------------|
+| `geo`         | `geo`                 | `country_code`   |
+| `TIME_PERIOD` | `time_period`         | `year`           |
+| `icd10`       | `icd10`               | `cause_code`     |
+| `OBS_VALUE`   | `obs_value`           | `death_rate`     |
+| `OBS_FLAG`    | `obs_flag`            | `flag`           |
+
+```{r}
+#| label: show-deaths-names
+# 3.3.1 Make the column names readable
+deaths_clean <- deaths_raw |>                  # start from the untouched raw table
+  clean_names() |>                             # for example TIME_PERIOD becomes time_period
+  rename(country_code = geo,                   # new name = old name
+         year         = time_period,           # the year, a key for the join in Section 4
+         cause_code   = icd10,                 # the ICD-10 code of the cause of death
+         death_rate   = obs_value,             # the value: deaths per 100 000, under 65
+         flag         = obs_flag)              # e, p, b ... how the value was produced
+
+names(deaths_clean)   # list the new column names, expected: 12
+```
+
+**What it shows:** the same 12 columns. Five of them have new names: `country_code`, `year`, `cause_code`, `death_rate` and `flag`.
+
+### 3.3.2 The five quality checks
+
+The checks run on all 43 902 rows, before anything is removed. The code follows 3.1.2 and 3.2.2. What is new: the countries were already limited to the EU in the download link, and there is one more dimension to check, the cause of death.
+
+#### Check 1: types
+
+```{r}
+#| label: show-deaths-types
+# 3.3.2 Check 1: the type of every column
+glimpse(deaths_clean)   # death_rate and year should be <dbl>
+```
+
+**Result:** `death_rate` and `year` are numbers. `country_code`, `sex` and `cause_code` are text. `flag` and `conf_status` are read as logical, because they are empty in every row.
+
+#### Check 2: missing values
+
+The same two tables as before: `tbl_summary()` for the value and `sex`, and a count of the flags.
+
+```{r}
+#| label: show-deaths-missing
+# 3.3.2 Check 2: missing values and spread of the key columns
+deaths_clean |>                                          # the renamed table, all 43 902 rows
+  tbl_summary(
+    include   = c(death_rate, sex),                      # the two columns to check
+    type      = death_rate ~ "continuous2",              # show the number on several lines
+    statistic = death_rate ~ c("{median} ({p25} to {p75})",   # middle half
+                               "{min} to {max}"),             # full range
+    label     = list(death_rate ~ "Death rate under 65 (per 100 000)",   # readable row names
+                     sex ~ "Sex"),
+    missing      = "always",                             # a Missing row, even if it is 0
+    missing_text = "Missing"                             # the word shown in that row
+  )
+```
+
+```{r}
+#| label: show-deaths-flags
+# 3.3.2 Check 2: how many values carry a flag, and which one
+deaths_clean |>                                     # the renamed table, all 43 902 rows
+  count(flag, sort = TRUE) |>                       # most common flag first
+  kable(col.names = c("Flag", "Number of values"))  # NA here means "no flag"
+```
+
+**Result:** no value of `death_rate` is missing, and `sex` holds only `F` and `M`, with 21 951 rows each. No value carries a flag. The median death rate is only 1.7 per 100 000, and half of all values lie between 0.4 and 5.2, because most of the 93 causes are rare: 3 151 values are exactly 0 (no deaths from that cause under 65 in that country and year). The few large values belong to the broad groups such as all causes or circulatory diseases. A zero is a real count, not a missing value, so it is kept.
+
+#### Check 3: units and ranges
+
+A histogram of all 43 902 values would mix rare causes, close to 0, with the broad groups, in the hundreds, and show little. The range check therefore looks at the one value that must be plausible in every country and year: the death rate from all causes. It is coded `TOTAL` in some years and `A-R_V-Y` in others (see 2.3.3), so both codes are kept here. Under 65, the death rate from all causes in the EU is expected to lie roughly between 50 and 1 000 per 100 000.
+
+```{r}
+#| label: show-deaths-range
+#| fig-height: 4
+# 3.3.2 Check 3: the distribution of the death rate from all causes, women and men apart
+deaths_clean |>
+  filter(cause_code %in% c("TOTAL", "A-R_V-Y")) |>  # all causes, under both of its codes
+  ggplot(aes(x = death_rate, fill = sex)) +          # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 25,
+                 color = "white") +                  # one bar per 25 deaths, white gaps between bars
+  scale_fill_viridis_d(begin = 0.25, end = 0.75) +   # same colours as before: blue women, green men
+  geom_vline(xintercept = c(50, 1000),
+             linetype = "dashed") +                  # the expected range
+  facet_wrap(~ sex,
+             labeller = as_labeller(c(F = "Women", M = "Men"))) +   # one panel per sex
+  labs(title = "Death rates from all causes lie inside the expected range",   # the title states the finding
+       x = "Deaths from all causes under 65, per 100 000",
+       y = "Number of rows") +
+  theme_minimal() +                                  # white background, light grid
+  theme(legend.position = "none",                    # the panel titles already name the sexes
+        panel.grid.minor = element_blank())          # fewer lines that carry no data
+```
+
+**Result:** all 486 values (27 countries, 2 sexes, 9 years) lie inside the expected range. For women they run from 83 to 320 deaths per 100 000, for men from 146 to 717. The highest value is Latvian men in 2021, a COVID-19 year. The men's panel has a second group of values between about 350 and 700: in some countries, men under 65 die at two to three times the rate of men elsewhere. Which countries these are is examined in Section 5.
+
+#### Check 4: duplicates
+
+In this table, one row should be one country, one sex, one cause and one year. The cause is part of the combination now, because every country, sex and year appears once for each cause.
+
+```{r}
+#| label: show-deaths-duplicates
+# 3.3.2 Check 4: compare all rows with distinct country, sex, cause and year combinations
+nrow(deaths_clean)                                  # all rows, expected: 43 902
+
+deaths_clean |>
+  distinct(country_code, sex, cause_code, year) |>  # each combination once
+  nrow()                                            # the same number means no duplicates
+```
+
+**Result:** both counts are 43 902. Every combination of country, sex, cause and year appears exactly once, so the table has no duplicates.
+
+#### Check 5: row counts
+
+The 27 countries were selected in the download link, so the bar chart from 3.1.2 and 3.2.2 would only show 27 equal bars. Here the row counts answer four other questions: does every country have the same number of rows, how many causes exist in each year, which code holds "all causes" in each year, and do the columns fixed in the link hold one value each.
+
+```{r}
+#| label: show-deaths-rows-per-country
+# 3.3.2 Check 5: does every country have the same number of rows?
+deaths_clean |>
+  count(country_code) |>            # n = number of rows per country
+  count(n, name = "countries") |>   # how many countries have each row count
+  kable(col.names = c("Rows per country", "Number of countries"))   # one line means all equal
+```
+
+```{r}
+#| label: show-deaths-causes-per-year
+# 3.3.2 Check 5: how many different causes exist in each year?
+deaths_clean |>
+  distinct(year, cause_code) |>     # each cause once per year
+  count(year, name = "causes") |>   # number of causes per year
+  kable(col.names = c("Year", "Number of causes"))   # expected: 89 up to 2019, 92 from 2020
+```
+
+```{r}
+#| label: show-deaths-all-causes-codes
+# 3.3.2 Check 5: which code holds "all causes" in which year?
+deaths_clean |>
+  filter(cause_code %in% c("TOTAL", "A-R_V-Y")) |>   # the two codes for all causes
+  distinct(year, cause_code) |>                      # one row per year and code
+  arrange(year) |>                                   # in time order
+  kable(col.names = c("Year", "Code for all causes")) # one code per year, never both
+```
+
+```{r}
+#| label: show-deaths-constant
+# 3.3.2 Check 5: columns fixed in the link: each should have only one value
+deaths_clean |>
+  distinct(freq, unit, age) |>   # one row means each column has one value
+  kable()                        # show the result as a neat table
+```
+
+**Result:** all 27 countries have the same 1 626 rows, so no country is incomplete. Up to 2019 each year has 89 causes, from 2020 it has 92, because three COVID-19 codes were added. Every year has exactly one code for all causes: `TOTAL` in 2015 to 2017 and in 2022 to 2023, `A-R_V-Y` in 2018 to 2021. Never both in the same year, so the two codes can be treated as one without counting anything twice. `freq`, `unit` and `age` each hold a single value (`A`, `RT`, `Y_LT65`), the choices made in the link, so they can be removed.
+
+### 3.3.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|-----------------|----------------------------|----------------------------|
+| 1 Types | `death_rate` and `year` are numbers | No change needed |
+| 2 Missing values | No empty cells, no flags. 3 151 values are 0, real counts of no deaths | Zeros are kept, as real values |
+| 3 Units and ranges | All causes: 83 to 320 per 100 000 for women, 146 to 717 for men, all inside the expected range | No change needed |
+| 4 Duplicates | Every country, sex, cause and year appears once | No change needed |
+| 5 Row counts | All 27 countries complete (1 626 rows each). 89 causes up to 2019, 92 from 2020 (COVID-19 codes added) | No country is removed. The EU was already selected in the link |
+| 5 All causes | Coded `TOTAL` in 2015 to 2017 and 2022 to 2023, `A-R_V-Y` in 2018 to 2021, never both in one year | Both codes are merged into one, `TOTAL`, so all causes has the same code in every year |
+| 5 Chapters of causes | 93 causes at three levels: all causes, 17 chapters of the ICD-10 classification (plus 3 COVID-19 codes from 2020), and detailed causes inside the chapters. The chapters and COVID-19 add up to all causes in every country, sex and year (differences below 0.03%, from rounding) | A new column `cause_level` marks each row as "all causes", "chapter" or "detail". All rows are kept |
+| 5 Columns fixed in the link | `freq`, `unit` and `age` hold one value each. `conf_status` is empty. `dataflow` and `last_update` describe the download | These six technical columns are removed. The `last_update` date is reported once, in the source line |
+
+**Why the two codes for all causes are merged.** Eurostat renamed the code for all causes in 2018 and changed it back in 2022. It is the same measure under two names. Keeping both would mean that every later filter has to ask for both codes, and forgetting it once would make four years disappear without an error. Dropping all causes would lose the best check that the chapters add up. Since no year has both codes, renaming `A-R_V-Y` to `TOTAL` is safe: no row is lost and nothing is counted twice.
+
+**Why the level of each cause is marked, not split or left for later.** The analysis looks first at the chapters of causes, without choosing any cause, and only then deeper at the causes named in the hypotheses (see 2.3). A column `cause_level` makes both views one `filter()` away, and keeps every row. Splitting the table in two would mean two objects to keep in line, and leaving it to Section 5 would hide the chapter list inside the charts. The three COVID-19 codes count as chapter level, because without them the chapters would not add up to all causes from 2020 on.
+
+### 3.3.4 Apply the decisions
+
+Three steps, each followed by a check.
+
+#### Merge the two codes for all causes
+
+`case_when()` (class 04) goes through the rows and gives each one a value: where the condition on the left is true, it uses the value on the right. `.default = cause_code` keeps every other code as it was.
+
+```{r}
+#| label: show-deaths-merge-total
+# 3.3.4 Give "all causes" the same code, TOTAL, in every year
+deaths_clean <- deaths_clean |>                         # overwrite the table with the changed version
+  mutate(cause_code = case_when(
+    cause_code == "A-R_V-Y" ~ "TOTAL",                  # the 2018 to 2021 code becomes TOTAL
+    .default = cause_code                               # every other code stays as it is
+  ))
+
+deaths_clean |>
+  filter(cause_code %in% c("TOTAL", "A-R_V-Y")) |>     # look for both codes again
+  count(cause_code) |>                                  # rows per code
+  kable(col.names = c("Code", "Rows"))                  # expected: only TOTAL, 486 rows
+```
+
+**What it shows:** only `TOTAL` remains, with 486 rows: 27 countries, 2 sexes and 9 years. All causes now has one code in every year.
+
+#### Mark the level of each cause
+
+The 17 chapters of the ICD-10 classification and the 3 COVID-19 codes are listed once, as `chapter_codes`. `case_when()` then labels every row: `TOTAL` is "all causes", the codes in the list are "chapter", and everything else is "detail".
+
+| Code | Chapter |
+|------------------------------------|------------------------------------|
+| `A_B` | Infectious and parasitic diseases |
+| `C00-D48` | Neoplasms (cancer and other tumours) |
+| `D50-D89` | Diseases of the blood and the immune system |
+| `E` | Endocrine, nutritional and metabolic diseases (for example diabetes) |
+| `F` | Mental and behavioural disorders (including alcohol and drug use) |
+| `G_H` | Diseases of the nervous system and the sense organs |
+| `I` | Diseases of the circulatory system (heart and blood vessels) |
+| `J` | Diseases of the respiratory system |
+| `K` | Diseases of the digestive system (including the liver) |
+| `L` | Diseases of the skin |
+| `M` | Diseases of the musculoskeletal system |
+| `N` | Diseases of the genitourinary system |
+| `O` | Pregnancy and childbirth |
+| `P` | Conditions from the perinatal period |
+| `Q` | Congenital malformations |
+| `R` | Ill-defined and unknown causes |
+| `V01-Y89` | External causes (accidents, suicide, violence) |
+| `U071`, `U072`, `U_COV19_OTH` | COVID-19, from 2020 |
+
+```{r}
+#| label: show-deaths-cause-level
+# 3.3.4 Mark each row as all causes, chapter or detail
+chapter_codes <- c("A_B", "C00-D48", "D50-D89", "E", "F", "G_H", "I", "J", "K",   # the 17 ICD-10 chapters
+                   "L", "M", "N", "O", "P", "Q", "R", "V01-Y89",
+                   "U071", "U072", "U_COV19_OTH")                                 # COVID-19, from 2020
+
+deaths_clean <- deaths_clean |>                          # overwrite the table with the new column
+  mutate(cause_level = case_when(
+    cause_code == "TOTAL"         ~ "all causes",        # the total of all deaths
+    cause_code %in% chapter_codes ~ "chapter",           # the big groups that add up to the total
+    .default                      = "detail"             # everything else sits inside a chapter
+  ))
+
+deaths_clean |>
+  distinct(cause_code, cause_level) |>                   # each cause once
+  count(cause_level) |>                                  # how many causes at each level
+  kable(col.names = c("Level", "Number of causes"))      # expected: 1, 20 and 71 (92 codes after the merge)
+```
+
+**What it shows:** 92 causes in three levels: 1 for all causes, 20 at chapter level (17 chapters and 3 COVID-19 codes) and 71 detailed causes. The chapter view in Section 5 is now one `filter(cause_level == "chapter")` away.
+
+#### Remove the technical columns
+
+```{r}
+#| label: show-deaths-select
+# 3.3.4 Keep the seven columns the analysis uses
+deaths_clean <- deaths_clean |>                                                  # overwrite the table again
+  select(country_code, sex, year, cause_code, cause_level, death_rate, flag)   # everything else is dropped
+
+glimpse(deaths_clean)   # expected: 43 902 rows, 7 columns
+```
+
+**What it shows:** the clean table, with 43 902 rows and 7 columns: the same five columns as the first two tables, plus `cause_code` and `cause_level`. No row was removed in this section. This is the deaths table that goes into Section 4.
+
+### 3.3.5 Save the clean table
+
+The clean deaths table is saved to `data/clean/` at the end of this sub-section, right after it is created. Section 4 starts from this file, so each part of the analysis can be rerun on its own. Like the panel in 4.5, the file is created by the code and can always be recreated by running this sub-section again.
+
+```{r}
+#| label: show-save-deaths
+# 3.3.5 Save the clean deaths table to data/clean/
+write_csv(deaths_clean, here("data", "clean", "deaths_clean.csv"))   # 43 902 rows
+```
+
+**What it shows:** nothing on screen. The file `data/clean/deaths_clean.csv` is created or replaced.

@@ -1,0 +1,254 @@
+```{r}
+#| label: setup-cleaning-life-expectancy
+#| include: false
+# Setup for working in this file on its own: loads the packages, the EU codes and this table's raw file.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+read_raw <- function(file) read_csv(here("data", "raw", file),          # read a raw file as in Section 2
+                                    na = c("", ":", "NA"), show_col_types = FALSE)
+life_expectancy_raw    <- read_raw("demo_mlexpec.csv")    # the raw table of 2.1
+```
+
+## 3.1 Life expectancy at birth
+
+The life expectancy table goes through four stages. Nothing is removed until the checks are done and the decisions are written down.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.1.1 | Tidy the column names | Readable names, same data |
+| 3.1.2 | Run the five quality checks | One result per check |
+| 3.1.3 | Summarise what was found and decide | A table of decisions |
+| 3.1.4 | Apply the decisions | `life_expectancy_clean`, EU only, key columns only |
+
+### 3.1.1 Tidy the column names
+
+Eurostat uses the same technical column names in every table: `geo` for the country, `time_period` for the year and `obs_value` ("observed value") for the number itself. Two steps make them readable. `clean_names()` first turns them into lowercase with underscores, so `LAST UPDATE`, which contains a space, becomes `last_update`. `rename()` then gives the four key columns names that say what they hold. The new names `country_code` and `year` are also the keys used to join the tables in Section 4.
+
+| Eurostat name | After `clean_names()` | After `rename()`  |
+|---------------|-----------------------|-------------------|
+| `geo`         | `geo`                 | `country_code`    |
+| `TIME_PERIOD` | `time_period`         | `year`            |
+| `OBS_VALUE`   | `obs_value`           | `life_expectancy` |
+| `OBS_FLAG`    | `obs_flag`            | `flag`            |
+
+```{r}
+#| label: show-life-expectancy-names
+# 3.1.1 Make the column names readable
+life_expectancy_clean <- life_expectancy_raw |>   # start from the untouched raw table
+  clean_names() |>                        # for example TIME_PERIOD becomes time_period
+  rename(country_code    = geo,           # new name = old name
+         year            = time_period,   # the year, a key for the join in Section 4
+         life_expectancy = obs_value,     # the value: life expectancy at birth
+         flag            = obs_flag)      # e, p, b ... how the value was produced
+
+names(life_expectancy_clean)   # list the new column names
+```
+
+**What it shows:** the same 11 columns. Four of them have new names: `country_code`, `year`, `life_expectancy` and `flag`. The technical columns (`dataflow`, `last_update`, `freq`, `unit`, `age`, `conf_status`) keep their names for now and are removed after the checks.
+
+### 3.1.2 The five quality checks
+
+The checks run on all 906 rows, before anything is removed, so that problems outside the EU are also visible.
+
+#### Check 1: types
+
+`glimpse()` lists every column with its type: `<dbl>` for numbers, `<chr>` for text and `<lgl>` for logical (`TRUE`/`FALSE`). The value column must be a number. If an Eurostat flag had been written into the same cell as the value, for example `75.2 e`, R would read the whole column as text. The check runs again here, on the renamed table, so that every check of Section 3 can be read in one place.
+
+```{r}
+#| label: show-life-expectancy-types
+# 3.1.2 Check 1: the type of every column
+glimpse(life_expectancy_clean)   # life_expectancy and year should be <dbl>
+```
+
+**Result:** `life_expectancy` and `year` are numbers. All other columns are text, except `conf_status`, which R reads as logical because it is empty.
+
+#### Check 2: missing values
+
+`tbl_summary()` from `gtsummary` (class 04) puts the two key columns in one table: the spread of `life_expectancy` and the number of rows for each `sex`. `missing = "always"` adds a "Missing" row to every variable, even when the count is 0, so the table shows that missing values were checked, not only that none were reported.
+
+```{r}
+#| label: show-life-expectancy-missing
+# 3.1.2 Check 2: missing values and spread of the key columns
+life_expectancy_clean |>
+  tbl_summary(
+    include   = c(life_expectancy, sex),                 # the two columns to check
+    type      = life_expectancy ~ "continuous2",         # show the number on several lines
+    statistic = life_expectancy ~ c("{median} ({p25} to {p75})",   # middle half
+                                    "{min} to {max}"),             # full range
+    label     = list(life_expectancy ~ "Life expectancy at birth (years)",   # readable row names
+                     sex ~ "Sex"),
+    missing      = "always",                             # a Missing row, even if it is 0
+    missing_text = "Missing"                             # the word shown in that row
+  )
+```
+
+The `flag` column is left out of that table, because in `flag` an empty cell means "no flag", not a missing value. Its letters are counted separately, and `kable()` shows the result as a table.
+
+```{r}
+#| label: show-life-expectancy-flags
+# 3.1.2 Check 2: how many values carry a flag, and which one
+life_expectancy_clean |>
+  count(flag, sort = TRUE) |>                     # most common flag first
+  kable(col.names = c("Flag", "Number of values"))  # NA here means "no flag"
+```
+
+**Result:** no value of `life_expectancy` is missing. `sex` holds only `F` and `M`, with 453 rows each, so there are no gaps. 146 of the 906 values carry a flag, most often `b` (66 values, a break in the series), then `e` (28), `ep` (16), `bep` (12), `be` (10), `p` (10) and `bp` (4). A flag marks how a value was produced, not a missing value, so every flagged value is kept. Most flags belong to countries outside the focus: in the 27 EU member states only 52 of 540 values carry a flag, and Estonia, Latvia and Lithuania have none. `conf_status` is empty in all 906 rows.
+
+#### Check 3: units and ranges
+
+Life expectancy at birth in Europe is expected to lie roughly between 65 and 90 years. A value far outside this range would point to an error, for example a wrong age class. Women and men are drawn in separate panels with `facet_wrap()`, because their values are known to differ, and two dashed lines from `geom_vline()` mark the expected range. The colours come from `viridis`, the course's default palette, which stays readable for people with colour blindness and in black-and-white print.
+
+```{r}
+#| label: show-life-expectancy-range
+#| fig-height: 4
+# 3.1.2 Check 3: the distribution of life expectancy values, women and men apart
+life_expectancy_clean |>
+  ggplot(aes(x = life_expectancy, fill = sex)) +     # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 1,
+                 color = "white") +                  # one bar per year, white gaps between bars
+  scale_fill_viridis_d(begin = 0.25, end = 0.75) +   # course palette: blue for women, green for men
+  geom_vline(xintercept = c(65, 90),
+             linetype = "dashed") +                  # the expected range
+  facet_wrap(~ sex,
+             labeller = as_labeller(c(F = "Women", M = "Men"))) +   # one panel per sex
+  labs(title = "All values lie inside the expected range of 65 to 90 years",   # the title states the finding
+       x = "Life expectancy at birth (years)",
+       y = "Number of rows") +
+  theme_minimal() +                                  # white background, light grid
+  theme(legend.position = "none",                    # the panel titles already name the sexes
+        panel.grid.minor = element_blank())          # fewer lines that carry no data
+```
+
+**Result:** the values run from 66.8 to 86.5 years, all inside the expected range of 65 to 90. Half of the rows lie between 78.1 and 83.5 years (the middle line of the table in Check 2). No value points to a wrong age class or a wrong unit.
+
+#### Check 4: duplicates
+
+Each combination of country, sex and year should appear only once. If the number of distinct combinations equals the number of rows, no row repeats.
+
+```{r}
+#| label: show-life-expectancy-duplicates
+# 3.1.2 Check 4: compare all rows with distinct country, sex and year combinations
+nrow(life_expectancy_clean)   # all rows
+
+life_expectancy_clean |>
+  distinct(country_code, sex, year) |>   # each combination once
+  nrow()
+```
+
+**Result:** both counts are 906. Every combination of country, sex and year appears exactly once, so the table has no duplicates.
+
+#### Check 5: row counts
+
+With 10 years and 2 sexes, every geographic unit should have 20 rows. `count()` gives the number of rows per unit, and a bar chart shows all 53 units at once (class 10_2). `fct_reorder()` sorts the bars by length, `coord_flip()` turns them sideways so the codes are readable, and `geom_hline()` draws the expected 20 rows as a line. EU member states are orange and all other units purple, from the `plasma` palette of the viridis family. Red is not used here, because in this project it is kept for the Baltic states.
+
+```{r}
+#| label: show-life-expectancy-rows
+#| fig-height: 9
+# 3.1.2 Check 5: number of rows per geographic unit, EU member states in orange
+life_expectancy_clean |>
+  count(country_code) |>                                  # n = number of rows per unit
+  mutate(eu = country_code %in% eu_codes,                 # TRUE for the 27 member states
+         country_code = fct_reorder(country_code, n)) |>  # sort the bars by n
+  ggplot(aes(x = country_code, y = n, fill = eu)) +      # one bar per unit, coloured by EU or not
+  geom_col() +                                            # bar length = the number of rows
+  geom_hline(yintercept = 20, linetype = "dashed") +      # the expected 20 rows
+  coord_flip() +                                          # bars sideways, codes readable
+  scale_fill_viridis_d(option = "plasma",
+                       begin = 0.15, end = 0.75,                    # purple and orange, no red
+                       labels = c("Other unit", "EU member state"), # FALSE comes first, then TRUE
+                       name = NULL) +
+  labs(title = "Every EU member state has all 20 rows",   # the title states the finding
+       x = NULL,                                         # the country codes need no axis title
+       y = "Number of rows (expected: 20)") +
+  theme_minimal() +                                  # white background, light grid
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank())              # the bars need no horizontal grid
+```
+
+The EU member states are the focus of the analysis, so their completeness is checked separately, with the `eu_codes` list from the start of Section 3. This only counts the rows. Nothing is removed yet.
+
+```{r}
+#| label: show-life-expectancy-eu-rows
+# 3.1.2 Check 5: count the rows of the EU member states, without removing anything
+life_expectancy_clean |>
+  filter(country_code %in% eu_codes) |>   # look at the member states only
+  nrow()                                  # expected: 27 x 2 x 10 = 540
+```
+
+Finally, the columns `freq`, `unit` and `age` should each hold only one value, because they were fixed in the download link.
+
+```{r}
+#| label: show-life-expectancy-constant
+# 3.1.2 Check 5: columns fixed in the link: each should have only one value
+life_expectancy_clean |>
+  distinct(freq, unit, age) |>   # one row means each column has one value
+  kable()                        # show the result as a neat table
+```
+
+**Result:** all 27 EU member states have the full 20 rows, 540 rows together, as expected. The units with fewer than 20 rows are all outside the focus: non-EU countries such as `XK` (2 rows), `MD` (6) and `UK` (8), and old aggregates such as `EU28` and `EU27_2007` (8 each). `freq`, `unit` and `age` each hold a single value (`A`, `YR`, `Y_LT1`), so they carry no information and can be removed.
+
+### 3.1.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|-----------------|----------------------------|----------------------------|
+| 1 Types | `life_expectancy` and `year` are numbers, the flags did not turn them into text | No change needed |
+| 2 Missing values | No missing values. 146 of 906 values carry a flag, none in the Baltic states | Flagged values are kept |
+| 3 Units and ranges | 66.8 to 86.5 years, all inside the expected range | No change needed |
+| 4 Duplicates | Every country, sex and year appears once | No change needed |
+| 5 Row counts | All 27 EU member states complete (540 rows). The incomplete units are all non-EU countries or aggregates | Only the 27 EU member states are kept, using `eu_codes` |
+| 5 Columns fixed in the link | `freq`, `unit` and `age` hold one value each. `conf_status` is empty. `dataflow` and `last_update` describe the download, not the data | These six technical columns are removed. The `last_update` date is reported once, in the source line |
+
+After these decisions, `life_expectancy_clean` keeps five columns: `country_code`, `sex`, `year`, `life_expectancy` and `flag`. The `flag` column stays, so that estimated or provisional values can still be recognised later, for example when an outlier is checked in Section 5.
+
+### 3.1.4 Apply the decisions
+
+The decisions from 3.1.3 are applied in two steps, and the row count is checked after each one.
+
+#### Keep only the EU member states
+
+`filter()` keeps only the rows whose country code is in `eu_codes`. This removes the non-EU countries, such as `NO` and `UK`, and the aggregates, such as `EU27_2020` and `EA20`. The aggregates would otherwise count every country twice: once on its own and once inside the EU total.
+
+```{r}
+#| label: show-life-expectancy-eu
+# 3.1.4 Keep only the 27 EU member states
+nrow(life_expectancy_clean)   # before: 906 rows
+
+life_expectancy_clean <- life_expectancy_clean |>
+  filter(country_code %in% eu_codes)   # drop non-EU countries and aggregates such as EU27_2020
+
+nrow(life_expectancy_clean)   # after: expected 27 x 2 x 10 = 540
+```
+
+**What it shows:** 906 rows before and 540 after. The 366 removed rows are the non-EU countries and the aggregates.
+
+#### Remove the technical columns
+
+`select()` keeps only the columns that are listed, in the order they are listed. Naming the five columns to keep, instead of the six to drop, makes the final table visible in the code itself.
+
+```{r}
+#| label: show-life-expectancy-select
+# 3.1.4 Keep the five columns the analysis uses
+life_expectancy_clean <- life_expectancy_clean |>
+  select(country_code, sex, year, life_expectancy, flag)   # everything else is dropped
+
+glimpse(life_expectancy_clean)   # expected: 540 rows, 5 columns
+```
+
+**What it shows:** the clean table, with 540 rows and 5 columns. `country_code`, `sex` and `flag` are text, `year` and `life_expectancy` are numbers. This is the life expectancy table that goes into Section 4.
+
+### 3.1.5 Save the clean table
+
+The clean life expectancy table is saved to `data/clean/` at the end of this sub-section, right after it is created. Section 4 starts from this file, so each part of the analysis can be rerun on its own. Like the panel in 4.5, the file is created by the code and can always be recreated by running this sub-section again.
+
+```{r}
+#| label: show-save-life-expectancy
+# 3.1.5 Save the clean life expectancy table to data/clean/
+write_csv(life_expectancy_clean, here("data", "clean", "life_expectancy_clean.csv"))   # 540 rows
+```
+
+**What it shows:** nothing on screen. The file `data/clean/life_expectancy_clean.csv` is created or replaced.
