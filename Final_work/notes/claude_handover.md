@@ -51,3 +51,18 @@ Every chunk hung (spinner, CPU 0%). The cause was Quarto inline output in a very
 - Lithuania's alcohol policy around 2017 to 2018: find a citable source or leave it out.
 - Questions for Sergio (in `Project_idea.md`): prompt log format, 2 minutes before the 3-minute talk, hand-in deadline.
 - Deadline: the user's own deadline is 16 Nov 2026, Moodle checkpoint 13 Nov.
+
+## 7. Session 4 Nov: done and open
+
+**Done:** alcohol table complete end to end: 2.6.3 load, 3.6 cleaning in `_3_6_alcohol.qmd` (162 rows, 3 columns, saved as `data/clean/alcohol_clean.csv`), 4.3.5 join (`gap_panel` now 270 rows, 18 columns, alcohol `NA` for 2021 to 2024), Graph 16 in 5.4.8 (2019, r = 0.52, Baltic gaps 2.4 to 3.4 years above the line), Graph 17 in 5.7.2 (Baltic drinking over time), hypothesis 3 updated in 5.10.1 and the overview, EHIS dead end in the appendix. Review fixes 1 to 6: overview says six tables and 17 files, Section 4 intro, `SOURCE.md` alcohol entry, `nchar()` in the glossary.
+
+**Open from the review of Sections 1 to 5, in this order:**
+
+7. 5.9.1 robustness: add alcohol consumption (2019) with `cor.test()`: r = 0.52, p = 0.006.
+8. 5.9.3 outliers: add Romania (drinks the most in the EU, 17.0 litres in 2019, gap only 7.5 years).
+9. Decide with the user: renumber all graphs in reading order (Graph 16 now sits between 11 and 12, Graph 17 between 14 and 15).
+10. Decide with the user: graph captions with table code and access date, as the plan asks (most say only "Source: Eurostat").
+11. The "Found" message in the overview is still a draft: the user confirms it in their own words before Section 6.
+
+Then Section 7 (Limits, add: alcohol not by sex, ends 2020, amount not pattern of drinking) and Step 6 (final graph).
+

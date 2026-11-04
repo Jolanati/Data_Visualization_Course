@@ -567,4 +567,32 @@ if (!file.exists(alcohol_file)) {                # TRUE only on the first run
 
 **What it shows:** on the first run, a short message with the file size (about 100 KB). After that, nothing, because the file already exists.
 
+### 2.6.3 Load and look
+
+Same as in the other five tables, with one difference: Our World in Data does not use `:` for missing values, so only empty cells and `NA` are read as missing.
+
+```{r}
+#| label: show-alcohol-load
+# 2.6.3 Read the raw file and check what arrived
+alcohol_raw <- read_csv(alcohol_file,
+                        na = c("", "NA"),        # Our World in Data leaves missing values empty
+                        show_col_types = FALSE)  # keep the output short
+
+glimpse(alcohol_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-alcohol-head
+# 2.6.3 The first six rows of the raw table
+head(alcohol_raw)   # how the file is laid out: one row per country and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.6.
+
+- **Size:** 4 164 rows and 4 columns: `entity` (the country name), `code` (the three-letter country code), `year` and `sh_alc_pcap_li` (litres of pure alcohol per person aged 15+).
+- **One row** is one country or region and one year. There is no `sex` column.
+- **Types:** `year` and `sh_alc_pcap_li` are numbers, `entity` and `code` are text.
+- **Countries and years:** 200 countries and regions, from 2000 to 2020. Besides countries, the file holds regional totals such as `WB_EAP` (East Asia and Pacific, World Bank), which are removed in Section 3.
+- **The EU in the study period:** all 27 member states have all six years from 2015 to 2020 (162 rows), with values from 5.8 to 17.0 litres.
+
 ------------------------------------------------------------------------

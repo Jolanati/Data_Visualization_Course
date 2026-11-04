@@ -79,4 +79,5 @@ Each new function: one-line meaning and a tiny example.
 - `geom_jitter(width = 0.15, height = 0)`: draws every dot, moved sideways a little at random so they do not hide each other. `height = 0` keeps the values exact.
 - `stat_summary(fun = mean, geom = "point")`: adds a summary, here the mean of each group, as one point.
 - `alpha = 0.3`: transparency, from 0 (invisible) to 1 (solid).
+- `nchar(text)`: counts the characters in a text. `nchar("LVA")` gives 3, `nchar("OWID_WRL")` gives 8. Used in 3.6.2 to find the regional totals, whose codes are not three letters long.
 - `slice_max(x, n = 5)`: keeps the 5 rows with the largest values of `x`, largest first. Shorter than `arrange(desc(x)) |> head(5)` and from the course (class 10_2).

@@ -303,6 +303,50 @@ factors_long |>
 
 **What this means:** the life expectancy gap is made up mainly of men's early deaths from heart and circulatory diseases and from external causes, with alcohol-related deaths overlapping both. This pattern holds across Europe, not only in the Baltic states. Wealth goes with smaller gaps, but the Baltic gaps are about two years larger than their income would predict, and education does not explain them. The next question is whether Baltic men fall below the European pattern while Baltic women do not.
 
+### 5.4.8 Graph 16: A direct measure, alcohol consumption
+
+**Question:** do countries where people drink more alcohol have a larger life expectancy gap? Graph 9 could only show alcohol indirectly, through deaths. This graph uses WHO's estimate of how much is drunk (2.6). Two differences from Graphs 7 to 11: the alcohol data ends in 2020, so the graph uses **2019**, the last year before COVID and the same year as the robustness check in 5.9; and the figure is for women and men together, not for men alone.
+
+```{r}
+#| label: show-graph-16
+#| fig-height: 4.5
+# 5.4.8 Graph 16: the gap against litres of pure alcohol per person, 2019
+alcohol_2019 <- gap_panel |>
+  filter(year == 2019)                                      # the last year before COVID, one row per country
+
+alcohol_2019 |>
+  ggplot(aes(x = alcohol_litres, y = le_gap)) +             # one dot per country
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
+              colour = "gray40", linewidth = 0.6) +         # the straight trend line (y depends on x), without a band
+  geom_point(aes(colour = baltic), size = 2.5) +            # the countries, Baltic states in red
+  geom_text_repel(data = alcohol_2019 |> filter(baltic),    # names only for the Baltic states
+                  aes(label = country), colour = "firebrick",
+                  nudge_y = 0.4) +                          # labels slightly above the dots
+  scale_colour_manual(values = c("TRUE" = "firebrick",
+                                 "FALSE" = "gray60")) +
+  coord_cartesian(clip = "off") +                           # let the labels go past the edge of the panel
+  labs(title = "Drinking more goes with a larger gap, but the Baltic gaps are larger still",   # the title states the pattern
+       x = "Litres of pure alcohol per person aged 15+, per year",
+       y = "Life expectancy gap (years)",
+       caption = "Alcohol: women and men together, including unrecorded alcohol. 2019. Source: WHO via Our World in Data, Eurostat") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: show-correlation-16
+# 5.4.8 The correlation for Graph 16, with and without the Baltic states
+alcohol_2019 |>
+  summarise(r_all        = cor(alcohol_litres, le_gap),                          # all 27 countries
+            r_not_baltic = cor(alcohol_litres[!baltic], le_gap[!baltic])) |>     # the 24 other countries
+  kable(digits = 2, col.names = c("Correlation, all 27", "Without the Baltic states"))
+```
+
+**Finding:** countries where more alcohol is drunk tend to have larger gaps, but the link is only moderate (correlation 0.52, and 0.51 without the Baltic states). The three Baltic states all lie well above the line: their gaps are 2.4 to 3.4 years larger than their drinking would predict. Latvia (13.1 litres) and Lithuania (11.8) drink a lot, but so do Czechia (13.3), Germany (12.2) and Austria (12.0), whose gaps are much smaller (4.7 to 5.8 years). Romania drinks the most in the EU (17.0 litres) with a gap of 7.5 years. Hypothesis 3 is supported only partly: how much a country drinks goes with the gap, but it does not explain why the Baltic gaps are so large.
+
+**What this means:** the amount of alcohol alone does not separate the Baltic states from the rest of the EU. Alcohol-related deaths did (Graph 9, correlation 0.88), the amount drunk does much less. This fits the idea that how and by whom alcohol is drunk matters more than the national average, for example heavy drinking concentrated among men. This table cannot show that, because it is not by sex and does not measure drinking patterns, so it is named as a limit in Section 7.
+
 ## 5.5 Do Baltic men fall below the European pattern?
 
 ### 5.5.1 Graph 12: Baltic women and men against countries of similar income

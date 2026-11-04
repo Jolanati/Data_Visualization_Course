@@ -17,10 +17,10 @@ This section looks at the gap from several sides, one question per graph. It sta
 | 5.1 | Where is the gap largest, and how unusual are the Baltic gaps? | Graphs 1 to 3 | Ranked bar chart, histogram, box plot |
 | 5.2 | How has the gap changed between 2015 and 2024? | Graph 4 | Lines over time |
 | 5.3 | Which causes of death make up the extra deaths of men? | Graphs 5 and 6 | Grouped bar charts: chapters, then specific causes |
-| 5.4 | Which factors go with the gap? | Graphs 7 to 11, one per factor | Scatter plots with a trend line, correlations |
+| 5.4 | Which factors go with the gap? | Graphs 7 to 11, one per factor, and Graph 16 (alcohol consumption) | Scatter plots with a trend line, correlations |
 | 5.5 | Do Baltic men fall below the EU pattern while Baltic women do not? | Graph 12 | Comparison with countries of similar income, women and men |
 | 5.6 | Is the gap about the men? | Graph 13 | Two dots per country, women and men |
-| 5.7 | Which causes changed in Lithuania and Latvia? | Graph 14 | Lines over time, one panel per cause |
+| 5.7 | Which causes and how much drinking changed in Lithuania and Latvia? | Graphs 14 and 17 | Lines over time, one panel per cause, then litres per person |
 | 5.8 | Do Baltic men also lose healthy years? | Graph 15 | Stacked bars: healthy years and years with limitations |
 | 5.9 | How robust are the results? Chance, another year, overlap of the factors, outliers | | Tables |
 | 5.10 | Summary: strongest factor, weakest factor, one surprise | | Text |
@@ -43,7 +43,7 @@ gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"),              # one
 deaths_by_cause <- read_csv(here("data", "clean", "deaths_by_cause.csv"),  # one row per country, year and cause
                             show_col_types = FALSE)
 
-dim(gap_panel)         # expected: 270 rows, 17 columns
+dim(gap_panel)         # expected: 270 rows, 18 columns
 dim(deaths_by_cause)   # expected: 21 951 rows, 9 columns
 ```
 

@@ -44,6 +44,7 @@ Each sub-section ends with a short summary table: what each check found, and wha
 | 3.3         | Deaths by cause          | `deaths_clean`             |
 | 3.4         | GDP per capita           | `gdp_clean`                |
 | 3.5         | Education by sex         | `education_clean`          |
+| 3.6         | Alcohol consumption      | `alcohol_clean`            |
 
 **The EU member states.** Every table in this section is checked and filtered with the same list of 27 member state codes, `eu_codes`, defined at the start of Section 2.
 
@@ -66,3 +67,7 @@ Each sub-section ends with a short summary table: what each check found, and wha
 ------------------------------------------------------------------------
 
 {{< include _3_5_education.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_6_alcohol.qmd >}}

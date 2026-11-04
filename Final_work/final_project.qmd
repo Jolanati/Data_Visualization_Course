@@ -71,15 +71,16 @@ This part is written last, after Section 6, so that a reader sees the answer bef
 | **Expected** (written before the data) | Baltic men die earlier, and this goes mainly with heart disease deaths before 65. |
 | **Found** (draft, after Section 5) | Baltic men die earlier mainly because they die far more often before 65 from heart disease and from external causes such as poisoning and suicide, several linked to alcohol. Income does not explain it: at the same income, Baltic women live as long as other European women, only the men fall behind. |
 
-**Hypotheses in brief** (details in 5.10.1): supported are 1 (heart disease), 2 (external causes), 4 (income does not explain the Baltic gap) and 6 (the gap narrowed, unevenly). Hypothesis 3 (alcohol) is supported only through indirect measures. Hypothesis 5 (education) is not supported. Hypothesis 7 (which factor matters most) cannot be answered with 27 countries.
+**Hypotheses in brief** (details in 5.10.1): supported are 1 (heart disease), 2 (external causes), 4 (income does not explain the Baltic gap) and 6 (the gap narrowed, unevenly). Hypothesis 3 (alcohol) is supported for alcohol-related deaths, but only partly for the amount drunk: drinking goes with the gap moderately, and the Baltic gaps are larger than their drinking predicts. Hypothesis 5 (education) is not supported. Hypothesis 7 (which factor matters most) cannot be answered with 27 countries.
 
 ## The pipeline
 
 The analysis runs as one chain. Each step uses only the output of the step before it.
 
 ```         
-Five Eurostat tables                                    (Section 2)
-  life expectancy, healthy life years, deaths by cause, GDP, education
+Six tables                                              (Section 2)
+  five from Eurostat: life expectancy, healthy life years, deaths by cause, GDP, education
+  one from WHO, via Our World in Data: alcohol consumption per person
   saved untouched to data/raw/
         ↓
 Cleaning                                                (Section 3)
@@ -105,9 +106,9 @@ The story                                               (Section 6)
 | Section | Question it answers | Output |
 |------------------------|------------------------|------------------------|
 | 1\. Environment setup | Is R ready to run the analysis? | Packages loaded, project folder found |
-| 2\. Gathering data | What did Eurostat deliver? | Five raw CSV files in `data/raw/` |
+| 2\. Gathering data | What did Eurostat and WHO deliver? | Six raw CSV files in `data/raw/` |
 | 3\. Cleaning | Can the data be trusted, and what has to change? | One clean table per dataset |
-| 4\. Combining the tables | Do the five tables fit together? | `data/clean/gap_panel.csv` |
+| 4\. Combining the tables | Do the six tables fit together? | `data/clean/gap_panel.csv` |
 | 5\. Exploration | Which factors go with the gap? | Charts, correlations, dead ends |
 | 6\. The story | What is the one message? | The final chart in five frames |
 | 7\. Limits | What can the data not show? | A list of caveats |
@@ -120,7 +121,7 @@ The document follows the order in which the work was done, so its sections are n
 | Template section | Where it is in this document |
 |------------------------------------|------------------------------------|
 | 1\. Packages | 1.1 Packages |
-| 2\. Question and data | Project overview (question, scope, expected message) and Section 2 (the five Eurostat tables). Sources, dates and licence: `data/raw/SOURCE.md` |
+| 2\. Question and data | Project overview (question, scope, expected message) and Section 2 (five Eurostat tables and one WHO table). Sources, dates and licence: `data/raw/SOURCE.md` |
 | 3\. Exploration | The five quality checks in Section 3 (3.1.2, 3.2.2 and so on): types, missing values, ranges with histograms, duplicates, row counts |
 | 4\. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
 | 5\. Graphs | Section 5, Exploration: each graph has its question above it and its finding below it |
@@ -129,15 +130,19 @@ The document follows the order in which the work was done, so its sections are n
 
 ## How the files are organised
 
-The analysis is written in eight files: this one, `final_project.qmd`, with the overview, and one file per section, which this file puts in place when it is rendered, so that the result is one report. The underscore at the start of the section files tells Quarto that they are parts of this report, not reports of their own. Each section file starts with a hidden setup chunk, so that it can also be run on its own while working on it.
+The analysis is written in 17 files: this one, `final_project.qmd`, with the overview, and one file per section, which this file puts in place when it is rendered, so that the result is one report. The two longest sections, Cleaning and Exploration, are split further into one file per part, because very long files made the editor hang. The underscore at the start of the section files tells Quarto that they are parts of this report, not reports of their own. Each section file starts with a hidden setup chunk, so that it can also be run on its own while working on it.
 
 | File | Content |
 |---|---|
 | `_1_setup.qmd` | 1. Environment setup |
 | `_2_gathering.qmd` | 2. Gathering data |
-| `_3_cleaning.qmd` | 3. Cleaning |
+| `_3_cleaning.qmd` | 3. Cleaning: introduction, then includes the six files below |
+| `_3_1_life_expectancy.qmd` to `_3_6_alcohol.qmd` | 3.1 to 3.6, one file per table, each ending with saving its clean table |
 | `_4_combining.qmd` | 4. Combining the tables |
-| `_5_exploration.qmd` | 5. Exploration |
+| `_5_exploration.qmd` | 5. Exploration: introduction and 5.0, then includes the three files below |
+| `_5_1_gap_and_causes.qmd` | 5.1 to 5.3: the gap and the causes of death |
+| `_5_4_factors.qmd` | 5.4 and 5.5: the factors that go with the gap |
+| `_5_6_men_and_robustness.qmd` | 5.6 to 5.10: the men, the two neighbours, healthy years, robustness and the summary |
 | `_6_story.qmd` | 6. The story |
 | `_7_limits.qmd` | 7. Limits and the appendix |
 

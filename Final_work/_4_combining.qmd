@@ -6,16 +6,17 @@
 # include: false runs the chunk but does not show it in the report.
 pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
 read_clean <- function(file) read_csv(here("data", "clean", file), show_col_types = FALSE)   # read a table saved in 3.1 to 3.5
-life_expectancy_clean    <- read_clean("life_expectancy_clean.csv")     # the five clean tables of Section 3
+life_expectancy_clean    <- read_clean("life_expectancy_clean.csv")     # the six clean tables of Section 3
 healthy_life_years_clean <- read_clean("healthy_life_years_clean.csv")
 deaths_clean             <- read_clean("deaths_clean.csv")
 gdp_clean                <- read_clean("gdp_clean.csv")
 education_clean          <- read_clean("education_clean.csv")
+alcohol_clean            <- read_clean("alcohol_clean.csv")       # the sixth table, saved in 3.6.5
 ```
 
 # 4. Combining the tables
 
-This section turns five separate tables into one panel, `gap_panel`, with one row per EU country and year: 27 countries times 10 years, 270 rows. Each column holds one thing known about that country in that year. The research question is about relationships, for example whether a larger gap goes with lower GDP, and a chart can only show such a relationship when both numbers sit in the same row.
+This section turns six separate tables into one panel, `gap_panel`, with one row per EU country and year: 27 countries times 10 years, 270 rows. Each column holds one thing known about that country in that year. The research question is about relationships, for example whether a larger gap goes with lower GDP, and a chart can only show such a relationship when both numbers sit in the same row.
 
 Life expectancy is complete for all 27 countries and 10 years, so it is the backbone: every other table is joined onto it. Values that a table does not have, such as the deaths of 2024 or Luxembourg's healthy life years for 2023 and 2024, become `NA` in the panel, never 0.
 
@@ -280,6 +281,26 @@ gap_panel |>
 
 **What it shows:** still 270 rows. The 27 rows without deaths data are exactly the 27 countries in 2024, the year the deaths table does not yet cover. In these rows the three death columns are `NA`. After the four joins, `gap_panel` has 270 rows and 15 columns, and its only missing values are these 27 rows of deaths and the two rows of healthy life years for Luxembourg.
 
+### 4.3.5 Alcohol consumption
+
+Alcohol has no `sex`, like GDP, so the same value sits next to the values for women and men. It covers only 2015 to 2020, so the rows for 2021 to 2024 get `NA` in the alcohol column. They are not filled in.
+
+```{r}
+#| label: show-join-alcohol
+# 4.3.5 Add alcohol consumption per person
+gap_panel <- gap_panel |>                                  # the panel so far
+  left_join(alcohol_clean,                                 # add the alcohol column
+            by = join_by(country_code, year))              # match on country and year
+
+nrow(gap_panel)   # must still be 270
+
+gap_panel |>
+  anti_join(alcohol_clean, by = join_by(country_code, year)) |>   # rows with no alcohol data
+  count(year)                                                     # expected: 2021 to 2024, 27 rows each
+```
+
+**What it shows:** still 270 rows. The 108 rows without alcohol data are exactly the 27 countries in each of the years 2021 to 2024, which the WHO data does not cover. In these rows `alcohol_litres` is `NA`. The panel now has 16 columns.
+
 ## 4.4 Country names and the Baltic states
 
 Two columns make the panel easier to read and to chart. `country` holds the English name of each country, because codes such as `EL` (Greece) or `SI` (Slovenia) are not known to every reader. `baltic` is `TRUE` for Estonia, Latvia and Lithuania and `FALSE` for the other 24 countries, so that every chart can highlight the three countries with one line of code.
@@ -320,7 +341,7 @@ gap_panel |>
   kable(col.names = c("Baltic state", "Rows"))              # expected: FALSE 240, TRUE 30
 ```
 
-**What it shows:** still 270 rows, and every country code found its name (0 missing). 30 rows are marked as Baltic (3 countries times 10 years) and 240 as not Baltic. `gap_panel` now has 17 columns: code, name and Baltic mark first, then `year` and the 13 measures.
+**What it shows:** still 270 rows, and every country code found its name (0 missing). 30 rows are marked as Baltic (3 countries times 10 years) and 240 as not Baltic. `gap_panel` now has 18 columns: code, name and Baltic mark first, then `year` and the 14 measures.
 
 ## 4.5 Saving the panel
 
@@ -351,4 +372,4 @@ here("data", "clean", "gap_panel.csv") |>    # the path to the saved file
   nrow()                                     # expected: 270
 ```
 
-**What it shows:** the saved file loads with 270 rows and 17 columns, the same as `gap_panel` in memory. The types survived the round trip: `country_code` and `country` are text, `baltic` is logical (`TRUE` or `FALSE`), and all measures are numbers. `gap_panel.csv` is the table that Section 5 starts from.
+**What it shows:** the saved file loads with 270 rows and 18 columns, the same as `gap_panel` in memory. The types survived the round trip: `country_code` and `country` are text, `baltic` is logical (`TRUE` or `FALSE`), and all measures are numbers. `gap_panel.csv` is the table that Section 5 starts from.

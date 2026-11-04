@@ -126,6 +126,47 @@ men_over_time |>
 
 **Finding:** in all five panels, Baltic men under 65 die far more often than the average man in the rest of the EU, whose rates stay almost flat. The three countries moved differently. Lithuanian men's death rate from all causes fell by about a quarter, from 663 per 100 000 in 2015 to 485 in 2023, with the largest fall in external causes (from 160 to 96, from the highest of the three to below Latvia) and accidental poisoning, which halved (from 29 to 15). The fall starts in 2017, the year in which Lithuania's life expectancy gap first narrowed (Graph 4). Latvian men's death rate barely changed and rose sharply in 2021, a COVID-19 year, to 717. Their deaths from accidental poisoning have almost tripled since 2021 (from 10 to 27). In Estonia, deaths from chronic liver disease rose from 34 in 2019 to 49 in 2022. The data shows when the rates changed, not why. Whether changes in alcohol policy played a part would need a source outside this data.
 
+### 5.7.2 Graph 17: Drinking in the Baltic states over time
+
+**Question:** did the amount of alcohol drunk change differently in the three Baltic states between 2015 and 2020, the years the alcohol data covers? The chart uses the same colours as Graph 14, with the average of the other 24 EU countries as a dashed gray line. The figure is for women and men together.
+
+```{r}
+#| label: show-graph-17
+#| fig-height: 4
+# 5.7.2 Graph 17: litres of pure alcohol per person, Baltic states and the rest of the EU, 2015 to 2020
+alcohol_over_time <- gap_panel |>
+  filter(year <= 2020)                                                   # the years with alcohol data
+
+alcohol_rest_of_eu <- alcohol_over_time |>
+  filter(!baltic) |>                                                     # the 24 other countries
+  group_by(year) |>
+  summarise(alcohol_litres = mean(alcohol_litres), .groups = "drop") |>  # their average, year by year
+  mutate(country = "Rest of the EU (average)")
+
+alcohol_over_time |>
+  filter(baltic) |>                                                      # the three Baltic states
+  select(year, alcohol_litres, country) |>
+  bind_rows(alcohol_rest_of_eu) |>                                       # add the comparison line
+  ggplot(aes(x = year, y = alcohol_litres, colour = country, linetype = country)) +
+  geom_line(linewidth = 0.9) +                                           # one line per country
+  scale_colour_manual(values = c("Estonia" = "#440154", "Latvia" = "#21908C",
+                                 "Lithuania" = "#E8A33B",                # the same colours as Graph 14
+                                 "Rest of the EU (average)" = "gray50")) +
+  scale_linetype_manual(values = c("Estonia" = "solid", "Latvia" = "solid", "Lithuania" = "solid",
+                                   "Rest of the EU (average)" = "dashed")) +
+  labs(title = "Estonia and Lithuania drank less after 2015, Latvia drank more",   # the finding
+       subtitle = "Litres of pure alcohol per person aged 15+, 2015 to 2020",
+       x = NULL, y = "Litres per person", colour = NULL, linetype = NULL,
+       caption = "Women and men together. The y axis does not start at zero. Source: WHO via Our World in Data") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        panel.grid.minor = element_blank())
+```
+
+**Finding:** in 2015 Estonia (15.1 litres) and Lithuania (14.2) drank far more than the rest of the EU (10.6), and Latvia (11.6) only a little more. By 2020 the order had turned around. Estonia fell to 10.7 litres and Lithuania to 12.1, most of it between 2015 and 2018, while Latvia rose to 12.9 and became the heaviest-drinking Baltic state. The rest of the EU stayed at about 10.6 litres until it dropped to 9.9 in 2020, a COVID-19 year. Lithuania's fall in drinking came in the same years as the fall in its men's early deaths (Graph 14), and Latvia's rise in drinking in the same years as its gap stopped narrowing. This is a pattern in three countries, not proof that one caused the other.
+
+**What this means:** the two neighbours took different paths in drinking as well as in deaths. Together with Graph 16, this suggests that the amount drunk is not what makes the Baltic gaps so large, but that changes in drinking may go with changes in men's early deaths within a country.
+
 ## 5.8 Baltic men lose healthy years too
 
 ### 5.8.1 Graph 15: Years in good health and years with limitations
@@ -275,7 +316,7 @@ The hypotheses and the research question were written in the Project overview be
 |---|------------------|------------|------------|------------------|
 | 1 | A bigger gap is associated with more men dying under 65 from heart and circulatory disease | Graphs 5, 6, 7 | **Supported** | Correlation 0.87 (0.85 in 2019). Circulatory diseases are the largest part of Baltic men's extra deaths, ischaemic heart disease the largest single cause |
 | 2 | Accidents and suicide are also associated with a bigger gap | Graphs 6, 8 | **Supported** | Correlation 0.91, the closest of all factors. Poisoning, suicide, drowning and assault are 2 to 6 times the EU level among Baltic men |
-| 3 | More alcohol-related deaths among men are associated with a bigger gap | Graphs 6, 9 | **Supported, through indirect measures** | Correlation 0.88 for chronic liver disease and accidental poisoning. Deaths coded as alcohol disorders are barely higher. No direct measure of drinking was used |
+| 3 | More alcohol-related deaths among men are associated with a bigger gap | Graphs 6, 9, 16, 17 | **Supported for deaths, partly for drinking** | Correlation 0.88 for chronic liver disease and accidental poisoning. The amount drunk goes with the gap only moderately (0.52, 2019), and the Baltic gaps are 2.4 to 3.4 years larger than their drinking predicts. Within the Baltic states, Lithuania drank less and Latvia more after 2015, in the same years as their deaths changed |
 | 4 | Poorer countries have lower life expectancy, but in the Baltic states men fall further below the pattern than women | Graphs 10, 12 | **Supported** | Richer countries have smaller gaps (-0.61, -0.75 without Luxembourg and Ireland). At the same income, Baltic women live as long as other women, Baltic men up to 4.6 years shorter |
 | 5 | Where women are much more educated than men, the gap is bigger | Graph 11 | **Not supported** | 0.52 across all countries, but 0.22 without the Baltic states (p = 0.30). Dead end, see the appendix |
 | 6 | The gap has narrowed in most countries since 2015, but not at the same speed | Graphs 4, 14 | **Supported** | Narrowed in 22 of 27 countries. Lithuania most (-1.8 years), Latvia's grew (+0.2) |
@@ -284,7 +325,7 @@ The hypotheses and the research question were written in the Project overview be
 | Research question | Answer | Where |
 |------------------|------------------------------------|------------|
 | **Main question:** why do men in the Baltic states die so much earlier than women, compared with the rest of the EU? | Because Baltic men under 65 die far more often than men elsewhere, from heart and circulatory diseases and from external causes such as poisoning, suicide and drowning, several of them linked to alcohol. Lower income does not explain it: at the same income, Baltic women live as long as other European women, and only the men fall behind. The data shows which deaths make up the gap, not the reasons behind them | Whole of Section 5 |
-| 1. Which country-level factors are associated with the size of the gap? | Men's early deaths from circulatory diseases, external causes and alcohol-related causes (strongly), income (moderately, in the opposite direction). Not the education gap | 5.4, 5.9 |
+| 1. Which country-level factors are associated with the size of the gap? | Men's early deaths from circulatory diseases, external causes and alcohol-related causes (strongly), income (moderately, in the opposite direction) and the amount of alcohol drunk (moderately). Not the education gap | 5.4, 5.9 |
 | 2. How has the gap changed between 2015 and 2024? | It narrowed in most countries. Lithuania narrowed it most, with a fall in men's early deaths from 2017, while Latvia's gap grew and has been the largest in the EU since 2021 | 5.2, 5.7 |
 | 3. Where do Estonia, Latvia and Lithuania sit? | The three largest gaps in the EU in every year. Latvian men have the lowest life expectancy in the EU, and Latvian women and men both have very few healthy years | 5.1, 5.6, 5.8 |
 

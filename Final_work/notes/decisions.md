@@ -59,3 +59,9 @@ Every choice and why, in my words.
 - **One file per section (3 Nov).** Two parts were still too big to work with comfortably, so each section has its own file now, `_1_setup.qmd` to `_7_limits.qmd`, and I open only the `Final_work` folder in Positron. Each file starts with a hidden setup chunk, so I can run it on its own. For that, Section 3 now saves the five clean tables to `data/clean/`, and Section 4 starts from them.
 
 - **Save step (3 Nov).** Each cleaning file saves its own clean table at the end (3.1.5 to 3.5.5). A separate save file at the end of Section 3 broke as soon as one of the five files hadn't run in the same session. Now every file works on its own.
+
+- **Alcohol cleaning (4 Nov).** I keep only the 27 EU countries, which also drops WHO's regional totals like "World". I keep 2015 to 2020, my study period, because the data stops in 2020. Each row gets its Eurostat code (`LV`, `EL`) from a small lookup table I wrote by hand, so the table joins with the others. I drop the country name and the three-letter code after that. Result: 162 rows, 3 columns. The years 2021 to 2024 stay missing in the panel, I don't fill them in.
+
+- **Alcohol graph (4 Nov).** Alcohol consumption gets its own sub-section, 5.4.8, as Graph 16, so the other graph numbers stay the same. I use 2019, the last year before COVID and the same year as my robustness check, because the alcohol data stops in 2020 and can't be compared in 2023 like the other factors.
+
+- **More on alcohol (4 Nov).** I added Graph 17 (5.7.2): drinking in the three Baltic states over time, 2015 to 2020, next to Graph 14 because it fits the "two neighbours, two paths" story. I updated hypothesis 3 in the summary to "supported for deaths, partly for drinking". The EHIS heavy-drinking survey (correlation 0.03) went into the dead ends appendix.

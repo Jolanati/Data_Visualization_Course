@@ -1,0 +1,243 @@
+```{r}
+#| label: setup-cleaning-alcohol
+#| include: false
+# Setup for working in this file on its own: loads the packages, the EU codes and this table's raw file.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+alcohol_raw <- read_csv(here("data", "raw", "total_alcohol_consumption_per_capita.csv"),   # the raw table of 2.6
+                        na = c("", "NA"), show_col_types = FALSE)
+```
+
+## 3.6 Alcohol consumption per person
+
+The alcohol table goes through the same four stages. It is the only table that does not come from Eurostat, so it needs one extra step: its three-letter country codes (`LVA`) are matched to Eurostat's two-letter codes (`LV`) before the join in Section 4.
+
+| Stage | What happens | Result |
+|------------------|------------------------------------|------------------|
+| 3.6.1 | Tidy the column names | Readable names, same data |
+| 3.6.2 | Run the five quality checks | One result per check |
+| 3.6.3 | Summarise what was found and decide | A table of decisions |
+| 3.6.4 | Apply the decisions | `alcohol_clean`, EU only, Eurostat country codes |
+| 3.6.5 | Save the clean table | `data/clean/alcohol_clean.csv` |
+
+### 3.6.1 Tidy the column names
+
+Our World in Data's column names are already lowercase, so `clean_names()` changes nothing here. It is kept so that every table goes through the same steps. `rename()` then gives the columns names that say what they hold. The three-letter code is called `iso3_code`, not `country_code`, because `country_code` is kept for Eurostat's two-letter codes, the key of the join in Section 4.
+
+| Our World in Data name | After `rename()` |
+|------------------------|------------------|
+| `entity`               | `country_name`   |
+| `code`                 | `iso3_code`      |
+| `year`                 | `year`           |
+| `sh_alc_pcap_li`       | `alcohol_litres` |
+
+```{r}
+#| label: show-alcohol-names
+# 3.6.1 Make the column names readable
+alcohol_clean <- alcohol_raw |>                 # start from the untouched raw table
+  clean_names() |>                              # names are already lowercase, kept for the same steps as every table
+  rename(country_name   = entity,               # new name = old name: the country or region in words
+         iso3_code      = code,                 # WHO's three-letter code, for example LVA
+         alcohol_litres = sh_alc_pcap_li)       # the value: litres of pure alcohol per person aged 15+, per year
+
+names(alcohol_clean)   # list the new column names, expected: 4
+```
+
+**What it shows:** the same 4 columns, now called `country_name`, `iso3_code`, `year` and `alcohol_litres`.
+
+### 3.6.2 The five quality checks
+
+The checks run on all 4 164 rows, before anything is removed. The code follows 3.4.2 (GDP), because this table also has one value per country and year, with no sex. This table has no flag column: Our World in Data does not mark estimated or provisional values.
+
+#### Check 1: types
+
+```{r}
+#| label: show-alcohol-types
+# 3.6.2 Check 1: the type of every column
+glimpse(alcohol_clean)   # alcohol_litres and year should be <dbl>
+```
+
+**Result:** `alcohol_litres` and `year` are numbers, `country_name` and `iso3_code` are text.
+
+#### Check 2: missing values
+
+```{r}
+#| label: show-alcohol-missing
+# 3.6.2 Check 2: missing values and spread of the litres per person
+alcohol_clean |>                                          # the renamed table, all 4 164 rows
+  tbl_summary(
+    include   = alcohol_litres,                           # the one value column
+    type      = alcohol_litres ~ "continuous2",           # show the number on several lines
+    statistic = alcohol_litres ~ c("{median} ({p25} to {p75})",   # middle half
+                                   "{min} to {max}"),             # full range
+    label     = alcohol_litres ~ "Litres of pure alcohol per person aged 15+",   # readable row name
+    missing      = "always",                              # a Missing row, even if it is 0
+    missing_text = "Missing"                              # the word shown in that row
+  )
+```
+
+**Result:** no value is missing. The median is 4.9 litres, and half of all values lie between 1.9 and 8.7 litres.
+
+#### Check 3: units and ranges
+
+Litres of pure alcohol per person in a year are expected to lie between 0 (countries where alcohol is banned) and about 20. A value far above would point to a wrong unit, for example litres of beer instead of pure alcohol.
+
+```{r}
+#| label: show-alcohol-range
+#| fig-height: 4
+# 3.6.2 Check 3: the distribution of litres per person
+alcohol_clean |>
+  ggplot(aes(x = alcohol_litres)) +                   # one number, so a histogram (class 10_1)
+  geom_histogram(binwidth = 1,
+                 fill = "#21908C",                    # one colour from the viridis palette (teal)
+                 color = "white") +                   # one bar per litre, white gaps
+  geom_vline(xintercept = c(0, 20),
+             linetype = "dashed") +                   # the expected range
+  labs(title = "All values lie inside the expected range of 0 to 20 litres",   # the title states the finding
+       x = "Litres of pure alcohol per person aged 15+, per year",
+       y = "Number of rows") +
+  theme_minimal() +                                   # white background, light grid
+  theme(panel.grid.minor = element_blank())           # fewer lines that carry no data
+```
+
+**Result:** all values lie between 0 and 19.4 litres. The zeros are real: Kuwait, for example, bans alcohol, so its recorded consumption is 0 in every year. The highest value is Romania in 2002 (19.4 litres). In the EU from 2015, values run from 5.8 litres (Greece, 2020) to 17.0 (Romania, 2018 and 2019).
+
+#### Check 4: duplicates
+
+One row should be one country (or region) and one year.
+
+```{r}
+#| label: show-alcohol-duplicates
+# 3.6.2 Check 4: compare all rows with distinct country and year combinations
+nrow(alcohol_clean)                    # all rows, expected: 4 164
+
+alcohol_clean |>
+  distinct(iso3_code, year) |>         # each combination once
+  nrow()                               # the same number means no duplicates
+```
+
+**Result:** both counts are 4 164, so the table has no duplicates.
+
+#### Check 5: row counts
+
+With 21 years (2000 to 2020), every unit should have 21 rows. With 200 units, a bar per unit would be unreadable, so the first chunk counts how many units have each number of rows: `count()` is used twice, first rows per unit, then units per row count.
+
+```{r}
+#| label: show-alcohol-rows
+# 3.6.2 Check 5: how many units have each number of rows
+alcohol_clean |>
+  count(iso3_code) |>                          # n = number of rows per unit
+  count(n, name = "units") |>                  # how many units have that many rows
+  kable(col.names = c("Rows per unit", "Number of units"))
+```
+
+Besides countries, the file holds regional totals. Their codes are not three letters long, for example `OWID_WRL` for the world. `nchar()` counts the characters in a text, so these rows can be listed.
+
+```{r}
+#| label: show-alcohol-regions
+# 3.6.2 Check 5: the regional totals, whose codes are not three letters long
+alcohol_clean |>
+  filter(nchar(iso3_code) != 3) |>             # keep codes that are not 3 characters long
+  distinct(iso3_code, country_name) |>         # each region once
+  kable(col.names = c("Code", "Region"))
+```
+
+To count the EU rows, the three-letter codes of the 27 member states are needed. They are written next to Eurostat's two-letter codes, in the same order as `eu_codes`, in one small table. The same table is used in 3.6.4 to give every row its Eurostat code.
+
+```{r}
+#| label: show-alcohol-code-lookup
+# 3.6.2 Check 5: the 27 EU member states, Eurostat's two-letter code next to WHO's three-letter code
+eu_code_lookup <- tibble(
+  country_code = eu_codes,                                           # Eurostat: AT, BE, ... (Greece is EL)
+  iso3_code    = c("AUT", "BEL", "BGR", "CYP", "CZE", "DEU", "DNK", "EST", "GRC",   # WHO: Greece is GRC
+                   "ESP", "FIN", "FRA", "HRV", "HUN", "IRL", "ITA", "LTU", "LUX",
+                   "LVA", "MLT", "NLD", "POL", "PRT", "ROU", "SWE", "SVN", "SVK")
+)
+
+alcohol_clean |>
+  filter(iso3_code %in% eu_code_lookup$iso3_code) |>   # look at the member states only
+  nrow()                                               # expected: 27 x 21 = 567
+```
+
+**Result:** 198 units have all 21 years. Only Montenegro and Serbia have 3 rows each (2010, 2015 and 2019), and neither is in the EU. 13 of the units are regional totals, such as `OWID_EU27` (European Union) and `OWID_WRL` (World), which are removed in 3.6.4. The 27 EU member states have 567 rows together, all 21 years each, as expected.
+
+### 3.6.3 Summary: what was found, what was decided
+
+| Check | What was found | Decision |
+|-----------------|----------------------------|----------------------------|
+| 1 Types | `alcohol_litres` and `year` are numbers | No change needed |
+| 2 Missing values | No missing values. The table has no flags | No change needed |
+| 3 Units and ranges | 0 to 19.4 litres, all inside the expected range. The zeros belong to countries where alcohol is banned, such as Kuwait | No change needed. In the EU from 2015, values run from 5.8 to 17.0 litres |
+| 4 Duplicates | Every country and year appears once | No change needed |
+| 5 Row counts | 198 units complete (21 years each), Montenegro and Serbia with 3 years, 13 regional totals, 567 rows for the EU | Only the 27 EU member states are kept, which also removes the regional totals |
+| 5 Years | The data runs from 2000 to 2020 | Only 2015 to 2020 are kept, the study period of the other tables. The years 2021 to 2024 are not available |
+| 5 Country codes | WHO uses three-letter codes (`LVA`, `GRC`), Eurostat two-letter codes (`LV`, `EL`) | Each row gets its Eurostat code from `eu_code_lookup`, so the table can be joined in Section 4 |
+| 5 Columns | `country_name` and `iso3_code` are only needed until the Eurostat code is added | Both are removed |
+
+After these decisions, `alcohol_clean` keeps three columns: `country_code`, `year` and `alcohol_litres`. It has 162 rows: 27 countries times 6 years. Like GDP, it has no `sex` column, because the figure is for women and men together.
+
+**Why the years after 2020 stay missing.** The other tables run to 2023 or 2024. In the joined panel, the alcohol values for 2021 to 2024 will be `NA`, never filled in or carried forward from 2020. Every analysis of alcohol in Section 5 therefore uses 2015 to 2020 only.
+
+### 3.6.4 Apply the decisions
+
+The same steps as in 3.4.4, plus one: the Eurostat code is added with a join. The row count is checked after each step.
+
+#### Keep only the study period
+
+```{r}
+#| label: show-alcohol-years
+# 3.6.4 Keep only the years 2015 to 2020
+nrow(alcohol_clean)   # before: 4 164 rows
+
+alcohol_clean <- alcohol_clean |>            # overwrite the table with the filtered version
+  filter(year >= 2015)                       # the study period starts in 2015, the data ends in 2020
+
+nrow(alcohol_clean)   # after: expected 198 x 6 + 2 x 2 = 1 192
+```
+
+**What it shows:** 4 164 rows before and 1 192 after: 198 complete units with 6 years each (1 188 rows), plus Montenegro and Serbia with 2 rows each (2015 and 2019).
+
+#### Keep only the EU member states and add the Eurostat code
+
+`inner_join()` (class 08) keeps only the rows that have a match in both tables. `eu_code_lookup` holds only the 27 member states, so the join does two things at once: it drops every other country and every regional total, and it adds the matching `country_code` to each row that stays.
+
+```{r}
+#| label: show-alcohol-eu
+# 3.6.4 Keep the 27 EU member states and give each row its Eurostat code
+alcohol_clean <- alcohol_clean |>
+  inner_join(eu_code_lookup,                 # the 27 pairs of codes from 3.6.2
+             by = join_by(iso3_code))        # match on WHO's three-letter code
+
+nrow(alcohol_clean)   # after: expected 27 x 6 = 162
+```
+
+**What it shows:** 162 rows, 27 countries with 6 years each. Every row now also has `country_code`, for example `LV` next to `LVA`.
+
+#### Keep the columns the analysis uses
+
+```{r}
+#| label: show-alcohol-select
+# 3.6.4 Keep the three columns the analysis uses
+alcohol_clean <- alcohol_clean |>                     # overwrite the table again
+  select(country_code, year, alcohol_litres)          # country_name and iso3_code are dropped
+
+glimpse(alcohol_clean)   # expected: 162 rows, 3 columns
+```
+
+**What it shows:** the clean table, with 162 rows and 3 columns: `country_code`, `year` and `alcohol_litres`. One row per EU country and year, with no `sex` column. This is the alcohol table that goes into Section 4.
+
+### 3.6.5 Save the clean table
+
+The clean alcohol table is saved to `data/clean/` at the end of this sub-section, right after it is created. Section 4 starts from this file, so each part of the analysis can be rerun on its own. Like the panel in 4.5, the file is created by the code and can always be recreated by running this sub-section again.
+
+```{r}
+#| label: show-save-alcohol
+# 3.6.5 Save the clean alcohol table to data/clean/
+write_csv(alcohol_clean, here("data", "clean", "alcohol_clean.csv"))   # 162 rows
+```
+
+**What it shows:** nothing on screen. The file `data/clean/alcohol_clean.csv` is created or replaced.
