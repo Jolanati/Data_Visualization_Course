@@ -423,7 +423,7 @@ The app is not part of the new rubric, and only two evenings are left. It is dro
 - [ ] The source is named on the final graph.
 - [ ] The zip has the whole folder without `.Rproj.user`, and includes `final_project.html`.
 - [ ] The empty `app/` and `R/` folders are deleted, `.Rproj.user` is not in the zip.
-- [ ] The participation form is sent before Fri 13 Nov, 19:00.
+- [x] The participation form is sent before Fri 13 Nov, 19:00 (done 9 Nov).
 
 **Course coverage**, so the project shows what the classes taught. Every row is used at least once, on purpose, with a sentence in `final_project.qmd` saying why.
 
@@ -454,7 +454,7 @@ Only two evenings are left for the project work (9 and 10 Nov).
 |---|---|
 | Mon 9 Nov, evening | Reword the question. Step 6: graph v1, v2 and final, the log, the colour blind check, the report title |
 | Tue 10 Nov, evening | Step 7: the full prompt log, clean-session render, zip test |
-| **Fri 13 Nov, 19:00** | **Participation form** (40% of the course grade) |
+| ~~Fri 13 Nov, 19:00~~ | Participation form: done 9 Nov |
 | 11 to 19 Nov | Step 8 on my own: talk script, three timed rehearsals, backup video, practise explaining chunks |
 | **Fri 20 Nov** | Talk live (video by 18:00 if absent). Zip uploaded by 23:59 |
 

@@ -1,0 +1,183 @@
+---
+title: "Code walkthrough: the final graph"
+author: "Jolanta Stutane"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+This file is for the second video, the code walkthrough. It builds the final graph of the project from the clean data in five short steps, so that every line can be shown and explained. The full analysis is in `final_project.qmd`. Run the chunks one at a time in Positron (`Ctrl+Shift+Enter` in a chunk). Each chunk has a **Say** note: what to tell while it runs.
+
+## Step 1: packages and the clean data
+
+**Say:** I start from the clean panel I saved in Section 4 of my project. It has one row per EU country and year: 27 countries, 10 years, 270 rows. The raw downloads and all the cleaning are in the main report.
+
+```{r}
+#| label: demo-data
+# Step 1: load the packages and the clean panel
+pacman::p_load(tidyverse, here)                       # tidyverse for data and charts, here() for paths
+
+gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"),   # the panel saved in Section 4
+                      show_col_types = FALSE)                   # keep the output short
+
+dim(gap_panel)   # expected: 270 rows, 18 columns
+```
+
+## Step 2: the year and the comparison group
+
+**Say:** I use 2024, the latest year. The Baltic states are poorer than most of the EU, so I compare them only with countries that are about as rich: a GDP index between 60 and 90, where the EU average is 100. That gives ten countries, like Poland, Hungary and Croatia, and takes income out of the comparison.
+
+```{r}
+#| label: demo-comparison
+# Step 2: the latest year, and the ten EU countries of similar income
+gap_2024 <- gap_panel |>
+  filter(year == 2024)                                # one row per country
+
+similar_income <- gap_2024 |>
+  filter(!baltic,                                     # not a Baltic state
+         gdp_pps_index >= 60, gdp_pps_index <= 90)    # but about as rich
+
+similar_income |> select(country, gdp_pps_index)      # the ten comparison countries
+```
+
+## Step 3: the difference for women and men
+
+**Say:** for each Baltic state I subtract the average of the comparison group, separately for women and men. Zero means "the same as in equally rich countries", a negative number means shorter lives. Then `pivot_longer()` puts women and men in one column, because ggplot needs one column to split the panels.
+
+```{r}
+#| label: demo-difference
+# Step 3: years longer or shorter than in countries of similar income
+baltic_difference <- gap_2024 |>
+  filter(baltic) |>                                                   # the three Baltic states
+  mutate(Women = le_women - mean(similar_income$le_women),            # difference, women
+         Men   = le_men   - mean(similar_income$le_men)) |>           # difference, men
+  select(country, Women, Men) |>
+  pivot_longer(cols = c(Women, Men),                                  # women and men into one column
+               names_to = "sex", values_to = "difference") |>
+  mutate(sex = factor(sex, levels = c("Women", "Men")))               # women first
+
+baltic_difference   # six rows: three countries, two sexes
+```
+
+## Step 4: why not plain bars of life expectancy?
+
+**Say:** my first version showed total life expectancy. Bars must start at zero, so a difference of four or five years on an 80-year bar is almost invisible. That's why I show the difference instead.
+
+```{r}
+#| label: demo-v1
+#| fig-height: 4
+# Step 4: version 1, total life expectancy, the difference is hard to see
+gap_2024 |>
+  filter(baltic) |>
+  pivot_longer(cols = c(le_women, le_men), names_to = "sex", values_to = "life_expectancy") |>
+  ggplot(aes(x = country, y = life_expectancy, fill = sex)) +
+  geom_col(position = "dodge") +                       # women and men side by side
+  labs(title = "Version 1: Life expectancy by sex")    # a topic title, not a finding
+```
+
+## Step 5: the final graph, layer by layer
+
+**Say:** now I build the final graph one layer at a time, so you can see what each line adds.
+
+**5a. The bars and the panels.** Bars sideways, one panel for women and one for men, a line at zero.
+
+```{r}
+#| label: demo-5a
+#| fig-height: 4
+# 5a: bars, panels, the zero line
+p <- baltic_difference |>
+  mutate(country = fct_reorder(country, difference, .fun = min, .desc = TRUE)) |>   # Latvia, the largest shortfall, on top
+  ggplot(aes(x = country, y = difference, fill = sex)) +
+  geom_col(width = 0.7) +                              # bar length = years longer (+) or shorter (-)
+  geom_hline(yintercept = 0, colour = "gray30") +      # 0 = the same as in equally rich countries
+  coord_flip(clip = "off") +                           # bars sideways, names readable
+  facet_wrap(~ sex)                                    # one panel for women, one for men
+p
+```
+
+**5b. Gray plus one colour.** Gray for the women, firebrick for the men, so the eye goes to the message. No legend, because the panel titles already say women and men.
+
+```{r}
+#| label: demo-5b
+#| fig-height: 4
+# 5b: the palette
+p <- p +
+  scale_fill_manual(values = c("Women" = "gray70", "Men" = "firebrick")) +   # gray plus one colour
+  theme_minimal(base_size = 14) +                      # clean theme, large text for a screen
+  theme(legend.position = "none")                      # the panel titles replace the legend
+p
+```
+
+**5c. The numbers.** Each bar gets its value with a sign, so the graph can be read without colour.
+
+```{r}
+#| label: demo-5c
+#| fig-height: 4
+# 5c: the numbers at the end of each bar
+p <- p +
+  geom_text(aes(label = sprintf("%+.1f", difference),            # e.g. -4.6, +1.1
+                hjust = if_else(difference < 0, 1.15, -0.15)),   # just outside the bar
+            size = 4.5) +
+  scale_y_continuous(limits = c(-6, 4.5), breaks = seq(-6, 4, 2))  # room for numbers and the note
+p
+```
+
+**5d. The annotation.** One note, only in the men's panel, pointing to the evidence: Latvian men against men in equally rich countries.
+
+```{r}
+#| label: demo-5d
+#| fig-height: 4
+# 5d: one annotation in the men's panel
+note <- tibble(sex = factor("Men", levels = c("Women", "Men")),   # only the men's panel
+               country = "Latvia", difference = 0.3,
+               label = sprintf("Latvian men:\n%.1f years\nEqually rich\ncountries: %.1f",
+                               gap_2024$le_men[gap_2024$country == "Latvia"],
+                               mean(similar_income$le_men)))
+
+p <- p +
+  geom_text(data = note, aes(label = label), hjust = 0, size = 3.6,
+            lineheight = 0.9, colour = "firebrick", fontface = "italic")
+p
+```
+
+**5e. The title, the labels and the source.** The title states the finding, the axis says what is measured and in which unit, and the source line names the data.
+
+```{r}
+#| label: demo-5e
+#| fig-height: 5.5
+#| fig-width: 9
+# 5e: the finding as the title, axis label with the unit, the source
+p +
+  labs(title = "At the same income, Baltic women live as long as other Europeans,\nBaltic men up to 4.6 years shorter",
+       subtitle = "Life expectancy at birth compared with the average of ten EU countries of similar income, 2024",
+       x = NULL,
+       y = "Years longer (+) or shorter (-) than in countries of similar income",
+       caption = "Source: Eurostat, demo_mlexpec and tec00114") +
+  theme(plot.title.position = "plot",                  # title starts at the left edge
+        strip.text = element_text(face = "bold"),      # panel titles stand out
+        panel.grid.minor = element_blank(),            # no lines that carry no data
+        panel.grid.major.y = element_blank())
+```
+
+**Say, to close:** that's the whole graph: five steps from the clean data to the finding. At the same income, Baltic women keep up with Europe, Baltic men don't.
+
+## Optional: does the result depend on the income band?
+
+**Say (only if there is time):** the comparison group is a choice. If I change the band, the numbers move, but the men always fall further behind than the women.
+
+```{r}
+#| label: demo-band
+# Optional: the same comparison with a wider band, GDP index 50 to 100
+wider <- gap_2024 |> filter(!baltic, gdp_pps_index >= 50, gdp_pps_index <= 100)   # 14 countries
+
+gap_2024 |>
+  filter(baltic) |>
+  transmute(country,
+            women = round(le_women - mean(wider$le_women), 1),   # difference, women
+            men   = round(le_men   - mean(wider$le_men), 1))     # difference, men
+```

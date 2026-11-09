@@ -74,3 +74,7 @@ Sergio published a 10-point rubric on 8 Nov. `Project_idea.md` is rewritten for 
 **Done 9 Nov evening:** question reworded, Section 6 (v1, v2, final graph, colour blind check with Coblis Green-Blind/Deuteranopia, log), report title = finding, Section 7 Limits (six limits, income band checked with 50-100, 55-95, 65-85). Committed up to fe17e5b; Limits not yet committed.
 
 **Next (10 Nov):** confirm the "Found" message in the overview, `story.md`, `post.md`, prompt log appendix extracted from the sessions, delete `app/` and `R/`, clean-session render, zip test, `Surname_Name.zip`.
+
+**9 Nov, late:** participation form sent. Talk script in `notes/talk_script.md`. The user records the talk as a video too. Prompt log stays as it is (examples, not every prompt: the user chose this). Left: rehearse, zip test and zip, talk on 20 Nov.
+
+**9 Nov, late:** the user is travelling on 20 Nov, so two videos: talk (<= 3:00, `notes/talk_script.md`) and code walkthrough (`demo.qmd`, five steps building the final graph, renders). No live defence.
