@@ -70,3 +70,7 @@ Then Section 7 (Limits, add: alcohol not by sex, ends 2020, amount not pattern o
 ## 8. New rubric (9 Nov)
 
 Sergio published a 10-point rubric on 8 Nov. `Project_idea.md` is rewritten for it: see "What Sergio asks for" at the top, Steps 6 to 8 and the timeline. Only two evenings are left (9 and 10 Nov). The Vercel app, the Rosling frames and the open review items 7 to 10 above are dropped. Next: reword the question, then Step 6 (graph v1, v2, final, log, colour blind check) based on Graph 12.
+
+**Done 9 Nov evening:** question reworded, Section 6 (v1, v2, final graph, colour blind check with Coblis Green-Blind/Deuteranopia, log), report title = finding, Section 7 Limits (six limits, income band checked with 50-100, 55-95, 65-85). Committed up to fe17e5b; Limits not yet committed.
+
+**Next (10 Nov):** confirm the "Found" message in the overview, `story.md`, `post.md`, prompt log appendix extracted from the sessions, delete `app/` and `R/`, clean-session render, zip test, `Surname_Name.zip`.

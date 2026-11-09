@@ -70,7 +70,7 @@ This part is written last, after Section 6, so that a reader sees the answer bef
 |   | Message |
 |------------------------------------|------------------------------------|
 | **Expected** (written before the data) | Baltic men die earlier, and this goes mainly with heart disease deaths before 65. |
-| **Found** (draft, after Section 5) | Baltic men die earlier mainly because they die far more often before 65 from heart disease and from external causes such as poisoning and suicide, several linked to alcohol. Income does not explain it: at the same income, Baltic women live as long as other European women, only the men fall behind. |
+| **Found** (after Sections 5 and 6) | Baltic men die earlier mainly because they die far more often before 65 from heart disease and from external causes such as poisoning and suicide, several linked to alcohol. Income does not explain it: at the same income, Baltic women live as long as other European women, while Baltic men live up to 4.6 years shorter (Latvia). |
 
 **Hypotheses in brief** (details in 5.10.1): supported are 1 (heart disease), 2 (external causes), 4 (income does not explain the Baltic gap) and 6 (the gap narrowed, unevenly). Hypothesis 3 (alcohol) is supported for alcohol-related deaths, but only partly for the amount drunk: drinking goes with the gap moderately, and the Baltic gaps are larger than their drinking predicts. Hypothesis 5 (education) is not supported. Hypothesis 7 (which factor matters most) cannot be answered with 27 countries.
 

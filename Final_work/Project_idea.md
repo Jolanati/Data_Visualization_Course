@@ -20,7 +20,7 @@ Source: https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/c
 | 6 | Refinement | 2 | 1: title states a finding, axes with labels and units, one annotation, readable text. 1: theme and palette chosen on purpose, colour blind safe with a simulator screenshot, message not by colour alone | To do tonight (Step 6) |
 | 7 | Presentation | 1 | At most 3 minutes, the finding in the first 30 seconds, one graph. A video shows screen and presenter together | Script tomorrow, rehearse before 20 Nov (section 7) |
 | 8 | Reproducibility | 1 | Renders from a clean session with `here()`. The zip holds the `.qmd`, the html, `data/raw`, `SOURCE.md`, `prompt_log.md` | Test tomorrow (Step 7) |
-| + | Social media post | +1 | Up to 100 words, question, data, graph, source line (`post.md`) | Tomorrow (Step 7) |
+| + | Social media post | +1 | Up to 100 words, question, data, graph, source line (`post.md`) | Not done: my decision, 9 Nov |
 
 **Also required, no points of its own:** `prompt_log.md` lists every prompt and one AI mistake fixed. The teacher may ask about any line of code, "and the score follows your answer". `story.md` fits on one page. Each function has a comment that says why.
 
@@ -57,7 +57,7 @@ Source: https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/c
   - [ ] Graph 15 title: maybe "In Latvia, women and men alike live far fewer years in good health"
   - [ ] Lithuania alcohol policy around 2017 to 2018: find a citable source or leave it out. The data only shows when deaths fell, not why
 - [x] Step 6. Final graph (done 9 Nov): based on Graph 12, `graph_v1.png` (with a problem), `graph_v2.png`, `final_graph.png`, a log of the versions, `colour_blind_check.png`, report title changed to the finding
-- [ ] Step 7. Hand-in (10 Nov): Section 7 Limits, `story.md`, `post.md`, full prompt log, clean-session render, zip `Surname_Name.zip`
+- [ ] Step 7. Hand-in (10 Nov): Section 7 Limits done 9 Nov. Still: `story.md` (drafted 9 Nov), full prompt log, clean-session render, zip `Surname_Name.zip`
 - [ ] Step 8. Rehearse (before 20 Nov): the 3-minute talk, the finding in the first 30 seconds, and explaining any line of code
 
 Template files:
@@ -131,7 +131,7 @@ Code style:
 Writing style:
 
 - **In `final_project.qmd`: academic voice.** No "I", "my" or "me". Impersonal or passive phrasing ("the data is filtered in Section 3"), no contractions. The only exception is the personal sentence in Background ("I live in Latvia...").
-- **In `notes/decisions.md`, `prompt_log.md`, `story.md`, `post.md` and the talk: my own voice.** Plain, direct sentences of mixed length. Contractions are fine.
+- **In `notes/decisions.md`, `prompt_log.md`, `story.md` and the talk: my own voice.** Plain, direct sentences of mixed length. Contractions are fine.
 - No long dashes anywhere. Use commas, colons or full stops.
 - No filler openers, no buzzwords, no "in today's world" phrasing.
 - Titles state a finding, not a topic.
@@ -231,7 +231,6 @@ Final_work/                # Sergio's project_template structure, zipped as Surn
 ├── _1_setup.qmd ... _7_limits.qmd   # 16 section files, each with a hidden setup chunk (required, the .qmd includes them)
 ├── story.md               # one page: question, answer, final graph (required)
 ├── prompt_log.md          # every prompt, and one AI mistake fixed (required)
-├── post.md                # social media post, up to 100 words (+1 point)
 ├── data/
 │   ├── raw/               # untouched downloads, plus SOURCE.md (required)
 │   └── clean/             # the clean tables and gap_panel.csv
@@ -365,7 +364,6 @@ here("data", "clean", "gap_panel.csv") |>
 ### Step 7. Hand-in (rubric items 7 and 8 and the extra point, tomorrow)
 - **Section 7, Limits:** 3 to 5 plain bullets (see section 10 and the handover notes).
 - **`story.md`:** one page, following Sergio's template: question, data, the answer in one sentence with a number, the final graph, evidence, limits.
-- **`post.md`:** up to 100 words, question, data, the graph, source line.
 - **`prompt_log.md`:** every prompt in full. Claude extracts all my prompts with dates from the saved Claude Code sessions into an appendix, and I check it. The "one AI mistake fixed" entry is already there.
 - **Reproducibility:** Session > Restart R, then Render. Then unzip a copy into a fresh folder and render it there too.
 - **Zip:** `Surname_Name.zip`, the whole folder without `.Rproj.user`, with `final_project.html`. Upload by Fri 20 Nov, 23:59.
@@ -455,7 +453,7 @@ Only two evenings are left for the project work (9 and 10 Nov).
 | Date | Do |
 |---|---|
 | Mon 9 Nov, evening | Reword the question. Step 6: graph v1, v2 and final, the log, the colour blind check, the report title |
-| Tue 10 Nov, evening | Step 7: Section 7 Limits, `story.md`, `post.md`, the full prompt log, clean-session render, zip test |
+| Tue 10 Nov, evening | Step 7: the full prompt log, clean-session render, zip test |
 | **Fri 13 Nov, 19:00** | **Participation form** (40% of the course grade) |
 | 11 to 19 Nov | Step 8 on my own: talk script, three timed rehearsals, backup video, practise explaining chunks |
 | **Fri 20 Nov** | Talk live (video by 18:00 if absent). Zip uploaded by 23:59 |

@@ -9,7 +9,14 @@ pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patc
 
 # 7. Limits
 
-*To be written in Step 6.*
+The data shows which deaths make up the gap and where the Baltic states stand, but it cannot say why. Six limits matter most when reading the results.
+
+1. **Association, not cause.** With 27 countries, the analysis shows which factors go together with the gap, not what causes it. The three death factors also go together with each other (0.77 to 0.84, 5.9.2), so their effects cannot be separated.
+2. **Country averages, not people.** Every number is a national figure. That countries with more alcohol-related deaths have larger gaps does not show that the men who drink are the ones who die earlier. Conclusions about individuals would need data on individuals.
+3. **The death factors are part of the gap.** Life expectancy is calculated from death rates, so men's extra deaths are, in part, the gap itself. Their close link with the gap describes what the gap is made of rather than explaining it from outside. Only deaths under 65 were analysed, and the deaths of older men add to the gap too.
+4. **Life expectancy is a snapshot.** It assumes that the death rates of one year stay the same for a whole life. It describes the health of a country in that year, not how long a baby born today will actually live. Some values for 2024 are provisional.
+5. **The final graph rests on one choice of comparison.** "Countries of similar income" means a GDP index between 60 and 90. A wider or narrower band changes the comparison countries and the exact numbers, but not the pattern. With bands of 50 to 100, 55 to 95 and 65 to 85, Latvian men live between 4.1 and 6.1 years shorter than men in the comparison group, and in every band and every Baltic state the men fall 1.9 to 4.0 years further behind than the women.
+6. **Gaps in the data.** Deaths by cause end in 2023. Luxembourg has no healthy life years for 2023 and 2024. Education has a break in 2021, when the survey method changed. GDP overstates the income of residents in Luxembourg and Ireland. The alcohol figures end in 2020, are for women and men together, and measure how much is drunk, not how: heavy drinking concentrated among men cannot be seen in them.
 
 # Appendix: dead ends
 
