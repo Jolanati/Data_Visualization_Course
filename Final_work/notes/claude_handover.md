@@ -66,3 +66,7 @@ Every chunk hung (spinner, CPU 0%). The cause was Quarto inline output in a very
 
 Then Section 7 (Limits, add: alcohol not by sex, ends 2020, amount not pattern of drinking) and Step 6 (final graph).
 
+
+## 8. New rubric (9 Nov)
+
+Sergio published a 10-point rubric on 8 Nov. `Project_idea.md` is rewritten for it: see "What Sergio asks for" at the top, Steps 6 to 8 and the timeline. Only two evenings are left (9 and 10 Nov). The Vercel app, the Rosling frames and the open review items 7 to 10 above are dropped. Next: reword the question, then Step 6 (graph v1, v2, final, log, colour blind check) based on Graph 12.

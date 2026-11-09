@@ -6,32 +6,27 @@ Tools: Positron, R, Quarto, Claude Code.
 
 Start every Claude Code session with: "Read Project_idea.md first, then continue from the Progress section."
 
-## What Sergio asks for, and how my plan delivers it
+## What Sergio asks for: the 10-point rubric (published 8 Nov)
 
-Sergio's final project template (published 31 Oct): https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/capstone/project_template. The rubric is in the same repo, `capstone/rubric.md`.
+Source: https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/capstone (`rubric.md`, `project_template/`, `data_quality_checklist.md`, `peer_scoring_sheet.md`). The final project is the exam, 60% of the course grade. Class participation is the other 40%. A criterion met in part earns half a point. The total stops at 10, so the extra point is insurance.
 
-| Sergio asks for | My plan |
-|---|---|
-| One question that names a group, a measure and a period | Life expectancy gap, women minus men, EU member states, 2015 to 2024, Baltic states highlighted (section 2) |
-| `final_project.Rproj`, `final_project.qmd` that renders from a clean session | Done. The `.qmd` keeps my own section order, with a table in its overview that maps Sergio's 7 template sections to mine (section 4) |
-| `data/raw/` with the original files and `SOURCE.md` (link, date, licence) | Five Eurostat tables downloaded by code, never edited. `SOURCE.md` grows with each table |
-| `data/clean/` (optional) | `gap_panel.csv`, the joined table |
-| Each function commented with why | Comments for my future self on every line (section 1) |
-| At least 4 graphs, each matched to a question type | Exploration (Step 5): question above each graph, finding with a number below |
-| One refined final graph, saved to `figures/` | The story graph, built in frames, saved as `figures/final_graph.png` (Step 6) |
-| `prompt_log.md` with prompts and one AI mistake fixed | My AI workflow, prompt examples, decisions table, and the mistakes I caught |
-| `story.md`, one page | Question, data, answer with a number, final graph, evidence, limits (Step 7) |
-| Hand-in: zip of the folder without `.Rproj.user`, with the rendered HTML | Step 7 |
-| 5-minute defence: explain any chunk line by line, make one change in 2 minutes, say why this graph type | Our chunk-by-chunk way of working, and the practice in Step 8 |
-| Talk: one graph in 3 minutes, scored on Ask, Show, Cut, Focus, Tell | 2 minutes "the road" from the app, then the 3 graded minutes on the final graph in frames (section 7) |
+| # | Item | Points | What earns the points | Status (9 Nov) |
+|---|---|---|---|---|
+| 1 | Question | 1 | One question with a group, a measure and a period, which the data can answer | Done 9 Nov: reworded to name the measure and the period (section 2) |
+| 2 | Dataset | 1 | From outside the class, at least 100 rows and 4 variables, `SOURCE.md` with source, link, licence, download date | Done, six tables |
+| 3 | Exploratory analysis | 1 | Dimensions, types, missing values, key summaries, one sentence each | Done, five checks per table in Section 3 |
+| 4 | Wrangling | 1 | At least 2 tidyverse steps with a comment on why, clean data saved | Done, Sections 3 and 4, `data/clean/` |
+| 5 | Graph creation | 2 | 1: geom and aesthetics fit the question. 1: at least 2 saved versions, one with a problem, each with a one-line log | To do tonight (Step 6) |
+| 6 | Refinement | 2 | 1: title states a finding, axes with labels and units, one annotation, readable text. 1: theme and palette chosen on purpose, colour blind safe with a simulator screenshot, message not by colour alone | To do tonight (Step 6) |
+| 7 | Presentation | 1 | At most 3 minutes, the finding in the first 30 seconds, one graph. A video shows screen and presenter together | Script tomorrow, rehearse before 20 Nov (section 7) |
+| 8 | Reproducibility | 1 | Renders from a clean session with `here()`. The zip holds the `.qmd`, the html, `data/raw`, `SOURCE.md`, `prompt_log.md` | Test tomorrow (Step 7) |
+| + | Social media post | +1 | Up to 100 words, question, data, graph, source line (`post.md`) | Tomorrow (Step 7) |
 
-**My additions** on top of the template: the five data quality checks reported for every table, `notes/decisions.md` and `notes/glossary.md` for the talk and the defence, and a Vercel data app as the presentation tool. The app is not graded. The zip is.
+**Also required, no points of its own:** `prompt_log.md` lists every prompt and one AI mistake fixed. The teacher may ask about any line of code, "and the score follows your answer". `story.md` fits on one page. Each function has a comment that says why.
 
-**Still to ask Sergio:**
+**Dates:** participation form by **Fri 13 Nov, 19:00**. Talk live on **Fri 20 Nov** (video by 18:00 if absent). Zip `Surname_Name.zip` uploaded by **Fri 20 Nov, 23:59**.
 
-- The template asks for every prompt in full. Is a workflow description with prompt examples, plus the saved session history on request, accepted?
-- May I take 2 minutes to show the road before the 3-minute graph?
-- What is the hand-in deadline, and is the talk on Fri 20 Nov?
+**Scope decision (9 Nov):** only two evenings are left (9 and 10 Nov). Dropped: the Vercel app, the Rosling frames, renumbering the graphs, the remaining review items (robustness for alcohol, Romania as outlier, captions with codes on every graph). Kept: everything the rubric scores.
 
 ## Progress (Claude Code updates this at the end of every session)
 
@@ -61,9 +56,9 @@ Sergio's final project template (published 31 Oct): https://github.com/sergiouri
   - [x] Update the summary (now 5.10) with Graphs 13 to 15 and 5.9 (the gap is about the men; Lithuania's fall and Latvia's stagnation; poor health in Latvia for both sexes)
   - [ ] Graph 15 title: maybe "In Latvia, women and men alike live far fewer years in good health"
   - [ ] Lithuania alcohol policy around 2017 to 2018: find a citable source or leave it out. The data only shows when deaths fell, not why
-- [ ] Step 6. Final graph: refined, saved as `figures/final_graph.png`, story frames exported, report title changed to the finding
-- [ ] Step 7. Hand-in: renders from a clean session, `story.md` written, `prompt_log.md` complete, zip uploaded. App live
-- [ ] Step 8. Rehearse: the 5-minute talk and the defence
+- [x] Step 6. Final graph (done 9 Nov): based on Graph 12, `graph_v1.png` (with a problem), `graph_v2.png`, `final_graph.png`, a log of the versions, `colour_blind_check.png`, report title changed to the finding
+- [ ] Step 7. Hand-in (10 Nov): Section 7 Limits, `story.md`, `post.md`, full prompt log, clean-session render, zip `Surname_Name.zip`
+- [ ] Step 8. Rehearse (before 20 Nov): the 3-minute talk, the finding in the first 30 seconds, and explaining any line of code
 
 Template files:
 
@@ -78,7 +73,7 @@ Template files:
 
 Decisions so far (full reasons in `notes/decisions.md`):
 
-- **Question (locked):** "Why do men in the Baltic states die so much earlier than women, compared with the rest of the EU?", with three sub-questions in `final_project.qmd`. The AI topic was dropped (29 Oct).
+- **Question (reworded 9 Nov):** "How much shorter is men's life expectancy at birth than women's in the Baltic states compared with the rest of the EU, 2015 to 2024, and which causes of death go with the gap?", with three sub-questions in `final_project.qmd`. The AI topic was dropped (29 Oct).
 - **Expected message (30 Oct):** "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." Written after the life expectancy table was loaded, but before the other four tables.
 - **Data:** five Eurostat tables (section 3), 2015 to 2024, one row per country and year after the join.
 - **Alcohol (29 Oct):** alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4, if time allows.
@@ -95,8 +90,7 @@ Decisions so far (full reasons in `notes/decisions.md`):
 - **Charts in the checks (30 Oct):** viridis colours, a different pair per chart. Red (firebrick) is kept for the Baltic states only. Small tables with `knitr::kable()`.
 - **Packages (31 Oct):** all packages load in the setup chunk, `patchwork` added in advance.
 - **Working with Claude (1 Nov):** I say what each chunk needs to do, Claude writes it and explains the functions and the approach, then asks me one question to check that I understood. Then I run it (section 1, the same as in `prompt_log.md`).
-- **App and talk (1 Nov):** the Vercel app stays, visually polished, as the presentation tool. Talk about 5 minutes: 2 minutes the road, 3 graded minutes on one graph. The zip comes first, the app go or no-go is on Thu 12 Nov.
-- **Story style:** Rosling-like. One chart built up in frames, each with one spoken sentence (Step 6).
+- **App and talk (1 Nov, replaced 9 Nov):** the Vercel app is dropped, it is not graded and there is no time. The talk is 3 minutes on one graph, as the new rubric says. The Rosling frames are replaced by the rubric's graph versions with a log.
 
 ---
 
@@ -120,12 +114,11 @@ More rules:
 
 - If something errors, explain the error before fixing it.
 - Prefer functions the course has taught: `glimpse()`, `summary()`, `filter()`, `select()`, `mutate()`, `arrange()`, `distinct()`, `rename()`, `case_when()`, `pivot_longer()`, `pivot_wider()`, the joins (`left_join()`, `inner_join()`, `full_join()`, `anti_join()` with `join_by()`), `group_by()` with `summarize()`, `count()`, `ggplot2` (`geom_point()`, `geom_histogram()`, `geom_smooth(method = "lm")`, `facet_wrap()`, `labs()`, `theme_minimal()`, `scale_color_manual()`, `annotate()`, `ggsave()`), `ggrepel::geom_text_repel()`, `janitor::clean_names()`, `gtsummary::tbl_summary()`. If something outside the list is better, name it, explain it in two sentences, and let me decide.
-- **Known new functions** (not from the course, explain fully when we reach them): `cor()` in Step 5, `parse_number()` only if Eurostat flags turn a number column into text, `geom_segment()` with arrows in Step 6, `jsonlite` for the app export.
+- **Known new functions** (not from the course, explain fully when we reach them): `cor()` in Step 5, `parse_number()` only if Eurostat flags turn a number column into text, `annotate()` with an arrow in Step 6.
 - After each code piece, draft the explaining paragraph for `final_project.qmd`, short and plain. I edit it until I'm happy with it.
 - At the end of each workflow step, give me a "can I explain this?" summary in three bullet points.
 - **Step gate:** never start the next workflow step until I confirm I can explain the current one.
 - At the start of a session, read the Progress section and continue from the first unchecked item. At the end, tick what is done, update the decisions list, and add to `prompt_log.md`.
-- **Data app code** (HTML, CSS, JavaScript) follows the same approach, but lighter: explain the structure and the key parts, not every line. It is not course content.
 
 Code style:
 
@@ -138,7 +131,7 @@ Code style:
 Writing style:
 
 - **In `final_project.qmd`: academic voice.** No "I", "my" or "me". Impersonal or passive phrasing ("the data is filtered in Section 3"), no contractions. The only exception is the personal sentence in Background ("I live in Latvia...").
-- **In `notes/decisions.md`, `prompt_log.md`, the app and the talk: my own voice.** Plain, direct sentences of mixed length. Contractions are fine.
+- **In `notes/decisions.md`, `prompt_log.md`, `story.md`, `post.md` and the talk: my own voice.** Plain, direct sentences of mixed length. Contractions are fine.
 - No long dashes anywhere. Use commas, colons or full stops.
 - No filler openers, no buzzwords, no "in today's world" phrasing.
 - Titles state a finding, not a topic.
@@ -147,7 +140,9 @@ Writing style:
 
 ## 2. The question
 
-**Question (locked):** Why do men in the Baltic states die so much earlier than women, compared with the rest of the EU?
+**Question (reworded 9 Nov):** How much shorter is men's life expectancy at birth than women's in the Baltic states compared with the rest of the EU, 2015 to 2024, and which causes of death go with the gap?
+
+**Earlier wording (29 Oct):** "Why do men in the Baltic states die so much earlier than women, compared with the rest of the EU?" Reworded because rubric item 1 asks for one question that names a group, a measure and a period itself.
 
 - **Measure:** life expectancy at birth, women minus men, in years ("the gap").
 - **Group:** the 27 EU member states, with Estonia (EE), Latvia (LV) and Lithuania (LT) highlighted.
@@ -210,7 +205,7 @@ Rules:
 
 - Keep 2015 to 2024 unless a table forces a shorter period. Write down each table's years.
 - Write down the exact filters (indicator, sex, age class, cause, unit) in `notes/decisions.md` and `SOURCE.md`. A reader must be able to repeat the download.
-- Life expectancy is a snapshot: it assumes this year's death rates last a whole life. Say so in the report and the app.
+- Life expectancy is a snapshot: it assumes this year's death rates last a whole life. Say so in the report and the talk.
 - Tables have different latest years. Write the year of each table in the final graph's source line.
 - Name the source on every chart: "Source: Eurostat, [codes], accessed [date]".
 
@@ -229,30 +224,27 @@ What to expect in cleaning (learned so far, and still to watch):
 ## 4. Folder structure and the Quarto document
 
 ```
-Final_work/                # Sergio's project_template structure
+Final_work/                # Sergio's project_template structure, zipped as Surname_Name.zip
 ├── final_project.Rproj    # RStudio project file, sets the project root
-├── final_project.qmd      # the overview, puts the seven section files together when rendered
-├── _1_setup.qmd ... _7_limits.qmd   # one file per section, each with a hidden setup chunk
+├── final_project.qmd      # the overview, puts the section files together when rendered
+├── final_project.html     # the rendered report (required in the zip)
+├── _1_setup.qmd ... _7_limits.qmd   # 16 section files, each with a hidden setup chunk (required, the .qmd includes them)
 ├── story.md               # one page: question, answer, final graph (required)
-├── prompt_log.md          # AI workflow, prompts, decisions, AI mistakes (required)
+├── prompt_log.md          # every prompt, and one AI mistake fixed (required)
+├── post.md                # social media post, up to 100 words (+1 point)
 ├── data/
-│   ├── raw/               # untouched Eurostat downloads, plus SOURCE.md (required)
-│   └── clean/             # gap_panel.csv
-├── figures/               # final_graph.png and the story frames, 300 dpi
+│   ├── raw/               # untouched downloads, plus SOURCE.md (required)
+│   └── clean/             # the clean tables and gap_panel.csv
+├── figures/               # graph_v1.png, graph_v2.png, final_graph.png, colour_blind_check.png
 ├── Project_idea.md        # this plan
 ├── .here                  # empty file, a second way for here() to find the root
-├── notes/
-│   ├── decisions.md       # every choice and why, in my voice
-│   └── glossary.md        # each new function, one line each
-├── R/
-│   └── 99_export_for_app.R    # writes the JSON and images the app reads
-└── app/                   # the Vercel data app (static files only)
-    ├── index.html
-    ├── style.css
-    ├── app.js
-    ├── data/              # JSON exported from R
-    └── img/               # story frames from R
+└── notes/
+    ├── decisions.md       # every choice and why, in my voice
+    ├── glossary.md        # each new function, one line each
+    └── claude_handover.md # notes for the next Claude Code session
 ```
+
+The empty `app/` and `R/` folders are deleted before zipping.
 
 The hand-in zip is the whole folder without `.Rproj.user`, with `final_project.html` included.
 
@@ -287,7 +279,7 @@ My sections, and where Sergio's template sections are in them (the same table is
 | 3. Cleaning | 3.1 to 3.5, one per table: tidy names, five checks, "found, decided" summary, apply the decisions | 3. Exploration (the checks) and 4. Wrangling |
 | 4. Combining the tables | Reshape with `pivot_wider()`, compute the gap, join, check, save | 4. Wrangling |
 | 5. Exploration | At least 4 graphs, question above, finding with a number below | 5. Graphs |
-| 6. The story | The final graph in frames, saved as `figures/final_graph.png` | 6. Final graph |
+| 6. The final graph | Graph versions with a log, refinement, colour blind check, `figures/final_graph.png` | 5. Graph creation and 6. Refinement |
 | 7. Limits | What the data cannot tell | 7. Limits |
 | Appendix | Dead ends | |
 
@@ -300,7 +292,6 @@ Pattern inside every section:
 Rules:
 
 - Never put code without explaining text before it.
-- Chunks the app should display get a label that starts with `show-`.
 - Render with Session > Restart R, then Render (or `quarto render final_project.qmd`).
 
 ---
@@ -356,178 +347,75 @@ here("data", "clean", "gap_panel.csv") |>
 - **Dead ends** go in `notes/decisions.md` and the appendix of `final_project.qmd`.
 - **Done when:** I can name the strongest explanation, the weakest, one surprise, which angle has the clearest message, and whether GDP explains most of the pattern.
 
-### Step 6. The final graph (Show, Cut, Focus, Tell; classes 11, 12, 13)
-- **Task:** build one refined graph from the clearest angle.
-  - Highlight the Baltics with the `baltic` column: `scale_color_manual(values = c("TRUE" = "firebrick", "FALSE" = "gray70"))`, `theme_minimal(base_size = 14)`, `theme(legend.position = "none", panel.grid.minor = element_blank())`. Labels with `ggrepel::geom_text_repel()`, the note with `annotate("text", ...)`.
-  - Title states the finding. Example shape only: "[Group of countries] have the widest gap between women and men in life expectancy, [by how much]".
-  - One annotation pointing at the evidence.
-  - Source line, axis labels with units, ordered categories, no legend or grid line without a job, no border. Honest scales: bars from zero, say if an axis does not start at zero.
-- **Checklist before export (the rubric):**
-  - [ ] Ask: the title answers the question.
-  - [ ] Show: right chart for the data, honest scales, data quality applied.
-  - [ ] Cut: no non-data ink.
-  - [ ] Focus: gray plus one color.
-  - [ ] Tell: finding title, one annotation, source.
-- **Build it in frames (Rosling style).** One chart in five frames, after an opening question. Each frame adds one layer and gets one spoken sentence. Axes, scales and point size stay the same in every frame. Starting idea, decided after Exploration:
+### Step 6. The final graph (rubric items 5 and 6, 4 points, tonight)
+- **Base:** Graph 12 (Baltic women and men against countries of similar income). One picture says "it is the men, not income".
+- **Versions (item 5):** each saved with `ggsave()` and kept in `final_project.qmd`:
+  - `figures/graph_v1.png`: a first version with a real, named problem (for example default colours, a legend instead of labels, a topic title).
+  - `figures/graph_v2.png`: the version that fixes it.
+  - A log table: version, what changed, why. One line each.
+- **Refinement (item 6):** `figures/final_graph.png`
+  - Title states the finding. Axis labels with units. One annotation that points to the evidence (`annotate()`). Text readable on a screen (`theme_minimal(base_size = 14)`).
+  - Theme and palette chosen on purpose and named in the text: gray plus firebrick for the Baltic states. Firebrick is much darker than the gray, so it passes in a simulator.
+  - The message does not rely on colour alone: the Baltic states are labelled by name.
+  - Source line with the table codes and the access date.
+- **Colour blind check:** I upload `final_graph.png` to a simulator (for example Coblis) and save the screenshot as `figures/colour_blind_check.png`. Name the palette and the simulator in the report.
+- **Report title:** change the `title:` in the YAML header to the finding.
+- **Checklist (Ask, Show, Cut, Focus, Tell):** the title answers the question; right chart, honest scales; no non-data ink; gray plus one colour; finding title, one annotation, source.
 
-| Frame | What appears | What I say (one sentence) | Layer in R |
-|---|---|---|---|
-| 0 | A question to the audience, no chart (for example: which EU country has the biggest gap between how long women and men live?) | [write it] | none |
-| 1 | Women's and men's life expectancy against GDP in 2024, two dots per country, all gray | [what the axes mean] | `geom_point()` in `gray70`, a different shape for men |
-| 2 | Each country's two dots joined by a line, the gap | [what the line length means] | `geom_line(aes(group = country_code))` |
-| 3 | The Baltics in red, with labels | [where the Baltics sit] | `scale_color_manual()`, `ggrepel::geom_text_repel()` |
-| 4 | Arrows from the 2015 to the 2024 position for the Baltics | [how far each country moved] | `geom_segment()` with an arrow |
-| 5 | One annotation, the finding as the title, the source | [the finding in one sentence] | `annotate("text", ...)`, `labs(title = ..., caption = ...)` |
+### Step 7. Hand-in (rubric items 7 and 8 and the extra point, tomorrow)
+- **Section 7, Limits:** 3 to 5 plain bullets (see section 10 and the handover notes).
+- **`story.md`:** one page, following Sergio's template: question, data, the answer in one sentence with a number, the final graph, evidence, limits.
+- **`post.md`:** up to 100 words, question, data, the graph, source line.
+- **`prompt_log.md`:** every prompt in full. Claude extracts all my prompts with dates from the saved Claude Code sessions into an appendix, and I check it. The "one AI mistake fixed" entry is already there.
+- **Reproducibility:** Session > Restart R, then Render. Then unzip a copy into a fresh folder and render it there too.
+- **Zip:** `Surname_Name.zip`, the whole folder without `.Rproj.user`, with `final_project.html`. Upload by Fri 20 Nov, 23:59.
 
-  Rules for the frames: say what to look at before it appears. One idea per frame. The last frame states the finding. Build by saving the plot after each layer (`p1`, then `p2 <- p1 + ...`).
-- **Export:** each frame with `ggsave(here("figures", "story_frame_1.png"), width = 8, height = 5.5, dpi = 300)`, up to frame 5. Frame 5 is also saved as `figures/final_graph.png`.
-- **Report title:** change the `title:` in the YAML header from the question to the finding.
-
-### Step 7. Hand-in and the app
-- **Report:** Session > Restart R, then Render. `final_project.html` must render from top to bottom with no errors.
-- **`story.md`:** one page: question, data (two sentences), the answer in one sentence with a number, the final graph, evidence (three to five sentences with numbers), limits.
-- **`prompt_log.md`:** complete the workflow, prompt examples, decisions table and caught mistakes.
-- **Zip:** the whole `Final_work/` folder without `.Rproj.user`, with `final_project.html`. Upload to Moodle.
-- **App:** follow section 6. Presentation tool, not graded.
-- **Done when:** the checklist in section 8 is all ticked, the zip is uploaded, and the app is live with numbers that match the report.
-
-### Step 8. Polish and rehearse
-- Run the checklist in section 8.
-- Write the talk (section 7).
-- **Practise the defence:** pick a random chunk and explain every line out loud. Practise one quick change (reorder a bar chart, add a `facet_wrap()`) in under 2 minutes. For every graph, say in one sentence why this graph type.
-- Rehearse the talk twice with a timer. Prepare an offline backup.
+### Step 8. Rehearse (before 20 Nov, on my own)
+- The 3-minute talk (section 7), three times with a timer. Record one take as a backup video (screen and face).
+- **Practise the defence:** pick a random chunk and explain every line out loud, using `notes/glossary.md`. Say for the final graph why this graph type.
 
 ---
 
-## 6. The Vercel data app (presentation tool)
+## 6. The Vercel data app: dropped (9 Nov)
 
-**What it is:** a small interactive web app in plain HTML, CSS and JavaScript, hosted on Vercel, visually polished. I present from it. It walks through seven sections that match `final_project.qmd`: Question, Data, Cleaning, Combining the tables, Exploration, The story, Limits. Each section shows the logic, the result, and an info button that reveals the R code that produced it. R does all the analysis. The app only displays what R exported. It is not part of the graded hand-in.
-
-**Why this split:**
-
-- The analysis stays in R, with course tools, and runs top to bottom.
-- The code shown in the app is extracted from `final_project.qmd`, so it cannot drift from what actually ran.
-- No framework, no build step, no npm packages. Fewer things to break before the deadline.
-- The story frames are ggplot2 images exported from R, so Cut, Focus and Tell are applied with the course's own tool.
-
-### Data flow
-
-```
-final_project.qmd  ->  R/99_export_for_app.R  ->  app/data/*.json + app/img/story_frame_*.png
-                                                              |
-                                          app/index.html reads the JSON with fetch()
-                                                              |
-                                                           Vercel
-```
-
-| File written by R | Content | Used in section |
-|---|---|---|
-| `app/data/gap_panel.json` | Clean table, one object per country and year | Exploration, The story |
-| `app/data/quality.json` | Per table: rows, columns, missing values, duplicates, range of the key variable, my decision | Cleaning |
-| `app/data/joins.json` | Row counts before and after each join, countries listed by `anti_join()` | Combining the tables |
-| `app/data/correlations.json` | Correlation of the gap with each candidate explanation, plus n | Exploration |
-| `app/data/code.json` | R code per step, extracted from `final_project.qmd` | All |
-| `app/data/steps.json` | Two to four sentences per step on the logic, shortened from `final_project.qmd` | All |
-| `app/img/story_frame_1.png` to `story_frame_5.png` | The story frames from R. The last one is `final_graph.png` | The story |
-
-**Code extraction.** Chunks in `final_project.qmd` whose label starts with `show-` are the ones the app displays. `99_export_for_app.R` reads `final_project.qmd`, collects those chunks by label, and writes `code.json`. It uses `jsonlite`, which the course has not covered, so Claude Code explains that script line by line.
-
-### Page layout
-
-One page that scrolls, with a sticky navigation for the seven sections. Each section has four parts:
-
-1. A heading that says what happened, not only the topic.
-2. The logic: two to four sentences on why I did it.
-3. The result: a table or a chart.
-4. An info button ("Show the R code") that opens the code block, with a copy button.
-
-### Interactions (keep to this list)
-
-- **Cleaning:** a table of the five checks per dataset. Click a dataset to see my notes.
-- **Combining the tables:** row counts before and after each join, and the list of unmatched countries.
-- **Exploration:** a dropdown to switch the explanation on the x axis. Scatter plot with a hover tooltip (country, both values). A toggle to highlight the Baltics. The correlation and n for the selected explanation.
-- **The story:** the five frames with next and back buttons, and one caption per frame (my spoken sentence). The opening question comes first. The last frame is the final graph.
-
-### Design rules
-
-- Same colors as the ggplot: `gray70` for all countries, `firebrick` for the Baltics. Use the same two colors in the CSS.
-- Large text and high contrast, readable on a projector. Laptop screen first, mobile only if time remains.
-- Titles state a finding. A source line under every chart.
-- Every number in the app comes from the JSON files. Never type a result by hand.
-- One charting library from a CDN (Plotly.js or Observable Plot). Pick one on day one and stay with it.
-
-### Technical notes
-
-- `fetch()` does not work on a page opened as a `file://` link. Test locally with a small server inside `app/`: `python -m http.server 8000`, or `npx serve app`.
-- Commit the JSON files and the images. Vercel does not run R.
-- Deploy with the CLI (`npm i -g vercel`, then `vercel deploy app --prod`), or import the GitHub repo in Vercel with Root Directory `Final_work/app`, framework preset "Other", no build command.
-- Deploy a dummy version with fake data by Mon 9 Nov. Then swap in real data and redeploy.
-- Check the live link on another device and on a phone hotspot.
-
-### Build order
-
-Each piece works before the next starts.
-
-1. Skeleton page with seven empty sections and navigation. Deploy it.
-2. Load `gap_panel.json` (dummy data first) and draw the scatter plot.
-3. Add the info button with code from `code.json`.
-4. Add the explanation dropdown and the Baltic highlight.
-5. Add the quality and joins tables.
-6. Add the story frames with next and back buttons and captions, then polish.
-
-### Fallback
-
-If the app does not work end to end by **Thu 12 Nov**, I present from the rendered HTML report and the PNG frames instead. The zip is complete either way.
+The app is not part of the new rubric, and only two evenings are left. It is dropped. The empty `app/` and `R/` folders are deleted before zipping.
 
 ---
 
 ## 7. The presentation and the defence
 
-**The talk, about 5 minutes, from the app:**
+**The talk: at most 3 minutes, one graph, live on Fri 20 Nov.** The teacher stops the clock at 3:00. Classmates score Ask, Show, Cut, Focus and Tell on the peer scoring sheet (feedback only).
 
-| Time | Part | In the app |
+| Time | Part | What I say and show |
 |---|---|---|
-| 0:00 to 2:00 | The road: the question, the five Eurostat tables, one real problem from cleaning (for example Luxembourg's missing years), the join, one dead end | Question, Data, Cleaning, Combining, Exploration |
-| 2:00 to 5:00 | The graded part: one graph. Open with the question, build it in frames, end on the finding (Ask, Show, Cut, Focus, Tell). Beginning, middle and end | The story |
+| 0:00 to 0:30 | The finding | The question in one sentence, then the answer in one sentence with a number. The final graph is already on screen |
+| 0:30 to 2:15 | The evidence | Walk through the graph: what the axes are, where the Baltic women sit, where the Baltic men sit, the annotation |
+| 2:15 to 2:45 | How I got there | One sentence on the data (six tables, 27 countries, 2015 to 2024), one on v1 and what I fixed |
+| 2:45 to 3:00 | The limit and the close | One limit (country averages, not people), then the finding again |
 
-If Sergio enforces exactly 3 minutes, the road shrinks to about 30 seconds.
+**The defence:** the teacher may point to any line of code and ask me to explain it. The score follows my answer.
 
-**The defence, 5 minutes:** Sergio points to one chunk and I explain each line. He asks for one change (a new order, a facet) and I have 2 minutes. I answer: why this graph type for this question?
-
-Rules for the talk:
-
-- Hints from classmates (29 Oct, secondhand): make a "wow" moment, use everything learned in the classes, show the code and tell how I did it, as a story. The opening question and the frames are my "wow" moment.
-- Open the info button at most once, at the moment where the logic matters most.
-- Keep `final_project.qmd` open in Positron next to the app, for the defence.
-- Say the finding in one sentence at the start of the graph part and again at the end.
-- Optional: one light joke, friendly and never at anyone's expense. Draft: "Estonia added seven years of life expectancy in twenty years. For a country that runs its government like software, that is just a good update cycle." Use it only if it feels natural.
-- Offline backup: the app running from a local server on the laptop, the rendered HTML report, the PNG frames. Wi-Fi fails at the worst time.
+**If I cannot attend:** a video by Fri 20 Nov, 18:00, showing the screen and me together.
 
 ---
 
 ## 8. Checklist
 
-**Sergio's template checklist:**
+**Sergio's template checklist (`project_template/README.md`, 8 Nov):**
 
-- [ ] The question names a group, a measure and a period, and the data can answer it.
-- [ ] The original data sit in `data/raw/` and `SOURCE.md` has the link and the licence.
+- [x] The question names a group, a measure and a period, and the data can answer it.
+- [x] The dataset comes from outside the class, has at least 100 rows and 4 variables, and has no personal data.
+- [x] The original data sit in `data/raw/` and `SOURCE.md` has the link, the licence and the download date.
+- [x] The exploration checks the dimensions, the variable types and the missing values, with one sentence for each result.
+- [x] The wrangling has at least 2 tidyverse steps, each with a comment that says why, and the clean data are saved.
+- [x] The graph has at least 2 saved versions, one with a problem, and each version has a line in the log.
+- [x] The final graph has a title that states the finding, axis labels with units, one annotation, a theme and a palette.
+- [x] The palette is colour blind safe and `figures/colour_blind_check.png` shows the simulator result.
 - [ ] `final_project.qmd` renders from a clean session (Session > Restart R, then Render).
-- [ ] Each function in the code has a comment that says why I use it.
-- [ ] At least 4 graphs, each matched to a question type from the course.
-- [ ] One graph is refined: title that states the finding, labels, order, one highlight color.
-- [ ] `prompt_log.md` lists my prompts, and one entry describes an AI mistake I fixed.
+- [x] Each function in the code has a comment that says why it is used.
+- [ ] `prompt_log.md` lists every prompt, and one entry describes an AI mistake I fixed.
 - [ ] `story.md` fits on one page.
-- [ ] I can explain every line of my code in the 5-minute defence.
-
-**Sergio's rubric** (100 points, the capstone is 60% of the course grade; each principle scored 0 missing, 1 partial, 2 good, 3 complete):
-
-| Principle | What the audience checks | Points |
-|---|---|---|
-| Ask | The question is clear and the data can answer it. The message fits in one sentence | 20 |
-| Show | Chart type fits the data type. Honest scales (bars from zero, labelled log axes). Tidy data, the data quality checklist applied and reported, the script runs | 25 |
-| Cut | No non-data ink. No legend, border or grid line without a job | 15 |
-| Focus | One element stands out (gray plus one color). The eye goes to the message | 15 |
-| Tell | The title states the finding. One annotation points to the evidence. The talk has a beginning, middle and end | 25 |
+- [ ] I can explain every line of my code.
 
 **My own final checks:**
 
@@ -536,14 +424,15 @@ Rules for the talk:
 - [ ] The limits are stated plainly.
 - [ ] The source is named on the final graph.
 - [ ] The zip has the whole folder without `.Rproj.user`, and includes `final_project.html`.
-- [ ] The deployed app works on another device.
+- [ ] The empty `app/` and `R/` folders are deleted, `.Rproj.user` is not in the zip.
+- [ ] The participation form is sent before Fri 13 Nov, 19:00.
 
 **Course coverage**, so the project shows what the classes taught. Every row is used at least once, on purpose, with a sentence in `final_project.qmd` saying why.
 
 | Class | Tools and ideas | Where they show up in the project |
 |---|---|---|
 | 01 Why storytelling | Bad graphs, the five principles, baseline and axis tricks with `coord_cartesian()`, why pie charts mislead | Step 6 checklist. Optionally a "bad" version next to the good one with `patchwork` |
-| 02 First graph | `pacman::p_load()`, `read_csv()`, `glimpse()`, `ggplot()`, `geom_point()`, `labs()`, `ggsave()` | Setup chunk, Step 2 import, scatter plots, exporting the frames |
+| 02 First graph | `pacman::p_load()`, `read_csv()`, `glimpse()`, `ggplot()`, `geom_point()`, `labs()`, `ggsave()` | Setup chunk, Step 2 import, scatter plots, saving the graph versions |
 | 03 Know your data | `summary()`, `count()`, `distinct()`, `arrange()`, chart by data type, outlier check, the data quality checklist | Step 3: the five checks for every table. Step 5: one sentence per outlier |
 | 04 Row and column verbs | `filter()`, `select()`, `mutate()`, `arrange()`, `rename()`, `case_when()`, `is.na()`, `gtsummary::tbl_summary()`, `janitor::clean_names()` | Step 3: names, `tbl_summary()`, EU filter, columns. Step 4: `case_when()` for the `baltic` column |
 | 05 Tidy data | Tidy data rules, `pivot_longer()` | Step 4: every Eurostat table is tidy. Step 5: `pivot_longer()` for the Rosling chart |
@@ -555,26 +444,21 @@ Rules for the talk:
 | 10_2 Counts | `geom_bar()`, `geom_col()`, `fct_reorder()`, `coord_flip()`, `slice_max()` | Step 3: rows per country (done). Step 5: ranked bar chart of the gap |
 | 10_3 Scatter | `geom_point()`, `geom_smooth(method = "lm")`, `facet_wrap()` | Step 5: the gap against each explanation. The Rosling chart |
 | 10_4 Differences | `geom_boxplot()`, `geom_violin()`, `geom_jitter()`, `stat_summary()` | Step 5: Baltics against the rest of the EU |
-| Later classes | Themes, highlight color, `ggrepel`, `annotate()` | Step 6: the story frames. Update when those classes happen |
+| Later classes | Themes, highlight color, `ggrepel`, `annotate()` | Step 6: the final graph and its versions |
 
 ---
 
 ## 9. Timeline
 
-Course dates come from the course README and may change. My own deadline: 16 Nov.
+Only two evenings are left for the project work (9 and 10 Nov).
 
-| Date | Do | Course event |
-|---|---|---|
-| 29 Oct to 1 Nov | Steps 1, 2 and 3 done: all five tables loaded and cleaned. Template structure adopted | |
-| 2 to 6 Nov | Step 4: reshape and join into `gap_panel`. Start Step 5 | |
-| Sat 7 Nov | Clean table from a script | Class 16 |
-| 8 to 12 Nov | Step 5: explore. First draft of Step 6. Dummy app deployed by Mon 9 Nov. **Thu 12 Nov: go or no-go on the app** | |
-| Fri 13 Nov, 23:59 | Moodle checkpoint script | Moodle deadline |
-| 14 to 16 Nov | Final graph, `story.md`, `prompt_log.md`, render test, zip. App live with real data. Rehearsal | My deadline: 16 Nov |
-| Thu 19 Nov | Draft and refine | Classes 17 and 18 |
-| Fri 20 Nov | Presentation and defence | Classes 19 and 20 |
-
-If time gets short: get an ugly working version of the whole pipeline first (Steps 1 to 6), then the hand-in files, then the app, then polish. The app can lose features. The zip cannot lose the clean data, the final graph, the data quality notes, `story.md` or `prompt_log.md`.
+| Date | Do |
+|---|---|
+| Mon 9 Nov, evening | Reword the question. Step 6: graph v1, v2 and final, the log, the colour blind check, the report title |
+| Tue 10 Nov, evening | Step 7: Section 7 Limits, `story.md`, `post.md`, the full prompt log, clean-session render, zip test |
+| **Fri 13 Nov, 19:00** | **Participation form** (40% of the course grade) |
+| 11 to 19 Nov | Step 8 on my own: talk script, three timed rehearsals, backup video, practise explaining chunks |
+| **Fri 20 Nov** | Talk live (video by 18:00 if absent). Zip uploaded by 23:59 |
 
 ---
 
@@ -585,8 +469,8 @@ If time gets short: get an ugly working version of the whole pipeline first (Ste
 - With 27 countries, one outlier can move the trend line. Show the line with and without it if it matters. Known from the checks: Luxembourg (GDP index 244 to 279, cross-border workers) and Ireland (178 to 237, profits of international companies) sit far to the right in any chart against GDP.
 - Cause-of-death data is coded and reported differently across countries. Mention it as a caveat.
 - The GDP index shows position relative to the EU average, not real growth. Say so.
-- App scope: JavaScript is not part of the course. Keep the app to the interactions in section 6. Every extra is a risk to the deadline.
-- Optional extras, only after the 12 Nov go or no-go: bubble size by population (`demo_pjan`), a year slider on the Exploration scatter plot.
+- **Prompt log:** the rubric wants every prompt. Extract them from the saved sessions instead of writing them by hand.
+- **The defence:** about 2 500 lines of code. Keep the final graph code short and clear, and practise with the glossary.
 
 ---
 
