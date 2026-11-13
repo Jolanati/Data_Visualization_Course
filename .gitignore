@@ -14,5 +14,10 @@
 Thumbs.db
 desktop.ini
 
-# Keep the Vercel app pages
-!Final_work/app/*.html
+# Keep the rendered final project and the two presentation decks
+!Final_work/stutane_final_project.html
+!Final_work/talk.html
+!Final_work/demo.html
+
+# Course material and hand-in zips stay out of the repository
+*.zip

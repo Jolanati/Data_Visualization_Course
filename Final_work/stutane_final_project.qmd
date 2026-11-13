@@ -1,0 +1,165 @@
+---
+title: "At the same income, Baltic women live as long as other Europeans, Baltic men up to 4.6 years shorter"
+subtitle: "Why do Baltic men die earlier? Life expectancy in the EU, 2015 to 2024"
+author: "Jolanta Stutane"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    embed-resources: true
+execute:
+  echo: true        # show the code in the report
+  warning: false    # hide package warnings, so the report shows only results
+  message: false    # hide package loading messages
+---
+
+# Project overview
+
+## Background
+
+In every EU country women live longer than men. The size of that difference, however, is not the same everywhere. Press coverage of Eurostat figures places the three Baltic states at the top of the list: in 2024 Latvia had the widest gap in the EU, close to ten years, followed by Lithuania and Estonia. These figures are checked against the data in this analysis.
+
+A gap of almost ten years means that many Baltic men do not live to see retirement, while the women around them do. I live in Latvia, so this isn't an abstract statistic for me. It made me want to find out what sits behind it, and whether the Baltic men simply follow a European pattern or fall outside it.
+
+## Aim
+
+The aim of this project is to describe the gap in life expectancy between women and men across the EU, and to identify which country-level factors are associated with it, with the Baltic states as the focus.
+
+## Research question
+
+**Main question:** How much shorter is men's life expectancy at birth than women's in the Baltic states compared with the rest of the EU, 2015 to 2024, and which causes of death go with the gap?
+
+**Sub-questions:**
+
+1.  Which country-level factors (causes of death, alcohol, income, education) are associated with the size of the gap?
+2.  How has the gap changed between 2015 and 2024?
+3.  Where do Estonia, Latvia and Lithuania sit compared with the other EU countries?
+
+**Scope:**
+
+- **The measure:** life expectancy at birth, women minus men, in years, referred to as "the gap".
+- **The countries:** the EU member states, about 27.
+- **The period:** 2015 to 2024, or the latest year available in each table.
+- **The level:** countries, not individuals. Every number is a national figure.
+
+With about 27 countries, the data can show which factors go together, not what causes what. The analysis therefore uses "is associated with" or "goes with", never "causes".
+
+## Assumptions
+
+**Rationale:** the expected findings are written down before any data is opened. This allows the results to be compared with the initial expectations, and prevents the story from being adjusted to fit the results afterwards.
+
+**Expected message:** Baltic men die earlier, and this goes mainly with heart disease deaths before 65.
+
+**The factor expected to matter most:** deaths from heart and circulatory disease among men under 65. They are the most common cause of early death for men in the Baltics, and many of these men die decades before the women. Accidents and suicide are expected to come second. Alcohol is expected to sit behind both, which is why alcohol-related deaths are included in the data.
+
+**Hypotheses (expectations, not results):**
+
+1.  A bigger gap is associated with more men dying under 65 from heart and circulatory disease.
+2.  Accidents and suicide are also associated with a bigger gap.
+3.  More alcohol-related deaths among men are associated with a bigger gap.
+4.  Poorer countries have lower life expectancy for both sexes, but in the Baltics men fall further below the pattern than women do.
+5.  Where women are much more educated than men, the gap is bigger.
+6.  The gap has narrowed in most countries since 2015, but not at the same speed.
+7.  These factors overlap. Some may only stand in for wealth or for alcohol, so the analysis checks which of them still matters when the others are taken into account.
+
+## Main findings
+
+This part is written last, after Section 6, so that a reader sees the answer before the method. The expected message above stays unchanged, and the found message is placed next to it.
+
+|   | Message |
+|------------------------------------|------------------------------------|
+| **Expected** (written before the data) | Baltic men die earlier, and this goes mainly with heart disease deaths before 65. |
+| **Found** (after Sections 5 and 6) | Baltic men die earlier mainly because they die far more often before 65 from heart disease and from external causes such as poisoning and suicide, several linked to alcohol. Income does not explain it: at the same income, Baltic women live as long as other European women, while Baltic men live up to 4.6 years shorter (Latvia). |
+
+**Hypotheses in brief** (details in 5.10.1): supported are 1 (heart disease), 2 (external causes), 4 (income does not explain the Baltic gap) and 6 (the gap narrowed, unevenly). Hypothesis 3 (alcohol) is supported for alcohol-related deaths, but only partly for the amount drunk: drinking goes with the gap moderately, and the Baltic gaps are larger than their drinking predicts. Hypothesis 5 (education) is not supported. Hypothesis 7 (which factor matters most) cannot be answered with 27 countries.
+
+## The pipeline
+
+The analysis runs as one chain. Each step uses only the output of the step before it.
+
+```         
+Six tables                                              (Section 2)
+  five from Eurostat: life expectancy, healthy life years, deaths by cause, GDP, education
+  one from WHO, via Our World in Data: alcohol consumption per person
+  saved untouched to data/raw/
+        ↓
+Cleaning                                                (Section 3)
+  five data quality checks per table, then documented decisions
+  only the 27 EU member states are kept
+        ↓
+Combining                                               (Section 4)
+  women and men side by side, the gap computed
+  joined on country code and year
+  → data/clean/gap_panel.csv, one row per country and year (about 270 rows)
+        ↓
+Exploration                                             (Section 5)
+  the gap against each candidate factor, the gap over time,
+  the Baltic states against the rest of the EU
+        ↓
+The final graph                                         (Section 6)
+  one graph in versions, each saved with a log line, then refined
+  → figures/graph_v1.png, graph_v2.png, final_graph.png
+```
+
+## How this document is organised
+
+| Section | Question it answers | Output |
+|------------------------|------------------------|------------------------|
+| 1\. Environment setup | Is R ready to run the analysis? | Packages loaded, project folder found |
+| 2\. Gathering data | What did Eurostat and WHO deliver? | Six raw CSV files in `data/raw/` |
+| 3\. Cleaning | Can the data be trusted, and what has to change? | One clean table per dataset |
+| 4\. Combining the tables | Do the six tables fit together? | `data/clean/gap_panel.csv` |
+| 5\. Exploration | Which factors go with the gap? | Charts, correlations, dead ends |
+| 6. The final graph | What is the one message? | Versions with a log, `figures/final_graph.png` |
+| 7\. Limits | What can the data not show? | A list of caveats |
+| Appendix | Which expected relationships did not hold? | Dead ends and what was done about them |
+
+## Where to find the parts of the course template
+
+The document follows the order in which the work was done, so its sections are named differently from the course's final project template. The content is the same. The table shows where each template section is found.
+
+| Template section | Where it is in this document |
+|------------------------------------|------------------------------------|
+| 1\. Packages | 1.1 Packages |
+| 2\. Question and data | Project overview (question, scope, expected message) and Section 2 (five Eurostat tables and one WHO table). Sources, dates and licence: `data/raw/SOURCE.md` |
+| 3\. Exploration | The five quality checks in Section 3 (3.1.2, 3.2.2 and so on): types, missing values, ranges with histograms, duplicates, row counts |
+| 4\. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
+| 5\. Graph creation | Section 6, The final graph: version 1 with a problem (6.1), version 2 (6.2), each saved to `figures/`, and the log of the versions (6.5). The 17 graphs of Section 5, Exploration, come before it, each with its question above and its finding below |
+| 6\. Refinement and final graph | Section 6: the final graph (6.3), saved as `figures/final_graph.png`, and the colour blind check (6.4) |
+| 7\. Answer the question with the graph | Section 6.6: the finding with a number, and one limit |
+| 7\. Limits | Section 7, Limits |
+
+## How the files are organised
+
+The analysis is written in 17 files: this one, `stutane_final_project.qmd`, with the overview, and one file per section, which this file puts in place when it is rendered, so that the result is one report. The two longest sections, Cleaning and Exploration, are split further into one file per part, because very long files made the editor hang. The underscore at the start of the section files tells Quarto that they are parts of this report, not reports of their own. Each section file starts with a hidden setup chunk, so that it can also be run on its own while working on it.
+
+| File | Content |
+|---|---|
+| `_1_setup.qmd` | 1. Environment setup |
+| `_2_gathering.qmd` | 2. Gathering data |
+| `_3_cleaning.qmd` | 3. Cleaning: introduction, then includes the six files below |
+| `_3_1_life_expectancy.qmd` to `_3_6_alcohol.qmd` | 3.1 to 3.6, one file per table, each ending with saving its clean table |
+| `_4_combining.qmd` | 4. Combining the tables |
+| `_5_exploration.qmd` | 5. Exploration: introduction and 5.0, then includes the three files below |
+| `_5_1_gap_and_causes.qmd` | 5.1 to 5.3: the gap and the causes of death |
+| `_5_4_factors.qmd` | 5.4 and 5.5: the factors that go with the gap |
+| `_5_6_men_and_robustness.qmd` | 5.6 to 5.10: the men, the two neighbours, healthy years, robustness and the summary |
+| `_6_story.qmd` | 6. The final graph |
+| `_7_limits.qmd` | 7. Limits and the appendix |
+
+Two more documents belong to the presentation and are rendered on their own: `talk.qmd` (the talk, as slides with speaker notes) and `demo.qmd` (a code walkthrough that runs the report's own chunks, from the raw download to the final graph).
+
+{{< include _1_setup.qmd >}}
+
+{{< include _2_gathering.qmd >}}
+
+{{< include _3_cleaning.qmd >}}
+
+{{< include _4_combining.qmd >}}
+
+{{< include _5_exploration.qmd >}}
+
+{{< include _6_story.qmd >}}
+
+{{< include _7_limits.qmd >}}

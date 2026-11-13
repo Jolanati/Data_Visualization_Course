@@ -1,0 +1,55 @@
+```{r}
+#| label: setup-exploration
+#| include: false
+# Setup for working in this file on its own: loads the packages. Section 5 loads its own data in 5.0.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+```
+
+# 5. Exploration
+
+This section looks at the gap from several sides, one question per graph. It starts with the gap itself (where is it largest, how has it changed), then looks at what makes it up (causes of death), and only then at the factors that may go with it (wealth, education). Each graph has its question above it and one finding with a number below it, as the course template asks. Each chart type is chosen for the type of question (class 10).
+
+| Sub-section | Question | Graph | Chart type |
+|------------------|------------------------------------|------------------|------------------|
+| 5.0 | Starting from the saved files | | |
+| 5.1 | Where is the gap largest, and how unusual are the Baltic gaps? | Graphs 1 to 3 | Ranked bar chart, histogram, box plot |
+| 5.2 | How has the gap changed between 2015 and 2024? | Graph 4 | Lines over time |
+| 5.3 | Which causes of death make up the extra deaths of men? | Graphs 5 and 6 | Grouped bar charts: chapters, then specific causes |
+| 5.4 | Which factors go with the gap? | Graphs 7 to 11, one per factor, and Graph 16 (alcohol consumption) | Scatter plots with a trend line, correlations |
+| 5.5 | Do Baltic men fall below the EU pattern while Baltic women do not? | Graph 12 | Comparison with countries of similar income, women and men |
+| 5.6 | Is the gap about the men? | Graph 13 | Two dots per country, women and men |
+| 5.7 | Which causes and how much drinking changed in Lithuania and Latvia? | Graphs 14 and 17 | Lines over time, one panel per cause, then litres per person |
+| 5.8 | Do Baltic men also lose healthy years? | Graph 15 | Stacked bars: healthy years and years with limitations |
+| 5.9 | How robust are the results? Chance, another year, overlap of the factors, outliers | | Tables |
+| 5.10 | Summary: strongest factor, weakest factor, one surprise | | Text |
+
+The question whether the factors only stand in for wealth, first planned as a separate step, is answered within 5.4 by Graph 10: the Baltic gaps are about two years larger than their income would predict.
+
+Each sub-section ends with a short **What this means**: the answer to its question in one or two sentences, and why it leads to the next one.
+
+The order may change as the findings come in. Relationships that were expected but turn out weak are kept in the appendix, not deleted.
+
+## 5.0 Starting from the saved files
+
+Section 5 starts from the two files saved in 4.5, not from the objects in memory. This way the exploration depends only on the clean data, and it can be rerun on its own.
+
+```{r}
+#| label: show-explore-load
+# 5.0 Load the two clean tables saved in Section 4
+gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"),              # one row per country and year
+                      show_col_types = FALSE)
+deaths_by_cause <- read_csv(here("data", "clean", "deaths_by_cause.csv"),  # one row per country, year and cause
+                            show_col_types = FALSE)
+
+dim(gap_panel)         # expected: 270 rows, 18 columns
+dim(deaths_by_cause)   # expected: 21 951 rows, 9 columns
+```
+
+{{< include _5_1_gap_and_causes.qmd >}}
+
+{{< include _5_4_factors.qmd >}}
+
+{{< include _5_6_men_and_robustness.qmd >}}

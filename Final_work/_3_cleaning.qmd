@@ -1,0 +1,82 @@
+```{r}
+#| label: setup-cleaning
+#| include: false
+# Setup for working in this file on its own: loads the packages, the EU codes and the raw tables.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+read_raw <- function(file) read_csv(here("data", "raw", file),          # read a raw file as in Section 2
+                                    na = c("", ":", "NA"), show_col_types = FALSE)
+life_expectancy_raw    <- read_raw("demo_mlexpec.csv")    # the five raw tables of Section 2
+healthy_life_years_raw <- read_raw("hlth_hlye.csv")
+deaths_raw             <- read_raw("hlth_cd_asdr2.csv")
+gdp_raw                <- read_raw("tec00114.csv")
+education_raw          <- read_raw("sdg_04_20.csv")
+```
+
+# 3. Cleaning
+
+This section checks the quality of every raw table before anything is removed or changed. Only after the checks are the cleaning decisions made, so each decision is based on what the data actually contains.
+
+The first step for every table is `clean_names()`, which turns Eurostat's column names like `TIME_PERIOD` into `time_period`. It is done here, not during loading, so the raw tables in Section 2 keep Eurostat's original names.
+
+Every table then goes through the same five data quality checks, taken from the course checklist (class 03, "Know your data"):
+
+| \# | Check | Question | Function |
+|------------------|------------------|------------------|------------------|
+| 1 | Types | Is every column the type it should be, for example numbers stored as numbers? | `glimpse()` |
+| 2 | Missing values | How many values are missing, and where? | `tbl_summary()`, `count()` |
+| 3 | Units and ranges | Are the values plausible for the unit? | `geom_histogram()` with `facet_wrap()` |
+| 4 | Duplicates | Does any combination of country, sex and year appear twice? | `distinct()`, `nrow()` |
+| 5 | Row counts | Does each country have the expected number of rows? | `count()`, `geom_col()` |
+
+**Tidy check** (the three rules of tidy data, class 05), answered for all six raw tables:
+
+- Each variable is a column: **yes**. Country, sex, year, the value and its flag each have their own column.
+- Each observation is a row: **yes**. One row is one country (or region), one sex and one year, with one value. The alcohol and GDP tables have no sex, so there one row is one country and one year.
+- Each value is a cell: **yes**. Every cell holds one value. The flags (`e`, `p`, `b`) sit in their own column, not inside the numbers.
+
+All six tables are therefore tidy as downloaded. The only reshaping, `pivot_wider()` in Section 4, puts women and men side by side so that the gap can be computed in one row.
+
+Short result tables are shown with `kable()` from `knitr`, which turns a table into a neat table in the rendered report. It changes only how a table looks, never the data.
+
+Each sub-section ends with a short summary table: what each check found, and what was decided because of it.
+
+| Sub-section | Dataset                  | Clean object               |
+|-------------|--------------------------|----------------------------|
+| 3.1         | Life expectancy at birth | `life_expectancy_clean`    |
+| 3.2         | Healthy life years       | `healthy_life_years_clean` |
+| 3.3         | Deaths by cause          | `deaths_clean`             |
+| 3.4         | GDP per capita           | `gdp_clean`                |
+| 3.5         | Education by sex         | `education_clean`          |
+| 3.6         | Alcohol consumption      | `alcohol_clean`            |
+
+**The EU member states.** Every table in this section is checked and filtered with the same list of 27 member state codes, `eu_codes`, defined at the start of Section 2.
+
+------------------------------------------------------------------------
+
+{{< include _3_1_life_expectancy.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_2_healthy_life_years.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_3_deaths.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_4_gdp.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_5_education.qmd >}}
+
+------------------------------------------------------------------------
+
+{{< include _3_6_alcohol.qmd >}}

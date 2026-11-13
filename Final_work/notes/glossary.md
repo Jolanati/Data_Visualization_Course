@@ -3,6 +3,81 @@
 Each new function: one-line meaning and a tiny example.
 
 - `paste0()`: glues pieces of text together with no space between them. `paste0("demo_", "mlexpec")` gives `"demo_mlexpec"`.
+- `paste(x, collapse = "+")`: joins all values of a vector into one text, with `+` between them. `paste(c("EE", "LV", "LT"), collapse = "+")` gives `"EE+LV+LT"`. Used to put the 27 EU codes into the deaths link.
+- `readLines(file, n = 1)`: reads lines of a text file as text, here only the first one. `readLines(deaths_file, n = 1)` gives the header line of the CSV.
+- `startsWith(text, "DATAFLOW")`: `TRUE` if the text begins with that word. `startsWith("DATAFLOW,LAST UPDATE", "DATAFLOW")` gives `TRUE`.
+- `file.remove(path)`: deletes a file. Used only to remove a failed download, never a real raw file.
+- `stop("message")`: stops the code on purpose and shows the message in red. Better than going on with broken data.
 - `download.file(url, destfile, mode = "wb")`: saves a file from the internet to my computer. `"wb"` means copy it byte for byte.
-- `file.exists(path)`: `TRUE` if the file is already there, `FALSE` if not. `file.exists(here("data-raw", "demo_mlexpec.csv"))`.
+- `file.exists(path)`: `TRUE` if the file is already there, `FALSE` if not. `file.exists(here("data", "raw", "demo_mlexpec.csv"))`.
+- `x %in% list`: `TRUE` for each value of `x` that is in the list, `FALSE` otherwise. `"LV" %in% eu_codes` gives `TRUE`, `"NO" %in% eu_codes` gives `FALSE`. Inside `filter()` it keeps the rows that match.
+- `knitr::kable()`: shows a small table as a neat table in the rendered report. Display only, the data stays the same. `count(df, flag) |> kable(col.names = c("Flag", "Number of values"))`.
+- `tbl_summary(missing = "always")`: adds a "Missing" row to every variable, even when the count is 0. `type = x ~ "continuous2"` lets a number show several statistics on separate lines.
+- `geom_vline(xintercept = 65)` / `geom_hline(yintercept = 20)`: a vertical or horizontal reference line on a chart. Use `linetype = "dashed"` so it doesn't look like data.
+- `as_labeller(c(F = "Women", M = "Men"))`: gives the facet panels readable titles instead of the raw codes. Used inside `facet_wrap(~ sex, labeller = ...)`.
+- `scale_fill_viridis_d(begin, end, option)`: fills groups with colours from the viridis palette. `begin` and `end` (0 to 1) choose which part of the palette is used, `option = "plasma"` picks a sister palette. `scale_fill_viridis_d(begin = 0.25, end = 0.75)`.
+- `str_detect(text, "u")`: `TRUE` if the text contains the pattern anywhere. `str_detect("bu", "u")` gives `TRUE`. Inside `filter()` it keeps the matching rows. From `stringr`, part of the tidyverse.
+- `count(sex, name = "years")`: like `count()`, but the new column is called `years` instead of `n`. Counting twice in a row (`count(sex, year) |> count(sex)`) first lists the combinations, then counts them per group.
+- `patchwork`: puts saved ggplot charts together. `p1 + p2` side by side, `p1 / p2` one above the other. Loaded at the start with the other packages.
+- `length(x)`: how many values a vector holds. `length(eu_codes)` gives `27`.
 - `if (condition) { ... }`: runs the code inside only when the condition is `TRUE`. `if (!file.exists(f)) { download.file(u, f) }`. The `!` means "not".
+- `pivot_wider(names_from = sex, values_from = life_expectancy)`: turns long into wide. The values of `sex` (F, M) become column names, and the numbers move into them. Two rows per country and year become one.
+- `select(-flag)`: the minus sign means "drop this column", keep all others.
+- `summarise(smallest = min(x), largest = max(x))`: turns a whole column into one row of summary numbers. `sum(x < 0)` counts how many values are below 0, because each `TRUE` counts as 1.
+- `arrange(desc(x))`: sorts the rows, largest first. Without `desc()`, smallest first.
+- `head(5)`: keeps the first 5 rows.
+- `kable(digits = 1)`: rounds numbers to one decimal in the table.
+- `left_join(x, y, by = join_by(country_code, year))`: keeps every row of `x` and adds the columns of `y` where both keys match. No match means `NA` in the new columns. The number of rows of `x` must not change.
+- `anti_join(x, y, by = join_by(...))`: the rows of `x` that have no partner in `y`. Used to see exactly which rows will get `NA`.
+- `join_by(country_code, year)`: says which columns must match. Both columns must match at the same time.
+- `tibble(a = c(...), b = c(...))`: builds a small table by hand, one vector per column. The vectors must have the same length, and the n-th value of each belongs to the same row.
+- `select(a, b, everything())`: puts the named columns first, then all the others in their old order.
+- `sum(is.na(x))`: counts the missing values in a column. `is.na()` gives `TRUE` for each `NA`, and `sum()` counts them.
+- `df$column`: takes one column out of a table. `gap_panel$country` is the `country` column.
+- `write_csv(table, path)`: saves a table as a CSV file. Missing values are written as `NA`. `write_csv(gap_panel, here("data", "clean", "gap_panel.csv"))`.
+- `dim(table)`: the number of rows and columns, in that order. `dim(gap_panel)` gives `270 17`.
+- `mean(x)`: the average of a column. `mean(gap_2024$le_gap)` gives the EU average gap.
+- `scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "gray70"))`: chooses the fill colours by hand, one per group. The course way to highlight one group in red and keep the rest gray.
+- `labs(caption = ...)`: a small line under the chart, used for the source and notes.
+- `geom_line(aes(group = country))`: one line per country. `group` tells ggplot which points belong to the same line.
+- `geom_text_repel(data = ..., aes(label = country))`: writes labels that push away from each other. `data =` lets the labels use only some rows, here the Baltic states in 2024.
+- `scale_linewidth_manual()`: line thickness chosen by hand per group, like `scale_colour_manual()` does for colour.
+- `group_by(country)` + `summarise()`: does the calculation once per country and gives one row per country. `.groups = "drop"` removes the grouping afterwards.
+- `le_gap[year == 2015]`: the square brackets pick the value of `le_gap` where the year is 2015.
+- `row_number()`, `n()`: the position of a row and the number of rows. `row_number() <= 3` keeps the first three rows.
+- `geom_col(position = "dodge")`: puts the bars of two groups side by side instead of on top of each other.
+- `if_else(condition, "yes", "no")`: one value when the condition is `TRUE`, another when `FALSE`. `if_else(baltic, "Baltic states", "Rest of the EU")`.
+- `group_by()` twice: first `summarise()` per country, then per group, so that each country counts once in the average.
+- `fct_reorder(x, y, .fun = max)`: sorts the categories by the largest value of `y` in each, instead of the median (the default). Useful when each category has two bars.
+- `labs(subtitle = ...)`: a second, smaller line under the title. Keeps the title short and the details readable.
+- `pivot_longer(cols = c(a, b), names_to = "factor", values_to = "value")`: the opposite of `pivot_wider()`. Several columns are stacked into two: one with their names, one with their numbers. Needed so `facet_wrap()` can make one panel per factor.
+- `geom_smooth(method = "lm", se = FALSE)`: draws a straight trend line through the dots. `se = FALSE` hides the grey uncertainty band.
+- `facet_wrap(~ factor, scales = "free_x")`: one panel per factor, each with its own x axis, the same y axis.
+- `cor(x, y)`: the correlation, one number from -1 to 1. Near 1: dots on a rising line. Near -1: on a falling line. Near 0: no straight-line pattern. It shows that two things go together, not that one causes the other.
+- `value[!baltic]`: the square brackets keep only the values where `baltic` is `FALSE`. `!` means "not".
+- `geom_smooth(formula = y ~ x)`: says the line is "y depends on x" (a straight line). Writing it out stops the message R prints otherwise.
+- `coord_cartesian(clip = "off")`: lets labels go beyond the edge of the chart area, so a dot in the corner keeps its full name.
+- `scale_shape_manual(values = c("Women" = 16, "Men" = 17))`: chooses the dot shape per group by hand. 16 is a filled circle, 17 a filled triangle.
+- `scale_colour_manual(..., guide = "none")`: sets the colours but shows no legend for them.
+- `geom_smooth(aes(linetype = sex))`: one trend line per group, drawn as solid or dashed.
+- `pull(column)`: takes one column out of a table as a plain list. Used to get the country names in a chosen order.
+- `factor(x, levels = ...)`: fixes the order of categories, for example the order of the bars, or which panel comes first.
+- `bind_rows(a, b)`: puts two tables with the same columns on top of each other, one table under the other.
+- `geom_text(aes(label = ...))`: writes a number or word at each bar or dot.
+- `sprintf("%.1f", x)`: writes a number as text with exactly one decimal, so -3 becomes "-3.0".
+- `geom_segment(aes(x, xend, y, yend))`: draws a line from one point to another. Used to join a country's women and men.
+- `sd(x)`: standard deviation, the typical distance of the values from their average. Larger means more spread.
+- `causes[cause_code]`: looks up a name in a named list, like a small dictionary: `c("I" = "Circulatory")["I"]` gives "Circulatory".
+- `facet_wrap(~ cause, scales = "free_y")`: one panel per cause, each with its own y axis.
+- `summarise(across(c(a, b), mean))`: the same function (here `mean`) for several columns at once.
+- `pivot_longer(names_to = c(".value", "sex"), names_sep = "_")`: splits column names like `hly_men` at the `_` into a value (`hly`) and a group (`men`).
+- `cor.test(x, y)`: the correlation with its 95% confidence interval (`$conf.int`) and p-value (`$p.value`). A narrow interval far from 0 and a small p-value (below 0.05) mean the pattern is unlikely to be chance.
+- `inner_join(x, y, ...)`: keeps only the rows that exist in both tables. Used when rows without a partner should be dropped on purpose.
+- `cor(table)`: with several columns, gives the correlation of every pair at once, a correlation matrix. The diagonal is always 1.
+- `geom_histogram(binwidth = 0.5, boundary = 0)`: `boundary = 0` makes the bands start at round numbers (2.5 to 3, 3 to 3.5), not at odd values.
+- `geom_boxplot()`: the box holds the middle half of the values, the line inside is the median, the whiskers reach the lowest and highest values that are not far out. `outlier.shape = NA` hides the outlier dots when all dots are drawn anyway.
+- `geom_jitter(width = 0.15, height = 0)`: draws every dot, moved sideways a little at random so they do not hide each other. `height = 0` keeps the values exact.
+- `stat_summary(fun = mean, geom = "point")`: adds a summary, here the mean of each group, as one point.
+- `alpha = 0.3`: transparency, from 0 (invisible) to 1 (solid).
+- `nchar(text)`: counts the characters in a text. `nchar("LVA")` gives 3, `nchar("OWID_WRL")` gives 8. Used in 3.6.2 to find the regional totals, whose codes are not three letters long.
+- `slice_max(x, n = 5)`: keeps the 5 rows with the largest values of `x`, largest first. Shorter than `arrange(desc(x)) |> head(5)` and from the course (class 10_2).

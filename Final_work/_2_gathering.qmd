@@ -1,0 +1,599 @@
+```{r}
+#| label: setup-gathering
+#| include: false
+# Setup for working in this file on its own: loads the packages.
+# In the rendered report the earlier sections have already done this, so running it again changes nothing.
+# include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
+pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
+```
+
+# 2. Gathering data
+
+To answer the research question, the analysis needs comparable figures for every EU country on life expectancy, health, causes of death, wealth and education, for the same years. The natural source is Eurostat, the statistical office of the EU. It collects the same figures from every member state using the same definitions, so the countries can be compared.
+
+The data is not downloaded by hand from the Eurostat website. Each table is requested from Eurostat's API (a web address that returns data) directly from R, so anyone can rerun this file and get the same data. Every Eurostat table has a code, for example `demo_mlexpec`, and is split into dimensions: sex, age, country, year. The values needed are selected inside the download link.
+
+Every dataset is loaded in its **original, uncleaned form**. The only selection happens in the download link (sex, age, years), where it is visible to any reader. After the download, nothing is filtered, renamed or fixed in this section. Cleaning while loading would hide what was removed. Keeping gathering (Section 2) and cleaning (Section 3) apart means that every dropped row is a documented decision, not a side effect of the loading step.
+
+**Every dataset follows the same three steps:**
+
+1.  **Build the link:** the table code plus the selected dimensions.
+2.  **Download once:** save the file to `data/raw/`. This folder is never edited, so the original download is always available.
+3.  **Load and look:** read the file into R, check its structure with `glimpse()` and inspect the first rows with `head()`.
+
+**Naming of objects:** every object created for a dataset starts with the full name of that dataset, followed by what the object holds. The names are long, but they say exactly what each object is. For life expectancy the prefix is `life_expectancy_`: `life_expectancy_url` (the download link), `life_expectancy_file` (the path to the saved file), `life_expectancy_raw` (the table as downloaded) and, in Section 3, `life_expectancy_clean` (the cleaned table). The other datasets follow the same pattern: `healthy_life_years_`, `deaths_`, `gdp_` and `education_`.
+
+| Sub-section | Dataset | Eurostat code | Role in the analysis |
+|------------------|------------------|------------------|------------------|
+| 2.1 | Life expectancy at birth | `demo_mlexpec` | The gap between women and men, the main measure |
+| 2.2 | Healthy life years | `hlth_hlye` | Years in good health, women and men |
+| 2.3 | Deaths by cause | `hlth_cd_asdr2` | Death rates under 65 by cause, including alcohol-related causes |
+| 2.4 | GDP per capita | `tec00114` | Wealth of each country compared with the EU average |
+| 2.5 | Education by sex | `sdg_04_20` | Share of 25 to 34 year olds with a university degree |
+| 2.6 | Alcohol consumption per person | WHO, via Our World in Data | Litres of pure alcohol per person aged 15+, a direct measure of drinking |
+
+**The EU member states.** The analysis covers the 27 EU member states. Their codes are defined once, here, because they are used in two places: in the download link of the deaths table (2.3) and in the cleaning of every table (Section 3). Eurostat writes Greece as `EL`, not `GR`.
+
+```{r}
+#| label: show-eu-codes
+# 2. The 27 EU member states, in Eurostat's codes (Greece is EL)
+eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # one code per member state
+              "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",
+              "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK")
+
+length(eu_codes)   # should be 27
+```
+
+**What it shows:** the number 27, one code per member state.
+
+------------------------------------------------------------------------
+
+## 2.1 Life expectancy at birth
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `demo_mlexpec`, "Life expectancy by age and sex" |
+| **What it measures** | How many years a newborn would live on average, if the death rates of that year stayed the same for their whole life |
+| **Unit** | Years |
+| **Selected dimensions** | Sex: `F` (females) and `M` (males). Age: `Y_LT1` ("less than 1 year"), which is how Eurostat labels life expectancy at birth. All countries, years 2015 to 2024 |
+| **Flags** | Some values carry letters: `e` estimated, `p` provisional, `b` break in the series (the method changed that year) |
+
+**Role in the analysis:** this is the main measure. The gap is women's life expectancy minus men's, so this table provides the value on the y axis of most charts.
+
+**Points to note:**
+
+- Life expectancy is a snapshot, not a forecast. It does not follow real people through life. It answers the question: "if the current death rates never changed, how long would a baby born now live?"
+- The table has 97 age classes, from `Y_LT1` to `Y_GE95`. Without selecting `Y_LT1` in the link, the file would have 97 rows per country, sex and year instead of one.
+- The file also contains EU totals and non-EU countries. They are kept for now and removed in Section 3.
+- 2020 and 2021 show a COVID dip. This is real, not an error.
+
+### 2.1.1 Build the link
+
+The link has four parts: the API address, the table code, the selected dimensions, and the years. In the dimension part, dots separate the dimensions in this order: frequency, unit, sex, age, country. `F+M` means both sexes, and the empty position after the last dot means all countries.
+
+```{r}
+#| label: show-life-expectancy-url
+# 2.1.1 The Eurostat API link for life expectancy
+life_expectancy_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "demo_mlexpec/",                      # the table code
+  "A.YR.F+M.Y_LT1.",                    # annual, in years, women and men, at birth, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+life_expectancy_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.1.2 Download once
+
+The file is saved to `data/raw/`. The `if` check makes R download only when the file is not there yet, so rerunning this document never overwrites the original download.
+
+```{r}
+#| label: show-life-expectancy-download
+# 2.1.2 Save the raw file to data/raw/, only if it isn't there yet
+life_expectancy_file <- here("data", "raw", "demo_mlexpec.csv")  # where the raw file goes
+
+if (!file.exists(life_expectancy_file)) {   # TRUE only on the first run
+  download.file(life_expectancy_url,        # from this link
+                life_expectancy_file,       # to this file
+                mode = "wb")                # "wb" copies the file byte for byte
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.1.3 Load and look
+
+Eurostat writes missing values as `:`, so `read_csv()` is told to treat `:` as missing. This is not cleaning: the values stay missing, R only reads them correctly. The column names stay exactly as Eurostat wrote them, for example `TIME_PERIOD` and `OBS_VALUE`.
+
+```{r}
+#| label: show-life-expectancy-load
+# 2.1.3 Read the raw file and check what arrived
+life_expectancy_raw <- read_csv(life_expectancy_file,
+                                na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                                show_col_types = FALSE)  # keep the output short
+
+glimpse(life_expectancy_raw)  # rows, columns and the type of each column
+```
+
+`glimpse()` lists every column with its type. `head()` shows the first rows as a table, the way the file is actually laid out.
+
+```{r}
+#| label: show-life-expectancy-head
+# 2.1.3 The first six rows of the raw table
+head(life_expectancy_raw)   # how the file is laid out: one row per country, sex and year
+```
+
+**What it shows:** a first overview of the raw table. Size and column types are visible in the output above. The remaining points are verified with code in Section 3.1.
+
+- **Size:** 906 rows and 11 columns.
+- **One row** is one geographic unit, one sex and one year, with its life expectancy in `OBS_VALUE`.
+- **Types:** `OBS_VALUE` and `TIME_PERIOD` are numbers, so the flags did not turn the values into text. `CONF_STATUS` is empty in every row.
+- **Geographic units:** 53 codes. They include all 27 EU member states (Greece appears as `EL`, not `GR`), 9 aggregates such as `EU27_2020`, `EA20` and `DE_TOT`, and 17 non-EU countries such as `NO`, `UK` and `UA`.
+- **Completeness:** every EU member state has all 10 years for both sexes (27 × 2 × 10 = 540 rows). Some non-EU countries have fewer years.
+- **Missing values and flags:** no value in `OBS_VALUE` is missing. 146 values carry a flag in `OBS_FLAG` (estimated, provisional or a break in the series).
+- **Columns with one value only:** `freq`, `unit` and `age` repeat the choices made in the link, so they add no information. They are removed in Section 3.
+
+------------------------------------------------------------------------
+
+## 2.2 Healthy life years
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `hlth_hlye`, "Healthy life years and life expectancy at birth, by sex" |
+| **What it measures** | How many years a newborn would live in good health, without limitations in daily activities, if the conditions of that year stayed the same |
+| **Unit** | Years |
+| **Selected dimensions** | Unit: `YR` (years). Sex: `F` and `M`. Indicator: `HLY_Y0`, healthy life years at birth. All countries, years 2015 to 2024 |
+
+**Role in the analysis:** life expectancy says how long people live. Healthy life years say how much of that life is spent in good health. Together they show whether Baltic men lose years of life, years of good health, or both.
+
+### 2.2.1 Build the link
+
+The link has the same four parts as in 2.1. The dimensions are different in this table: frequency, unit, sex, health indicator, country. The table holds nine indicators (healthy life years and life expectancy, at birth, at 50 and at 65, in years and as a share), so the link selects only `HLY_Y0`.
+
+```{r}
+#| label: show-healthy-life-years-url
+# 2.2.1 The Eurostat API link for healthy life years
+healthy_life_years_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "hlth_hlye/",                         # the table code
+  "A.YR.F+M.HLY_Y0.",                   # annual, in years, women and men, healthy life years at birth, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+healthy_life_years_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.2.2 Download once
+
+Same as in 2.1.2: the file is saved to `data/raw/`, and only if it is not there yet.
+
+```{r}
+#| label: show-healthy-life-years-download
+# 2.2.2 Save the raw file to data/raw/, only if it isn't there yet
+healthy_life_years_file <- here("data", "raw", "hlth_hlye.csv")  # where the raw file goes
+
+if (!file.exists(healthy_life_years_file)) {   # TRUE only on the first run
+  download.file(healthy_life_years_url,        # from this link
+                healthy_life_years_file,       # to this file
+                mode = "wb")                   # "wb" copies the file byte for byte
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.2.3 Load and look
+
+Same as in 2.1.3: `:` is read as a missing value, and the column names stay exactly as Eurostat wrote them.
+
+```{r}
+#| label: show-healthy-life-years-load
+# 2.2.3 Read the raw file and check what arrived
+healthy_life_years_raw <- read_csv(healthy_life_years_file,
+                                   na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                                   show_col_types = FALSE)  # keep the output short
+
+glimpse(healthy_life_years_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-healthy-life-years-head
+# 2.2.3 The first six rows of the raw table
+head(healthy_life_years_raw)   # how the file is laid out: one row per country, sex and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.2.
+
+- **Size:** 618 rows and 11 columns.
+- **One row** is one geographic unit, one sex and one year, with its healthy life years in `OBS_VALUE`.
+- **Types:** `OBS_VALUE` and `TIME_PERIOD` are numbers (`<dbl>`), so the flags did not turn the values into text.
+- **Columns:** the same as in the life expectancy table, except that `age` is replaced by `hlth_hle`, the health indicator. It holds `HLY_Y0` in every row, as selected in the link.
+- **Geographic units:** 33 codes, far fewer than the 53 in the life expectancy table. They are the 27 EU member states, 4 non-EU countries (`CH`, `IS`, `NO`, `UK`) and 2 aggregates (`EU27_2020`, `EU28`).
+- **Completeness:** 26 of the 27 EU member states have all 10 years for both sexes. Luxembourg has no values for 2023 and 2024, so the EU part has 536 rows instead of 540.
+- **Missing values:** no value in `OBS_VALUE` is missing. Missing years appear as missing rows, not as empty cells, so `summary()` alone would not reveal them. Only the row counts do.
+- **Flags:** 80 values carry a flag, most often `b` (a break in the series). In the EU, the two Lithuanian values for 2024 are marked `p` (provisional), the only flags in the Baltic states.
+
+------------------------------------------------------------------------
+
+## 2.3 Deaths by cause
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `hlth_cd_asdr2`, "Causes of death, standardised death rate by NUTS 2 region of residence" |
+| **What it measures** | How many people per 100 000 die of a given cause in a year, age-standardised |
+| **Unit** | `RT`: deaths per 100 000 inhabitants |
+| **Selected dimensions** | Sex: `F` and `M`. Age: `Y_LT65` (under 65). Cause: all 93. Countries: the 27 EU member states. Years 2015 to 2024 (the table currently ends in 2023) |
+
+**Role in the analysis:** this table tests the main hypothesis. If Baltic men die earlier mainly because of heart disease before 65, it shows up here as a much higher death rate from circulatory diseases among men than among women.
+
+**Points to note:**
+
+- **Age-standardised** means the rates are calculated as if every country had the same age structure. Without it, a country with many older people would always look worse. With it, the countries can be compared fairly.
+- **Under 65 only.** Deaths before 65 are the ones that pull life expectancy down most, and they are where the gap between women and men is expected to come from.
+- **All 93 causes are downloaded.** Choosing only the causes named in the hypotheses could hide a cause that was not expected, which would bias the analysis by design. The analysis first looks at the big, non-overlapping groups of causes (chapters such as circulatory diseases, cancer or external causes) without choosing anything, and only then at the specific causes named in the hypotheses.
+- **Causes are nested.** Some causes are part of others, for example ischaemic heart disease (`I20-I25`) is part of all circulatory diseases (`I`). They can be compared, but never added up.
+- **The 27 EU countries are selected in the link,** unlike in 2.1 and 2.2. Besides 36 countries, the table holds about 460 regions, so the full file would be 55 MB. Only the countries are needed.
+- **The latest year is 2023.** Death statistics take longer to publish than life expectancy.
+
+### 2.3.1 Build the link
+
+The same four parts as in 2.1 and 2.2. The dimensions of this table, in order: frequency, unit, sex, age, cause of death, country. The cause position is left empty, which means all causes. The country position lists the 27 EU codes joined with `+`.
+
+```{r}
+#| label: show-deaths-url
+# 2.3.1 The Eurostat API link for deaths by cause
+deaths_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "hlth_cd_asdr2/",                     # the table code
+  "A.RT.F+M.Y_LT65..",                  # annual, rate per 100 000, women and men, under 65, all causes (empty)
+  paste(eu_codes, collapse = "+"),      # the 27 EU countries, joined as AT+BE+BG+...
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+deaths_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address, with the 27 country codes near the end.
+
+### 2.3.2 Download once
+
+Same as in 2.1.2, with one extra check. For larger requests, Eurostat sometimes puts the request in a queue and sends back a short waiting message instead of the data. Saved as a file, that message would look like a CSV but hold no data. A real Eurostat CSV always starts with the column name `DATAFLOW`, so the first line of the file is checked. If it is anything else, the file is deleted and the chunk stops with a message to run it again a minute later.
+
+```{r}
+#| label: show-deaths-download
+# 2.3.2 Save the raw file to data/raw/, only if it isn't there yet
+deaths_file <- here("data", "raw", "hlth_cd_asdr2.csv")  # where the raw file goes
+
+if (!file.exists(deaths_file)) {             # TRUE only on the first run
+  download.file(deaths_url,                  # from this link
+                deaths_file,                 # to this file
+                mode = "wb")                 # "wb" copies the file byte for byte
+
+  first_line <- readLines(deaths_file, n = 1)            # read only the first line of the file
+  if (!startsWith(first_line, "DATAFLOW")) {             # a real Eurostat CSV starts with DATAFLOW
+    file.remove(deaths_file)                             # delete the waiting message, keep data/raw/ clean
+    stop("Eurostat queued the request. Wait a minute and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists. If Eurostat queued the request, a red message says to run the chunk again.
+
+### 2.3.3 Load and look
+
+Same as in 2.1.3 and 2.2.3: `:` is read as a missing value, and the column names stay exactly as Eurostat wrote them. This table has one column more than the first two: `icd10`, the cause of death, coded with the international classification of diseases (ICD-10).
+
+```{r}
+#| label: show-deaths-load
+# 2.3.3 Read the raw file and check what arrived
+deaths_raw <- read_csv(deaths_file,
+                       na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                       show_col_types = FALSE)  # keep the output short
+
+glimpse(deaths_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-deaths-head
+# 2.3.3 The first six rows of the raw table
+head(deaths_raw)   # how the file is laid out: one row per country, sex, cause and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.3.
+
+- **Size:** 43 902 rows and 12 columns.
+- **One row** is one country, one sex, one cause and one year, with its death rate per 100 000 in `OBS_VALUE`.
+- **Columns:** the same as in the first two tables, plus `icd10`, the cause of death.
+- **Countries:** exactly the 27 EU member states, as asked in the link, each with 1 626 rows.
+- **Years:** 2015 to 2023. There is no 2024 yet.
+- **Causes:** 93 codes, but not all in every year. 89 codes exist from 2015 to 2019, and 92 from 2020, when three COVID-19 codes were added.
+- **"All causes" has two codes.** The total of all causes is coded `TOTAL` in 2015 to 2017 and 2022 to 2023, but `A-R_V-Y` in 2018 to 2021. It is the same measure under two names, so it has to be handled in cleaning, otherwise the total would seem to disappear in four years.
+- **Missing values and flags:** no value is missing and no value carries a flag. `OBS_FLAG` and `CONF_STATUS` are empty in every row.
+- **Range:** from 0 (causes with no deaths under 65 in a small country) to 716.9 deaths per 100 000.
+
+------------------------------------------------------------------------
+
+## 2.4 GDP per capita
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `tec00114`, "GDP per capita in PPS" |
+| **What it measures** | How rich a country is per person, compared with the EU average |
+| **Unit** | Index, EU27 = 100. A value of 120 means 20% above the EU average, 70 means 30% below |
+| **Selected dimensions** | Indicator: `VI_PPS_EU27_2020_HAB` (volume index per person, in purchasing power standards). Category: `GDP`. All countries, years 2015 to 2024 |
+
+**Role in the analysis:** wealth is the factor that could explain everything else. Poorer countries may have lower life expectancy for both sexes, and the analysis checks whether the Baltic gap is larger than their income alone would suggest (hypothesis 4).
+
+**Points to note:**
+
+- **PPS (purchasing power standards)** removes the differences in price levels between countries. A euro buys more in Bulgaria than in Luxembourg, and PPS corrects for that, so the countries can be compared fairly.
+- **No sex dimension.** GDP is a figure for the whole country, so there is one value per country and year, not one for women and one for men.
+- **An index compares countries, not years.** Over time it shows whether a country catches up with the EU average or falls behind, not whether it grows in real terms.
+- **The file also contains non-EU countries** such as Norway, the United States and Japan, and aggregates such as the euro area. As in 2.1 and 2.2, they are kept for now and removed in Section 3. The file is small, so the 30 October rule (EU filter in cleaning) applies again.
+
+### 2.4.1 Build the link
+
+The same four parts as before. This table has four dimensions: frequency, indicator, category and country. The country position is left empty, which means all countries.
+
+```{r}
+#| label: show-gdp-url
+# 2.4.1 The Eurostat API link for GDP per capita
+gdp_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "tec00114/",                          # the table code
+  "A.VI_PPS_EU27_2020_HAB.GDP.",        # annual, volume index per person (EU27 = 100), GDP, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+gdp_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.4.2 Download once
+
+Same as in 2.3.2, including the check of the first line. The file is small, so Eurostat is not expected to queue it, but the check costs nothing and protects `data/raw/` in case it does.
+
+```{r}
+#| label: show-gdp-download
+# 2.4.2 Save the raw file to data/raw/, only if it isn't there yet
+gdp_file <- here("data", "raw", "tec00114.csv")   # where the raw file goes
+
+if (!file.exists(gdp_file)) {                    # TRUE only on the first run
+  download.file(gdp_url,                         # from this link
+                gdp_file,                        # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(gdp_file, n = 1)                # read only the first line of the file
+  if (!startsWith(first_line, "DATAFLOW")) {              # a real Eurostat CSV starts with DATAFLOW
+    file.remove(gdp_file)                                 # delete the waiting message, keep data/raw/ clean
+    stop("Eurostat queued the request. Wait a minute and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.4.3 Load and look
+
+Same as in 2.1.3 to 2.3.3. This table has no `sex` column, and two columns that describe the indicator: `indic_ppp` and `ppp_cat18`.
+
+```{r}
+#| label: show-gdp-load
+# 2.4.3 Read the raw file and check what arrived
+gdp_raw <- read_csv(gdp_file,
+                    na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                    show_col_types = FALSE)  # keep the output short
+
+glimpse(gdp_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-gdp-head
+# 2.4.3 The first six rows of the raw table
+head(gdp_raw)   # how the file is laid out: one row per country and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.4.
+
+- **Size:** 430 rows and 10 columns, one fewer than the first two tables, because there is no `sex` column.
+- **One row** is one geographic unit and one year, with its GDP index in `OBS_VALUE`. There is no `sex` column.
+- **Geographic units:** 43 codes: the 27 EU member states, the aggregates `EU27_2020`, `EA19`, `EA20` and `EA21` (the euro area in different years), and 12 other countries such as `NO`, `UK`, `US` and `JP`.
+- **Completeness:** every unit has all 10 years, so the EU part has 270 rows (27 × 10).
+- **Missing values and flags:** no value is missing. 9 values are marked `p` (provisional), all from 2023 or 2024. In the EU these are Germany, Greece and Spain in 2023 and 2024, and France in 2024. The Baltic states have no flags.
+- **Range in the EU:** from 49 (Bulgaria, 2015) to 279 (Luxembourg, 2015). Luxembourg is far above every other country, partly because many people work there but live in neighbouring countries, so its GDP is shared by fewer residents.
+
+------------------------------------------------------------------------
+
+## 2.5 Education by sex
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Eurostat code** | `sdg_04_20`, "Tertiary educational attainment" |
+| **What it measures** | The share of people aged 25 to 34 who have finished tertiary education (a university degree or a similar higher education) |
+| **Unit** | Percent of the age group |
+| **Selected dimensions** | Sex: `F` and `M`. Age: `Y25-34`. Unit: `PC` (percentage). Education level: `ED5-8` (tertiary, levels 5 to 8). All countries, years 2015 to 2024 |
+
+**Role in the analysis:** this table tests hypothesis 5: where women are much more educated than men, the gap in life expectancy is bigger. Education goes with income, health habits and the kind of work people do, so a large difference in education between women and men may go with a large difference in how long they live.
+
+**Points to note:**
+
+- **Ages 25 to 34 only.** This is the age when most people have finished their studies. It describes the young generation, not the people who die before 65 today, so it is a sign of how the country is changing rather than a cause of today's deaths.
+- **ED5-8** covers all tertiary levels: short tertiary courses, bachelor, master and doctorate.
+- **The file also contains non-EU countries and aggregates.** As in 2.1, 2.2 and 2.4, they are kept for now and removed in Section 3. The file is small, so the 30 October rule (EU filter in cleaning) applies.
+
+### 2.5.1 Build the link
+
+This table has six dimensions: frequency, sex, age, unit, education level and country. The country position is left empty, which means all countries.
+
+```{r}
+#| label: show-education-url
+# 2.5.1 The Eurostat API link for tertiary education by sex
+education_url <- paste0(
+  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/",  # the API address
+  "sdg_04_20/",                         # the table code
+  "A.F+M.Y25-34.PC.ED5-8.",             # annual, women and men, age 25 to 34, percent, tertiary, all countries
+  "?startPeriod=2015&endPeriod=2024",   # the study period
+  "&format=SDMX-CSV"                    # ask for a CSV file
+)
+
+education_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one long web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.5.2 Download once
+
+Same as in 2.3.2 and 2.4.2, including the check of the first line.
+
+```{r}
+#| label: show-education-download
+# 2.5.2 Save the raw file to data/raw/, only if it isn't there yet
+education_file <- here("data", "raw", "sdg_04_20.csv")   # where the raw file goes
+
+if (!file.exists(education_file)) {              # TRUE only on the first run
+  download.file(education_url,                   # from this link
+                education_file,                  # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(education_file, n = 1)          # read only the first line of the file
+  if (!startsWith(first_line, "DATAFLOW")) {              # a real Eurostat CSV starts with DATAFLOW
+    file.remove(education_file)                           # delete the waiting message, keep data/raw/ clean
+    stop("Eurostat queued the request. Wait a minute and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size. After that, nothing, because the file already exists.
+
+### 2.5.3 Load and look
+
+Same as in the other four tables.
+
+```{r}
+#| label: show-education-load
+# 2.5.3 Read the raw file and check what arrived
+education_raw <- read_csv(education_file,
+                          na = c("", ":", "NA"),   # Eurostat marks missing values with ":"
+                          show_col_types = FALSE)  # keep the output short
+
+glimpse(education_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-education-head
+# 2.5.3 The first six rows of the raw table
+head(education_raw)   # how the file is laid out: one row per country, sex and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.5.
+
+- **Size:** 730 rows and 12 columns.
+- **One row** is one geographic unit, one sex and one year, with the share of 25 to 34 year olds with tertiary education in `OBS_VALUE`.
+- **Geographic units:** 38 codes: the 27 EU member states, the aggregates `EU27_2020` and `EA21`, and 9 other countries such as `NO`, `UK` and `RS`.
+- **Completeness:** all 27 EU member states have all 10 years for both sexes (540 rows). Three non-EU units have fewer: `UK` (10 rows), `ME` (12) and `BA` (8).
+- **Missing values:** none.
+- **Flags:** 104 values are marked `b` (break in the series), 72 of them in 2021, when the EU changed the method of its labour force survey, the source of this table. 3 values for Luxembourg (2016 and 2017) are marked `u` (low reliability), which in a survey usually means the sample was small.
+- **Range in the EU:** from 19.4% (Italian men, 2015) to 70.8% (Cypriot women, 2023).
+
+------------------------------------------------------------------------
+
+## 2.6 Alcohol consumption per person
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Source** | World Health Organization (WHO), Global Health Observatory, "Total alcohol per capita (15+) consumption", published by Our World in Data |
+| **What it measures** | How many litres of pure alcohol a person aged 15 or over drinks in a year, on average, including alcohol that is not recorded in official sales (for example home-made or brought from abroad) |
+| **Unit** | Litres of pure alcohol per person aged 15+, per year |
+| **Selected** | All countries, all years. The 27 EU countries and the years from 2015 are selected in Section 3 |
+
+**Role in the analysis:** hypothesis 3 says that more alcohol-related deaths among men go with a larger gap. In Section 5, alcohol could only be seen indirectly, through deaths from chronic liver disease and accidental poisoning. This table adds a direct measure of how much is drunk.
+
+**Points to note:**
+
+- **Why this table.** Eurostat's European Health Interview Survey (2019) was tried first: it asks people how often they drink heavily. Men's heavy drinking in that survey did not go with the gap (correlation 0.03), probably because it counts how often people drink, not how much, and because drinking tends to be under-reported in surveys. WHO's estimate of the amount drunk was used instead.
+- **Why Our World in Data.** WHO's own data service returned server errors when the data was downloaded. Our World in Data republishes the same WHO figures as one CSV file.
+- **Not by sex.** The figure is for women and men together, so it describes the drinking of a whole country, not of men alone.
+- **The data ends in 2020.** It covers 2015 to 2020 of the study period.
+- **Country codes are different.** WHO uses three-letter codes (`LVA`, not `LV`), so the codes are matched to Eurostat's in Section 3.
+
+### 2.6.1 Build the link
+
+This file is not from the Eurostat API, so the link is simpler: one fixed address for the whole table. The options at the end ask for the full data in CSV format with short column names.
+
+```{r}
+#| label: show-alcohol-url
+# 2.6.1 The link to WHO's alcohol consumption data, published by Our World in Data
+alcohol_url <- paste0(
+  "https://ourworldindata.org/grapher/",                           # Our World in Data's chart data
+  "total-alcohol-consumption-per-capita-litres-of-pure-alcohol",   # the WHO alcohol table
+  ".csv?v=1&csvType=full&useColumnShortNames=true"                 # the full data as CSV, short column names
+)
+
+alcohol_url  # print the link, so it can also be opened in a browser
+```
+
+**What it shows:** one web address. Pasted into a browser, it downloads the same CSV file.
+
+### 2.6.2 Download once
+
+Same as in 2.3.2, with a different first-line check. An Our World in Data file starts with the column name `entity` (the country name), not `DATAFLOW` like a Eurostat file. If the first line is anything else, for example an error page, the file is deleted and the chunk stops with a message.
+
+```{r}
+#| label: show-alcohol-download
+# 2.6.2 Save the raw file to data/raw/, only if it isn't there yet
+alcohol_file <- here("data", "raw", "total_alcohol_consumption_per_capita.csv")   # where the raw file goes
+
+if (!file.exists(alcohol_file)) {                # TRUE only on the first run
+  download.file(alcohol_url,                     # from this link
+                alcohol_file,                    # to this file
+                mode = "wb")                     # "wb" copies the file byte for byte
+
+  first_line <- readLines(alcohol_file, n = 1)            # read only the first line of the file
+  if (!startsWith(first_line, "entity")) {                # an Our World in Data CSV starts with entity
+    file.remove(alcohol_file)                             # delete the wrong file, keep data/raw/ clean
+    stop("The download did not return the alcohol table. Check the link and run this chunk again.")   # stop with a clear message
+  }
+}
+```
+
+**What it shows:** on the first run, a short message with the file size (about 100 KB). After that, nothing, because the file already exists.
+
+### 2.6.3 Load and look
+
+Same as in the other five tables, with one difference: Our World in Data does not use `:` for missing values, so only empty cells and `NA` are read as missing.
+
+```{r}
+#| label: show-alcohol-load
+# 2.6.3 Read the raw file and check what arrived
+alcohol_raw <- read_csv(alcohol_file,
+                        na = c("", "NA"),        # Our World in Data leaves missing values empty
+                        show_col_types = FALSE)  # keep the output short
+
+glimpse(alcohol_raw)  # rows, columns and the type of each column
+```
+
+```{r}
+#| label: show-alcohol-head
+# 2.6.3 The first six rows of the raw table
+head(alcohol_raw)   # how the file is laid out: one row per country and year
+```
+
+**What it shows:** a first overview of the raw table. The remaining points are verified with code in Section 3.6.
+
+- **Size:** 4 164 rows and 4 columns: `entity` (the country name), `code` (the three-letter country code), `year` and `sh_alc_pcap_li` (litres of pure alcohol per person aged 15+).
+- **One row** is one country or region and one year. There is no `sex` column.
+- **Types:** `year` and `sh_alc_pcap_li` are numbers, `entity` and `code` are text.
+- **Countries and years:** 200 countries and regions, from 2000 to 2020. Besides countries, the file holds regional totals such as `WB_EAP` (East Asia and Pacific, World Bank), which are removed in Section 3.
+- **The EU in the study period:** all 27 member states have all six years from 2015 to 2020 (162 rows), with values from 5.8 to 17.0 litres.
+
+------------------------------------------------------------------------
