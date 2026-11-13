@@ -12,7 +12,7 @@ format:
     height: 720
     code-overflow: scroll
     code-line-numbers: false
-    css: demo.css
+    css: slides.css
 execute:
   echo: true
   warning: false
@@ -44,13 +44,13 @@ pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patc
 
 # The story in one sentence {background-color="#1a1a1a"}
 
-::: {style="color:white; font-size:1.3em; margin-top:60px;"}
+::: {style="font-size:1.3em; margin-top:60px;"}
 At the same income, Baltic women live as long as other Europeans.
 
 Baltic men live up to **4.6 years** shorter.
 :::
 
-::: {style="color:#bbbbbb; font-size:0.8em; margin-top:60px;"}
+::: {.note-small style="margin-top:60px;"}
 This video shows the code behind that sentence: six tables, five checks, one panel, seventeen exploration graphs, one final graph.
 :::
 
@@ -62,14 +62,9 @@ The whole project is one Quarto report, split into section files. Everything you
 
 ## The pipeline
 
-```{mermaid}
-%%| echo: false
-flowchart LR
-  A["1 · Gather<br>6 tables via API"] --> B["2 · Clean<br>5 checks each"]
-  B --> C["3 · Combine<br>gap_panel, 270 rows"]
-  C --> D["4 · Explore<br>17 graphs"]
-  D --> E["5 · Final graph<br>v1 → v2 → final"]
-```
+::: {.pipeline}
+[1 · Gather<br>6 tables via API]{.step}[→]{.arrow}[2 · Clean<br>5 checks each]{.step}[→]{.arrow}[3 · Combine<br>gap_panel, 270 rows]{.step}[→]{.arrow}[4 · Explore<br>17 graphs]{.step}[→]{.arrow}[5 · Final graph<br>v1 → v2 → final]{.step .key}
+:::
 
 ::: {style="font-size:0.8em; margin-top:40px;"}
 `data/raw/` holds the downloads, never edited · `data/clean/` holds what the code makes · every decision is written in the report and in `notes/decisions.md`
@@ -79,7 +74,9 @@ flowchart LR
 This is the whole pipeline. Each step uses only the output of the step before. The raw downloads stay untouched in data raw. Everything in data clean is made by the code, so it can always be made again. And every decision I took, like which countries to keep, is written down in the report with its reason.
 :::
 
-# 1 · Gathering the data
+# 1 · Gathering the data {background-color="#1a1a1a"}
+
+[From a link to a raw file, by code]{.kicker}
 
 ## Building the download link
 
@@ -125,7 +122,9 @@ read csv reads the file. Eurostat writes missing values as a colon, so I tell R 
 (next slide) 906 rows and 11 columns. OBS VALUE, the life expectancy, is a number, as it should be. The column names are still Eurostat's own, because in this section I change nothing.
 :::
 
-# 2 · Cleaning
+# 2 · Cleaning {background-color="#1a1a1a"}
+
+[Readable names, and five checks on every table]{.kicker}
 
 ## Readable names
 
@@ -200,7 +199,9 @@ Only after the checks do I change the data. filter keeps the 27 member states, u
 I did the same for all six tables. The deaths table was the hardest: 93 causes of death, and the code for "all causes" changed between years, so I had to merge two codes into one.
 :::
 
-# 3 · Combining the tables
+# 3 · Combining the tables {background-color="#1a1a1a"}
+
+[Six tables become one panel of 270 rows]{.kicker}
 
 ```{r}
 #| label: demo-combining-setup
@@ -274,7 +275,9 @@ After the deaths I joined GDP, education and alcohol the same way.
 Last, I add the country names and one column, baltic, which is TRUE for Estonia, Latvia and Lithuania. With this one column, every graph can highlight the Baltic states. The result: 270 rows, 18 columns, saved as gap panel dot csv. This is the table all the exploration starts from.
 :::
 
-# 4 · Exploring
+# 4 · Exploring {background-color="#1a1a1a"}
+
+[Where is the gap, and what goes with it?]{.kicker}
 
 ```{r}
 #| label: demo-explore-load
@@ -384,7 +387,9 @@ With only 27 countries, I wanted to know if the pattern could be chance, and if 
 The death factors are strong in both years, with p values below 0.0001. So it's not chance, and it's not a COVID effect.
 :::
 
-# 5 · The final graph
+# 5 · The final graph {background-color="#1a1a1a"}
+
+[Version 1, version 2, final]{.kicker}
 
 ## Version 1 → version 2 → final
 
@@ -411,13 +416,13 @@ Then I refined it: the finding as the title, gray for the women and one colour, 
 
 ## {background-color="#1a1a1a"}
 
-::: {style="color:white; font-size:1.3em; margin-top:80px;"}
+::: {style="font-size:1.3em; margin-top:80px;"}
 At the same income, **Baltic women keep up with Europe.**
 
 **Baltic men don't**, and in Latvia they live **4.6 years** shorter.
 :::
 
-::: {style="color:#bbbbbb; font-size:0.75em; margin-top:60px;"}
+::: {.note-small style="font-size:0.75em; margin-top:60px;"}
 Six tables · five checks each · one panel of 270 rows · seventeen exploration graphs · one final graph
 :::
 

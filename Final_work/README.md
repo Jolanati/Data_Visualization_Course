@@ -21,6 +21,7 @@ Final project for SZF_184 Data Visualisation and Storytelling (RSU, autumn 2026,
 | `story.md` | One page: the question, the path to the finding, the answer, the final graph, evidence and limits |
 | `prompt_log.md` | How I worked with AI, prompt examples, decisions, and the AI mistakes I caught |
 | `talk.qmd` + `.html` | Video 1: the talk, as slides. Press `S` in the browser for the speaker notes |
+| `slides.css` | One style for both decks, in the colours of the final graph (gray and firebrick) |
 | `demo.qmd` + `.html` | Video 2: a code walkthrough that runs the report's own code, from the raw download to the final graph. Press `S` for the notes |
 | `notes/` | My decisions, a glossary of functions, the talk and demo scripts, and working notes |
 | `Project_idea.md` | The project plan and progress |

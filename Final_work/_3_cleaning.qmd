@@ -4,6 +4,7 @@
 # Setup for working in this file on its own: loads the packages, the EU codes and the raw tables.
 # In the rendered report the earlier sections have already done this, so running it again changes nothing.
 # include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
 pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
 eu_codes <- c("AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL",   # the same list as in Section 2
               "ES", "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU",

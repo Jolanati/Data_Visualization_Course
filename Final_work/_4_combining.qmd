@@ -4,6 +4,7 @@
 # Setup for working in this file on its own: loads the packages and the clean tables saved at the end of 3.1 to 3.5.
 # In the rendered report the earlier sections have already done this, so running it again changes nothing.
 # include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
 pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
 read_clean <- function(file) read_csv(here("data", "clean", file), show_col_types = FALSE)   # read a table saved in 3.1 to 3.5
 life_expectancy_clean    <- read_clean("life_expectancy_clean.csv")     # the six clean tables of Section 3

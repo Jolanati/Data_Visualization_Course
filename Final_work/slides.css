@@ -1,0 +1,68 @@
+/* One style for both decks, talk.qmd and demo.qmd.
+   The colours are the colours of the final graph: grays for everything, firebrick for the one thing that matters. */
+
+/* Text and titles: dark gray instead of pure black, so the firebrick stands out */
+.reveal { color: #333333; }
+.reveal h1, .reveal h2 { color: #222222; }
+
+/* A short firebrick line under every slide title, the one visual mark shared by both decks */
+.reveal h2 {
+  border-bottom: 4px solid #b22222;
+  padding-bottom: 0.15em;
+  width: fit-content;
+}
+
+/* The accent: firebrick on white slides */
+.reveal .accent { color: #b22222; }
+
+/* Small gray text for sources and side notes */
+.reveal .note-small { font-size: 0.8em; color: #666666; }
+
+/* Dark slides (section starts, the opening number, the closing sentence):
+   white text, light gray side text, and a lighter firebrick so it stays readable on dark */
+.reveal .has-dark-background,
+.reveal .has-dark-background h1,
+.reveal .has-dark-background h2 { color: #ffffff; }
+.reveal .has-dark-background h2 { border-bottom-color: #e05252; }
+.reveal .has-dark-background .accent { color: #e05252; }
+.reveal .has-dark-background .note-small,
+.reveal .kicker { color: #bbbbbb; }
+
+/* The line under a section title that says what this part is about */
+.reveal .kicker { font-size: 1.1em; margin-top: 0.6em; }
+
+/* Progress bar and links in firebrick, slide numbers in gray */
+.reveal .progress { color: #b22222; }
+.reveal a { color: #b22222; }
+.reveal .slide-number { color: #888888; background-color: transparent; }
+
+/* Tables: full width, light gray header line, readable text */
+.reveal table { font-size: 0.95em; width: 100%; }
+.reveal table th { border-bottom: 2px solid #888888; }
+.reveal table td, .reveal table th { padding: 0.3em 0.6em; }
+
+/* Inline code (file and table names): gray box, firebrick-free so it does not compete */
+.reveal code { color: #444444; }
+
+/* Code chunks (the demo): as large as fits, so the code can be read in a video */
+.reveal pre { width: 100%; box-shadow: none; border-left: 4px solid #b22222; }
+.reveal pre code { font-size: 0.78em; line-height: 1.3; max-height: 590px; }   /* reveal already sets pre to 0.55em, so this gives about 17 px */
+.reveal .cell-output pre { border-left-color: #bbbbbb; }
+.reveal .cell-output pre code { font-size: 0.7em; }
+
+/* The pipeline: a row of gray boxes, the last step in firebrick */
+.reveal .pipeline p { display: flex; align-items: stretch; gap: 0.25em; margin: 0.8em 0; font-size: 0.72em; line-height: 1.25; }
+.reveal .pipeline .step { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+  background: #f2f2f2; border: 1px solid #888888; border-radius: 4px; padding: 0.45em 0.3em; }
+.reveal .pipeline .key { background: #b22222; border-color: #b22222; color: #ffffff; font-weight: bold; }
+.reveal .pipeline .arrow { display: flex; align-items: center; color: #888888; }
+
+/* Tables printed by code (kable in the demo, the raw file in the talk): only as wide as needed, smaller text */
+.reveal .cell-output-display table { width: auto; min-width: 45%; font-size: 0.6em; }
+.reveal .cell-output-display table td, .reveal .cell-output-display table th { padding: 0.15em 0.8em; }
+/* The raw file on the talk slide is the point of that slide, so it stays large */
+.reveal .big-table .cell-output-display table { font-size: 1em; min-width: 85%; }
+.reveal .big-table .cell-output-display table td, .reveal .big-table .cell-output-display table th { padding: 0.3em 0.6em; }
+
+/* The menu button (bottom left) in gray, not the default blue */
+.reveal .slide-menu-button a, .reveal .slide-menu-button .fa-bars { color: #888888; }

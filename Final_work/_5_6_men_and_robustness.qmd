@@ -4,6 +4,7 @@
 # Setup for working in this file on its own: loads the packages and the two clean tables, as in 5.0.
 # In the rendered report the earlier parts have already done this, so running it again changes nothing.
 # include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
 pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
 gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"),              # the same files as in 5.0
                       show_col_types = FALSE)

@@ -4,6 +4,7 @@
 # Setup for working in this file on its own: loads the packages and the panel, and rebuilds the comparison group of 5.5.1.
 # In the rendered report the earlier sections have already done this, so running it again changes nothing.
 # include: false runs the chunk but does not show it in the report.
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # install pacman only if it is missing, as in 1.1
 pacman::p_load(tidyverse, here, janitor, gtsummary, knitr, scales, ggrepel, patchwork)   # the same packages as in 1.1
 gap_panel <- read_csv(here("data", "clean", "gap_panel.csv"), show_col_types = FALSE)    # the panel saved in 4.5
 gap_2024 <- gap_panel |> filter(year == 2024)                                             # the same as in 5.5.1

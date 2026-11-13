@@ -10,7 +10,7 @@ format:
     transition: fade
     width: 1280
     height: 720
-    css: talk.css
+    css: slides.css
 execute:
   echo: false
   warning: false
@@ -73,7 +73,7 @@ story_graph <- function(show = c("Women", "Men"), annotate = FALSE, title = NULL
 # 1 · The question {background-color="#1a1a1a"}
 
 ::: {style="color:white; text-align:center; margin-top:40px;"}
-[9.8 years]{style="font-size:3.6em; font-weight:bold; color:#e04848;"}
+[9.8 years]{.accent style="font-size:3.6em; font-weight:bold;"}
 
 [That is how much longer Latvian women live than Latvian men, almost twice the EU average.]{style="font-size:1.2em;"}
 :::
@@ -88,7 +88,7 @@ story_graph <- function(show = c("Women", "Men"), annotate = FALSE, title = NULL
 How much shorter is men's life expectancy at birth than women's in the **Baltic states**, compared with the rest of the EU, **2015 to 2024**, and which causes of death go with the gap?
 :::
 
-::: {style="font-size:1.25em; margin-top:50px; color:#b22222;"}
+::: {.accent style="font-size:1.25em; margin-top:50px;"}
 **At the same income, Baltic women live as long as other Europeans. Baltic men live up to 4.6 years shorter.**
 :::
 
@@ -100,7 +100,9 @@ Here is the answer straight away: at the same income, Baltic women live as long 
 Now let me show you how I got there, step by step.
 :::
 
-# 2 · The data
+# 2 · The data {background-color="#1a1a1a"}
+
+[Six tables, all downloaded by code]{.kicker}
 
 ## Six tables, downloaded by code {.smaller}
 
@@ -113,7 +115,7 @@ Now let me show you how I got there, step by step.
 | Tertiary education, by sex | Eurostat `sdg_04_20` | 730 |
 | Alcohol per person | WHO, via Our World in Data | 4 164 |
 
-::: {style="font-size:0.75em; color:#555555;"}
+::: {.note-small style="font-size:0.75em;"}
 Downloaded through the Eurostat API from R, saved untouched in `data/raw/`, documented in `SOURCE.md` (source, link, licence, date).
 :::
 
@@ -123,8 +125,9 @@ Downloaded through the Eurostat API from R, saved untouched in `data/raw/`, docu
 I didn't click through the website. My R code downloads each table through Eurostat's API, so anyone can rerun it and get the same data. The original files stay untouched in data raw, and SOURCE.md says where each one comes from.
 :::
 
-## What one raw file looks like {.smaller}
+## What one raw file looks like
 
+::: {.big-table}
 ```{r}
 # The first file as it arrived: Latvia, 2024, women and men
 read_csv(here("data", "raw", "demo_mlexpec.csv"), show_col_types = FALSE) |>
@@ -132,6 +135,7 @@ read_csv(here("data", "raw", "demo_mlexpec.csv"), show_col_types = FALSE) |>
   select(geo, sex, age, TIME_PERIOD, OBS_VALUE, OBS_FLAG) |>
   kable()
 ```
+:::
 
 ::: {style="font-size:0.85em; margin-top:30px;"}
 One row = one country, one sex, one year. `Y_LT1` = age under 1, so life expectancy **at birth**. The gap for Latvia: 81.2 − 71.4 = **9.8 years**.
@@ -141,9 +145,11 @@ One row = one country, one sex, one year. `Y_LT1` = age under 1, so life expecta
 (0:55) This is what a raw file looks like. One row is one country, one sex and one year. Here's Latvia in 2024: women 81.2 years, men 71.4. The age code Y LT1 means "under one year", so it's life expectancy at birth. 81.2 minus 71.4: there are the 9.8 years from the start, hidden in two rows of a CSV file.
 :::
 
-# 3 · Exploration and preparation
+# 3 · Exploration and preparation {background-color="#1a1a1a"}
 
-## Checking before trusting {.smaller}
+[Check every table, then build one panel]{.kicker}
+
+## Checking before trusting
 
 ::: {.columns}
 ::: {.column width="50%"}
@@ -174,15 +180,9 @@ They found real things. Eurostat writes Greece as EL, not GR, which would break 
 
 ## Preparing the data for the graph
 
-```{mermaid}
-flowchart LR
-  A["6 raw tables"] --> B["keep the<br>27 EU countries"]
-  B --> C["women and men<br>side by side"]
-  C --> D["join on country<br>and year"]
-  D --> E["gap_panel<br>270 rows"]
-  E --> F["2024 and ten<br>equally rich countries"]
-  F --> G["difference from<br>that group"]
-```
+::: {.pipeline}
+[6 raw<br>tables]{.step}[→]{.arrow}[keep<br>27 EU countries]{.step}[→]{.arrow}[women and men<br>side by side]{.step}[→]{.arrow}[join on<br>country and year]{.step}[→]{.arrow}[gap_panel<br>270 rows]{.step}[→]{.arrow}[2024, ten<br>equally rich countries]{.step}[→]{.arrow}[difference<br>from that group]{.step .key}
+:::
 
 ::: {style="font-size:0.85em; margin-top:30px;"}
 **Why equally rich countries?** The Baltic states are poorer than most of the EU. Comparing with countries of similar income (GDP per person 60 to 90% of the EU average) takes income out of the picture.
@@ -194,7 +194,9 @@ flowchart LR
 And here's the key idea of the whole project. The Baltic states are poorer than most of the EU. So if Baltic men die earlier, someone could simply say: it's poverty. To test that, I compared each Baltic state only with the ten EU countries that are about as rich: Bulgaria, Croatia, Czechia, Poland and so on. If it's only poverty, the Baltic states should look just like them.
 :::
 
-# 4 · Building the graph
+# 4 · Building the graph {background-color="#1a1a1a"}
+
+[From a first draft to the final graph]{.kicker}
 
 ## Version 1: the problem
 
@@ -261,7 +263,9 @@ story_graph(show = c("Women", "Men"), annotate = TRUE,
 (3:45) And the title states the finding. That's the final graph. I also checked it in a colour blindness simulator: the red stays much darker than the gray, and the numbers and panel titles carry the message without colour.
 :::
 
-# 5 · The answer
+# 5 · The answer {background-color="#1a1a1a"}
+
+[Why the men, and what the data cannot say]{.kicker}
 
 ## Why the men?
 
@@ -288,7 +292,7 @@ At the same income, **Baltic women keep up with Europe.**
 **Baltic men don't**, and in Latvia they live **4.6 years** shorter.
 :::
 
-::: {style="font-size:0.95em; color:#555555; margin-top:50px;"}
+::: {.note-small style="font-size:0.95em; margin-top:50px;"}
 Limit: these are country averages. They show what goes together, not what causes it.
 :::
 
