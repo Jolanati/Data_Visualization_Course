@@ -1,3 +1,5 @@
+> **Update 12 Nov:** video 2 is now the slide deck `demo.qmd` / `demo.html`: the whole pipeline (gather, clean, combine, explore, final graph) with the real code from the report and its output. The script is in the speaker notes: open `demo.html` and press S. The text below is the earlier version, kept for reference.
+
 # Video 2 script: code walkthrough of the final graph
 
 About 6 to 7 minutes, around 900 spoken words. Open `demo.qmd` in Positron, camera on, screen shared. Before recording, run the first chunk once in a fresh session so the packages are already loaded.

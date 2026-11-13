@@ -21,6 +21,7 @@ This section turns one graph from the exploration into the final graph of the pr
 | 6.3 | The final graph: refined for the message |
 | 6.4 | Colour blind check |
 | 6.5 | Log of the versions |
+| 6.6 | Answer to the question |
 
 ## 6.1 Version 1: a first draft
 
@@ -158,3 +159,8 @@ ggsave(here("figures", "final_graph.png"), final_graph, width = 9, height = 5.5,
 | 1 | `figures/graph_v1.png` | First draft: total life expectancy of women and men as bars, default colours, a legend, a topic title | To see the raw numbers first. Problem: on bars from 0 to 83 years, a shortfall of 3 to 5 years is almost invisible |
 | 2 | `figures/graph_v2.png` | The measure changed to the difference from countries of similar income, one panel for women and one for men, an axis label with the unit | A difference starts at 0, so the shortfall becomes the length of the bar and the finding is visible |
 | Final | `figures/final_graph.png` | Finding as the title, gray plus firebrick, no legend, countries ordered by the men's shortfall, numbers on the bars, one annotation, source line, larger text | So the eye goes to the men, the graph can be read without colour, and it works on a slide |
+
+## 6.6 Answer to the question
+
+**Answer:** at the same level of income, Baltic women live about as long as women in other EU countries, but Baltic men live shorter lives, in 2024 up to 4.6 years shorter in Latvia (71.4 years against 76.0 in ten EU countries of similar income), and the gap goes most closely with men's extra deaths before 65 from heart disease and external causes. One limit: these are country averages, so they show which factors go together with the gap, not what causes it.
+

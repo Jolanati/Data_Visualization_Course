@@ -22,6 +22,14 @@ All packages are loaded here, at the start, so they are listed in one place. `pa
 | `ggrepel` | Country labels on charts that push away from each other, so they do not overlap (`geom_text_repel()`) |
 | `patchwork` | Places several charts side by side or on top of each other, for example a weak and an improved version of the same chart (`p1 + p2`). Not taught in the course |
 
+`pacman` itself has to be installed before it can install the others. The first chunk checks this and installs it only if it is missing, as in the course template.
+
+```{r}
+#| label: install-pacman
+# 1.1 Install pacman only if it is not installed yet, so p_load() below works on a new computer
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")   # requireNamespace() is FALSE if pacman is missing
+```
+
 ```{r}
 #| label: setup
 # 1.1 Load every package the analysis uses, installing any that are missing
@@ -31,7 +39,7 @@ pacman::p_load(
   janitor,     # clean_names()
   gtsummary,   # tbl_summary() for the data quality tables
   knitr,       # kable() for neat result tables
-  scales,     # axis labels such as percentages
+  scales,      # axis labels such as percentages
   ggrepel,     # country labels that don't overlap
   patchwork    # several charts side by side, for example p1 + p2
 )

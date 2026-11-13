@@ -24,7 +24,7 @@ Source: https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/c
 
 **Also required, no points of its own:** `prompt_log.md` lists every prompt and one AI mistake fixed. The teacher may ask about any line of code, "and the score follows your answer". `story.md` fits on one page. Each function has a comment that says why.
 
-**Dates:** participation form by **Fri 13 Nov, 19:00**. Talk live on **Fri 20 Nov** (video by 18:00 if absent). Zip `Surname_Name.zip` uploaded by **Fri 20 Nov, 23:59**.
+**Dates (updated 12 Nov, from the instructions PDF):** zip `Stutane_Jolanta.zip` uploaded on **Thu 19 Nov, 13:45 to 17:00**. Presentations Thu 19 Nov and Fri 20 Nov, **3 to 5 minutes**. I am travelling, so I send a video. Report file name: `stutane_final_project.qmd`.
 
 **Scope decision (9 Nov):** only two evenings are left (9 and 10 Nov). Dropped: the Vercel app, the Rosling frames, renumbering the graphs, the remaining review items (robustness for alcohol, Romania as outlier, captions with codes on every graph). Kept: everything the rubric scores.
 
@@ -63,7 +63,7 @@ Source: https://github.com/sergiouribe/Data_Visualization_Course_RSU/tree/main/c
 Template files:
 
 - [x] `final_project.Rproj` and `.gitignore` from the template (1 Nov)
-- [x] Folder names: `final_project.qmd`, `data/raw/`, `data/clean/`, `figures/` (1 Nov)
+- [x] Folder names: `stutane_final_project.qmd`, `data/raw/`, `data/clean/`, `figures/` (1 Nov)
 - [x] YAML header with `execute:` `echo: true`, `warning: false`, `message: false` (1 Nov)
 - [x] Overview table that maps the template sections to mine (1 Nov)
 - [x] `data/raw/SOURCE.md`: all 5 tables (1 Nov)
@@ -73,13 +73,13 @@ Template files:
 
 Decisions so far (full reasons in `notes/decisions.md`):
 
-- **Question (reworded 9 Nov):** "How much shorter is men's life expectancy at birth than women's in the Baltic states compared with the rest of the EU, 2015 to 2024, and which causes of death go with the gap?", with three sub-questions in `final_project.qmd`. The AI topic was dropped (29 Oct).
+- **Question (reworded 9 Nov):** "How much shorter is men's life expectancy at birth than women's in the Baltic states compared with the rest of the EU, 2015 to 2024, and which causes of death go with the gap?", with three sub-questions in `stutane_final_project.qmd`. The AI topic was dropped (29 Oct).
 - **Expected message (30 Oct):** "Baltic men die earlier, and this goes mainly with heart disease deaths before 65." Written after the life expectancy table was loaded, but before the other four tables.
 - **Data:** five Eurostat tables (section 3), 2015 to 2024, one row per country and year after the join.
 - **Alcohol (29 Oct):** alcohol-related causes of death from `hlth_cd_asdr2` now. WHO alcohol consumption per person as a sixth table only after Step 4, if time allows.
-- **Files (3 Nov):** the report is split into `final_project.qmd` (overview and includes) and one file per section, `_1_setup.qmd` to `_7_limits.qmd`, because Positron's inline output hung on the 3 200-line file. Same single report when rendered. Each section file has a hidden setup chunk. Section 3 now saves the five clean tables to `data/clean/` (3.6), so Section 4 can run on its own. Work with `Final_work` opened as the folder. **Update (3 Nov):** `_3_cleaning.qmd` still hung, so it was split again: it keeps the intro and includes `_3_1_life_expectancy.qmd` to `_3_5_education.qmd` (one per table, each with its own hidden setup chunk) and each file saving its own clean table at the end (3.1.5 to 3.5.5); a separate `_3_6_save.qmd` was tried and dropped, because it only worked after all five files had run in the same session. Full render tested, no errors. Section 5 split the same way (aim: under 500 lines per file): `_5_exploration.qmd` keeps the intro and 5.0, then includes `_5_1_gap_and_causes.qmd` (5.1 to 5.3), `_5_4_factors.qmd` (5.4 to 5.5) and `_5_6_men_and_robustness.qmd` (5.6 to 5.10, its hidden setup rebuilds `factors_2023`, `gap_2024` and `similar_income`).
-- **Report structure (30 Oct, 1 Nov):** `final_project.qmd` follows my wine-dine notebook and the order the work was done: overview with main findings, pipeline and section map, a sub-section table at the start of every section, a "found, decided" summary after every cleaning step, dead ends in an appendix. A table in the overview maps Sergio's template sections to mine.
-- **Names (1 Nov):** Sergio's template names. `analysis.qmd` became `final_project.qmd`, `data-raw/` became `data/raw/`, `data/` became `data/clean/`. The raw files were moved, not changed (checksums identical).
+- **Files (3 Nov):** the report is split into `stutane_final_project.qmd` (overview and includes) and one file per section, `_1_setup.qmd` to `_7_limits.qmd`, because Positron's inline output hung on the 3 200-line file. Same single report when rendered. Each section file has a hidden setup chunk. Section 3 now saves the five clean tables to `data/clean/` (3.6), so Section 4 can run on its own. Work with `Final_work` opened as the folder. **Update (3 Nov):** `_3_cleaning.qmd` still hung, so it was split again: it keeps the intro and includes `_3_1_life_expectancy.qmd` to `_3_5_education.qmd` (one per table, each with its own hidden setup chunk) and each file saving its own clean table at the end (3.1.5 to 3.5.5); a separate `_3_6_save.qmd` was tried and dropped, because it only worked after all five files had run in the same session. Full render tested, no errors. Section 5 split the same way (aim: under 500 lines per file): `_5_exploration.qmd` keeps the intro and 5.0, then includes `_5_1_gap_and_causes.qmd` (5.1 to 5.3), `_5_4_factors.qmd` (5.4 to 5.5) and `_5_6_men_and_robustness.qmd` (5.6 to 5.10, its hidden setup rebuilds `factors_2023`, `gap_2024` and `similar_income`).
+- **Report structure (30 Oct, 1 Nov):** `stutane_final_project.qmd` follows my wine-dine notebook and the order the work was done: overview with main findings, pipeline and section map, a sub-section table at the start of every section, a "found, decided" summary after every cleaning step, dead ends in an appendix. A table in the overview maps Sergio's template sections to mine.
+- **Names (1 Nov):** Sergio's template names. `analysis.qmd` became `stutane_final_project.qmd`, `data-raw/` became `data/raw/`, `data/` became `data/clean/`. The raw files were moved, not changed (checksums identical).
 - **EU filter (30 Oct):** non-EU countries and aggregates are removed in Step 3, table by table, using the shared `eu_codes` list. **Exception (1 Nov):** the deaths table also has about 460 regions (55 MB in total), so its link asks for the 27 EU countries directly (3.5 MB).
 - **Causes of death (1 Nov):** all 93 causes are downloaded (women and men, under 65), to avoid choosing data that fits my hypotheses. Analysis looks first at the non-overlapping chapters of causes, then deeper at the causes my hypotheses name. I raised the bias question myself (see `prompt_log.md`). In cleaning (1 Nov): the two codes for all causes (`TOTAL`, `A-R_V-Y`) are merged into `TOTAL`, and a column `cause_level` marks "all causes", "chapter" (17 chapters + 3 COVID-19 codes, which add up to all causes) or "detail". Zeros are kept as real counts.
 - **Columns (30 Oct, 1 Nov):** each clean table drops Eurostat's technical columns and keeps `flag`. In Step 4 the flags are dropped before `pivot_wider()`, because they are already described in Section 3.
@@ -105,7 +105,7 @@ The steps below are the same nine as in `prompt_log.md`, section 1, with the sam
 3. **Claude explains the technical side: which functions it uses.** What each function does, what its arguments mean, why this one and not an alternative, the approach, which class topic it connects to, and what the output should look like. If I don't understand, Claude explains again in simpler words or with an everyday analogy.
 4. **Claude checks that I understood, with a question.** One question per chunk, before I run it, for example: "If Eurostat had written Greece as `GR` instead of `EL`, what would the row count print?" If my answer is wrong, Claude corrects me kindly and explains why. Then I run the chunk. We only discuss the output when something is unexpected or I ask. **From Section 5 on (2 Nov):** after each chunk Claude also gives one interesting finding from the output and a suggested next step.
 5. **I decide, the AI suggests.** Claude never makes an analysis decision silently (which year, which filter, what to do with an outlier, which factor wins). It gives the options with a recommendation, and I choose. One decision at a time, don't rush me.
-6. **Every decision is written down twice.** In `final_project.qmd` (academic voice) and in `notes/decisions.md` (my voice, for the talk). Decide first, then write it down, then code.
+6. **Every decision is written down twice.** In `stutane_final_project.qmd` (academic voice) and in `notes/decisions.md` (my voice, for the talk). Decide first, then write it down, then code.
 7. **New functions go into a glossary.** `notes/glossary.md`: each new function with a one-line meaning and a tiny example.
 8. **Comments for my future self.** Every chunk has a header comment and a comment on every line (see Code style below).
 9. **Fixed rules for the AI.** Never edit files in `data/raw/`. Never replace `NA` with 0. Never add Claude as co-author in my commits.
@@ -115,7 +115,7 @@ More rules:
 - If something errors, explain the error before fixing it.
 - Prefer functions the course has taught: `glimpse()`, `summary()`, `filter()`, `select()`, `mutate()`, `arrange()`, `distinct()`, `rename()`, `case_when()`, `pivot_longer()`, `pivot_wider()`, the joins (`left_join()`, `inner_join()`, `full_join()`, `anti_join()` with `join_by()`), `group_by()` with `summarize()`, `count()`, `ggplot2` (`geom_point()`, `geom_histogram()`, `geom_smooth(method = "lm")`, `facet_wrap()`, `labs()`, `theme_minimal()`, `scale_color_manual()`, `annotate()`, `ggsave()`), `ggrepel::geom_text_repel()`, `janitor::clean_names()`, `gtsummary::tbl_summary()`. If something outside the list is better, name it, explain it in two sentences, and let me decide.
 - **Known new functions** (not from the course, explain fully when we reach them): `cor()` in Step 5, `parse_number()` only if Eurostat flags turn a number column into text, `annotate()` with an arrow in Step 6.
-- After each code piece, draft the explaining paragraph for `final_project.qmd`, short and plain. I edit it until I'm happy with it.
+- After each code piece, draft the explaining paragraph for `stutane_final_project.qmd`, short and plain. I edit it until I'm happy with it.
 - At the end of each workflow step, give me a "can I explain this?" summary in three bullet points.
 - **Step gate:** never start the next workflow step until I confirm I can explain the current one.
 - At the start of a session, read the Progress section and continue from the first unchecked item. At the end, tick what is done, update the decisions list, and add to `prompt_log.md`.
@@ -130,7 +130,7 @@ Code style:
 
 Writing style:
 
-- **In `final_project.qmd`: academic voice.** No "I", "my" or "me". Impersonal or passive phrasing ("the data is filtered in Section 3"), no contractions. The only exception is the personal sentence in Background ("I live in Latvia...").
+- **In `stutane_final_project.qmd`: academic voice.** No "I", "my" or "me". Impersonal or passive phrasing ("the data is filtered in Section 3"), no contractions. The only exception is the personal sentence in Background ("I live in Latvia...").
 - **In `notes/decisions.md`, `prompt_log.md`, `story.md` and the talk: my own voice.** Plain, direct sentences of mixed length. Contractions are fine.
 - No long dashes anywhere. Use commas, colons or full stops.
 - No filler openers, no buzzwords, no "in today's world" phrasing.
@@ -226,8 +226,8 @@ What to expect in cleaning (learned so far, and still to watch):
 ```
 Final_work/                # Sergio's project_template structure, zipped as Surname_Name.zip
 ├── final_project.Rproj    # RStudio project file, sets the project root
-├── final_project.qmd      # the overview, puts the section files together when rendered
-├── final_project.html     # the rendered report (required in the zip)
+├── stutane_final_project.qmd      # the overview, puts the section files together when rendered
+├── stutane_final_project.html     # the rendered report (required in the zip)
 ├── _1_setup.qmd ... _7_limits.qmd   # 16 section files, each with a hidden setup chunk (required, the .qmd includes them)
 ├── story.md               # one page: question, answer, final graph (required)
 ├── prompt_log.md          # every prompt, and one AI mistake fixed (required)
@@ -245,11 +245,11 @@ Final_work/                # Sergio's project_template structure, zipped as Surn
 
 The empty `app/` and `R/` folders are deleted before zipping.
 
-The hand-in zip is the whole folder without `.Rproj.user`, with `final_project.html` included.
+The hand-in zip is the whole folder without `.Rproj.user`, with `stutane_final_project.html` included.
 
 ### The Quarto document
 
-Header of `final_project.qmd`:
+Header of `stutane_final_project.qmd`:
 
 ```yaml
 ---
@@ -291,7 +291,7 @@ Pattern inside every section:
 Rules:
 
 - Never put code without explaining text before it.
-- Render with Session > Restart R, then Render (or `quarto render final_project.qmd`).
+- Render with Session > Restart R, then Render (or `quarto render stutane_final_project.qmd`).
 
 ---
 
@@ -303,7 +303,7 @@ Each step has a task and a "done when", and points to the class that taught the 
 - Question, expected message and the factor I expect to matter most, written before the data was explored.
 
 ### Step 2. Get the data
-- **Task:** download each CSV into `data/raw/` through the Eurostat API. Every table follows the same three steps in `final_project.qmd`: build the link, download once, load and look. Record the filters in `notes/decisions.md` and add the table to `data/raw/SOURCE.md` (link, download date, last Eurostat update, size). Import with `read_csv(na = c("", ":", "NA"), show_col_types = FALSE)`, look with `glimpse()` and `head()`.
+- **Task:** download each CSV into `data/raw/` through the Eurostat API. Every table follows the same three steps in `stutane_final_project.qmd`: build the link, download once, load and look. Record the filters in `notes/decisions.md` and add the table to `data/raw/SOURCE.md` (link, download date, last Eurostat update, size). Import with `read_csv(na = c("", ":", "NA"), show_col_types = FALSE)`, look with `glimpse()` and `head()`.
 - **Done when:** each file imports without errors. No `clean_names()` here: the raw tables keep Eurostat's own names.
 
 ### Step 3. Clean (class 3 data quality checklist, classes 4 and 6)
@@ -343,12 +343,12 @@ here("data", "clean", "gap_panel.csv") |>
 - **Time:** the gap over the years for every country as lines, with the Baltics in red. `group_by(country_code)` and `summarize()` for each country's change from 2015 to 2024. Remember the 2020 and 2021 dip.
 - **Group comparison:** the Baltic average against the rest of the EU with `group_by(baltic)` and `summarize()`, shown as a box plot or bars.
 - **The Rosling chart:** `pivot_longer()` to put women and men in one `sex` column, then life expectancy against GDP, one dot per country and sex. Do Baltic men sit far below the pattern while Baltic women do not? Try this angle first.
-- **Dead ends** go in `notes/decisions.md` and the appendix of `final_project.qmd`.
+- **Dead ends** go in `notes/decisions.md` and the appendix of `stutane_final_project.qmd`.
 - **Done when:** I can name the strongest explanation, the weakest, one surprise, which angle has the clearest message, and whether GDP explains most of the pattern.
 
 ### Step 6. The final graph (rubric items 5 and 6, 4 points, tonight)
 - **Base:** Graph 12 (Baltic women and men against countries of similar income). One picture says "it is the men, not income".
-- **Versions (item 5):** each saved with `ggsave()` and kept in `final_project.qmd`:
+- **Versions (item 5):** each saved with `ggsave()` and kept in `stutane_final_project.qmd`:
   - `figures/graph_v1.png`: a first version with a real, named problem (for example default colours, a legend instead of labels, a topic title).
   - `figures/graph_v2.png`: the version that fixes it.
   - A log table: version, what changed, why. One line each.
@@ -366,7 +366,7 @@ here("data", "clean", "gap_panel.csv") |>
 - **`story.md`:** one page, following Sergio's template: question, data, the answer in one sentence with a number, the final graph, evidence, limits.
 - **`prompt_log.md`:** every prompt in full. Claude extracts all my prompts with dates from the saved Claude Code sessions into an appendix, and I check it. The "one AI mistake fixed" entry is already there.
 - **Reproducibility:** Session > Restart R, then Render. Then unzip a copy into a fresh folder and render it there too.
-- **Zip:** `Surname_Name.zip`, the whole folder without `.Rproj.user`, with `final_project.html`. Upload by Fri 20 Nov, 23:59.
+- **Zip:** `Surname_Name.zip`, the whole folder without `.Rproj.user`, with `stutane_final_project.html`. Upload by Fri 20 Nov, 23:59.
 
 ### Step 8. Rehearse (before 20 Nov, on my own)
 - The 3-minute talk (section 7), three times with a timer. Record one take as a backup video (screen and face).
@@ -409,10 +409,10 @@ The app is not part of the new rubric, and only two evenings are left. It is dro
 - [x] The graph has at least 2 saved versions, one with a problem, and each version has a line in the log.
 - [x] The final graph has a title that states the finding, axis labels with units, one annotation, a theme and a palette.
 - [x] The palette is colour blind safe and `figures/colour_blind_check.png` shows the simulator result.
-- [ ] `final_project.qmd` renders from a clean session (Session > Restart R, then Render).
+- [x] `stutane_final_project.qmd` renders from a clean session (tested 12 Nov in a fresh copy: from the raw files only, the clean data is rebuilt identically).
 - [x] Each function in the code has a comment that says why it is used.
 - [ ] `prompt_log.md` lists every prompt, and one entry describes an AI mistake I fixed.
-- [ ] `story.md` fits on one page.
+- [x] `story.md` fits on one page.
 - [ ] I can explain every line of my code.
 
 **My own final checks:**
@@ -421,11 +421,11 @@ The app is not part of the new rubric, and only two evenings are left. It is dro
 - [ ] Row counts are explained at every join.
 - [ ] The limits are stated plainly.
 - [ ] The source is named on the final graph.
-- [ ] The zip has the whole folder without `.Rproj.user`, and includes `final_project.html`.
+- [ ] The zip has the whole folder without `.Rproj.user`, and includes `stutane_final_project.html`.
 - [ ] The empty `app/` and `R/` folders are deleted, `.Rproj.user` is not in the zip.
 - [x] The participation form is sent before Fri 13 Nov, 19:00 (done 9 Nov).
 
-**Course coverage**, so the project shows what the classes taught. Every row is used at least once, on purpose, with a sentence in `final_project.qmd` saying why.
+**Course coverage**, so the project shows what the classes taught. Every row is used at least once, on purpose, with a sentence in `stutane_final_project.qmd` saying why.
 
 | Class | Tools and ideas | Where they show up in the project |
 |---|---|---|

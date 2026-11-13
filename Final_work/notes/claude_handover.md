@@ -78,3 +78,11 @@ Sergio published a 10-point rubric on 8 Nov. `Project_idea.md` is rewritten for 
 **9 Nov, late:** participation form sent. Talk script in `notes/talk_script.md`. The user records the talk as a video too. Prompt log stays as it is (examples, not every prompt: the user chose this). Left: rehearse, zip test and zip, talk on 20 Nov.
 
 **9 Nov, late:** the user is travelling on 20 Nov, so two videos: talk (<= 3:00, `notes/talk_script.md`) and code walkthrough (`demo.qmd`, five steps building the final graph, renders). No live defence.
+
+**12 Nov:** Sergio sent the instructions PDF and an example (voting_spain). Changes: upload Thu 19 Nov 13:45 to 17:00, talk 3 to 5 min, report renamed to `stutane_final_project.qmd`, pacman install line added in 1.1, tidy check added to Section 3, answer added as 6.6.
+
+**12 Nov, talk:** `talk.qmd` / `talk.html` slides follow Sergio's 7 steps, script in the speaker notes (press S). The user talks fast and wants storytelling: about 785 spoken words, about 5 min at 160 wpm. Keep it under 5:00 when timed. Demo in two versions: `demo_show.html` and `demo_tell.html` from `demo.qmd`.
+
+**12 Nov, demo:** `demo.qmd` is now a revealjs deck that runs the real chunks of the report through `get_code()` (knitr chunk option `code: !expr`), so the code on the slides is always the report code. About 23 slides, 1 550 spoken words (about 10 min fast). `demo.css` makes code smaller. The show/tell html pair was replaced by speaker view (S).
+
+**12 Nov, cleanup before submission:** root .gitignore now keeps the three html files and ignores *.zip (Sergio's zips stay out of Git), README.md added, prompt log decisions updated to 12 Nov, overview mentions talk.qmd and demo.qmd. Fresh-copy test: from data/raw only, the report renders and rebuilds data/clean identically.

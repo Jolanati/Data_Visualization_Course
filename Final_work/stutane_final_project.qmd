@@ -127,11 +127,12 @@ The document follows the order in which the work was done, so its sections are n
 | 4\. Wrangling | Section 3 (`rename()`, `filter()`, `select()`) and Section 4 (reshaping with `pivot_wider()`, joining, computing the gap with `mutate()`) |
 | 5\. Graph creation | Section 6, The final graph: version 1 with a problem (6.1), version 2 (6.2), each saved to `figures/`, and the log of the versions (6.5). The 17 graphs of Section 5, Exploration, come before it, each with its question above and its finding below |
 | 6\. Refinement and final graph | Section 6: the final graph (6.3), saved as `figures/final_graph.png`, and the colour blind check (6.4) |
+| 7\. Answer the question with the graph | Section 6.6: the finding with a number, and one limit |
 | 7\. Limits | Section 7, Limits |
 
 ## How the files are organised
 
-The analysis is written in 17 files: this one, `final_project.qmd`, with the overview, and one file per section, which this file puts in place when it is rendered, so that the result is one report. The two longest sections, Cleaning and Exploration, are split further into one file per part, because very long files made the editor hang. The underscore at the start of the section files tells Quarto that they are parts of this report, not reports of their own. Each section file starts with a hidden setup chunk, so that it can also be run on its own while working on it.
+The analysis is written in 17 files: this one, `stutane_final_project.qmd`, with the overview, and one file per section, which this file puts in place when it is rendered, so that the result is one report. The two longest sections, Cleaning and Exploration, are split further into one file per part, because very long files made the editor hang. The underscore at the start of the section files tells Quarto that they are parts of this report, not reports of their own. Each section file starts with a hidden setup chunk, so that it can also be run on its own while working on it.
 
 | File | Content |
 |---|---|
@@ -146,6 +147,8 @@ The analysis is written in 17 files: this one, `final_project.qmd`, with the ove
 | `_5_6_men_and_robustness.qmd` | 5.6 to 5.10: the men, the two neighbours, healthy years, robustness and the summary |
 | `_6_story.qmd` | 6. The final graph |
 | `_7_limits.qmd` | 7. Limits and the appendix |
+
+Two more documents belong to the presentation and are rendered on their own: `talk.qmd` (the talk, as slides with speaker notes) and `demo.qmd` (a code walkthrough that runs the report's own chunks, from the raw download to the final graph).
 
 {{< include _1_setup.qmd >}}
 

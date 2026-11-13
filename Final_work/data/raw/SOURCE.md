@@ -1,6 +1,6 @@
 # Data sources
 
-Five of the six files in this folder were downloaded from **Eurostat**, the statistical office of the European Union, through its API. The sixth, alcohol consumption, comes from the **World Health Organization (WHO)**, via Our World in Data (see the last entry). All six were downloaded by the code in `final_project.qmd` (Section 2). The filters are part of each download link, so the download can be repeated. The files are kept exactly as downloaded and are never edited.
+Five of the six files in this folder were downloaded from **Eurostat**, the statistical office of the European Union, through its API. The sixth, alcohol consumption, comes from the **World Health Organization (WHO)**, via Our World in Data (see the last entry). All six were downloaded by the code in `stutane_final_project.qmd` (Section 2). The filters are part of each download link, so the download can be repeated. The files are kept exactly as downloaded and are never edited.
 
 **Licence:** Eurostat data may be re-used free of charge, provided the source is acknowledged. The European Commission's reuse policy (Commission Decision 2011/833/EU) applies the Creative Commons Attribution 4.0 licence (CC BY 4.0). Copyright notice: https://ec.europa.eu/eurostat/about-us/policies/copyright
 

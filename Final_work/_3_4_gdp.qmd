@@ -15,7 +15,7 @@ gdp_raw                <- read_raw("tec00114.csv")        # the raw table of 2.4
 
 ## 3.4 GDP per capita
 
-The GDP table goes through the same four stages. It is the simplest of the five tables: one value per country and year, with no sex and no cause. As in 3.1 and 3.2, the non-EU countries and aggregates are removed in this section.
+The GDP table goes through the same four stages. It is the simplest of the six tables: one value per country and year, with no sex and no cause. As in 3.1 and 3.2, the non-EU countries and aggregates are removed in this section.
 
 | Stage | What happens | Result |
 |------------------|------------------------------------|------------------|

@@ -12,7 +12,7 @@ The full, word-for-word history of every session is saved by Claude Code on my l
 3. **Claude explains the technical side: which functions it uses.** What each function does, what its arguments mean, and why this approach and not another. If I don't understand, Claude explains it again in simpler words or with an everyday example (for example, `read_csv()` is like typing a printed table into Excel while the printout stays in the drawer).
 4. **Claude checks that I understood, with a question.** Before I run the chunk, Claude asks me one question about it, for example: "If Eurostat had written Greece as `GR` instead of `EL`, what would the row count print?" Some answers I got wrong, and Claude corrected me and explained why, which helped me understand the code better. Then I run the chunk in Positron, and we only talk about the output when something is unexpected. From the exploration on, Claude also points out one interesting finding in the output and suggests the next step.
 5. **I decide, the AI suggests.** For every analysis decision (which countries, what to do with missing years, which columns to keep) Claude gives the options with a recommendation, and I choose. Claude is not allowed to decide silently.
-6. **Every decision is written down twice.** In the report (`final_project.qmd`), in academic voice, and in `notes/decisions.md`, in my own words, for the talk.
+6. **Every decision is written down twice.** In the report (`stutane_final_project.qmd`), in academic voice, and in `notes/decisions.md`, in my own words, for the talk.
 7. **New functions go into a glossary.** In `notes/glossary.md`, each one with a one-line meaning and a small example, so I can revise before the defence.
 8. **Comments for my future self.** Every line of code has a comment that says what it does and why, so I can still read it in 10 years (Sergio's rule, which I added to the plan).
 9. **Fixed rules for the AI.** Never edit the raw data, never replace missing values with 0, never add itself as co-author in my commits.
@@ -85,7 +85,7 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 | 31 Oct | Packages | Add `patchwork` later, when needed | Add it now, all packages load at the start |
 | 1 Nov | Folder names | Rename to Sergio's template | Yes |
 | 1 Nov | Section order in the report | Keep mine, add a map to the template | Yes |
-| 1 Nov | The web app | Optional, as it is not required | Keep it as my presentation tool |
+| 1 Nov | The web app | Optional, as it is not required | Keep it as my presentation tool (dropped on 9 Nov, see below) |
 | 1 Nov | Which causes of death to download (the table has 93) | 6 causes named by my hypotheses, or 10 with smoking, suicide and accidents added, chosen by hypothesis, not by data | I asked whether choosing causes that fit my hypotheses makes me biased by design. Decided: download all 93, look first at the non-overlapping chapters of causes without choosing anything, then deeper at my hypothesis causes. Causes that don't matter go into the dead ends |
 | 1 Nov | Which countries in the deaths table (it also has about 460 regions, 55 MB) | Put the 27 EU countries in the link (3.5 MB), as an exception to the 30 Oct rule | Yes. I don't download data I don't need |
 | 1 Nov | Two codes for "all causes" in the deaths table (`TOTAL` and `A-R_V-Y` in different years) | Merge them into `TOTAL`, the safest of three options | Yes |
@@ -96,6 +96,18 @@ Who suggested what, and what I chose. The full reasons are in `notes/decisions.m
 | 1 Nov | The gap in deaths: difference or ratio | Difference, men minus women, because a ratio breaks when women have 0 deaths | Difference |
 | 1 Nov | Which join | `left_join()` onto life expectancy, so no country-year is lost | `left_join()` |
 | 1 Nov | Country names | Add English names, written once in a small table | Yes |
+| 3 Nov | Positron hung on the 3 200-line report | Split it into one file per section | Yes, and Sections 3 and 5 split again into smaller files |
+| 3 Nov | Saving the clean tables | One save step at the end of Section 3 | No: my own idea, each table saves itself at the end of its own file (see mistake 7) |
+| 4 Nov | Alcohol as a sixth table | Deaths only, WHO consumption, or both | Both: alcohol-related deaths and WHO litres per person |
+| 4 Nov | Alcohol cleaning | EU 27 only, 2015 to 2020, Eurostat codes from a small lookup table | Yes |
+| 4 Nov | Year for the alcohol graph | 2019, the last year before COVID | Yes |
+| 9 Nov | The main question (new rubric: group, measure and period) | Reword it to name life expectancy at birth and 2015 to 2024 | Yes |
+| 9 Nov | The web app | Drop it, it is not graded and there are only two evenings left | Yes, dropped |
+| 9 Nov | The final graph | Build it on Graph 12, in versions with a log | Yes |
+| 9 Nov | Colour blind check | Deuteranomaly (green-weak) or deuteranopia (green-blind) | Deuteranopia, the stricter test |
+| 9 Nov | The social media post (+1) | Write one | No, my decision |
+| 12 Nov | The presentation (I am travelling) | Two videos: the talk, and a code walkthrough | Yes, both as slide decks with speaker notes |
+| 12 Nov | Report file name (new instructions) | Rename to `stutane_final_project.qmd` | Yes |
 
 ## 4. AI mistakes I caught
 

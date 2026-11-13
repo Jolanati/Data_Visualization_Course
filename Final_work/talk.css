@@ -1,0 +1,7 @@
+/* Tables on the talk slides: smaller text so a six-row table fits on one slide */
+.reveal table {
+  font-size: 0.95em;
+}
+.reveal table td, .reveal table th {
+  padding: 0.25em 0.6em;
+}

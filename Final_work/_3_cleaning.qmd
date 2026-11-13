@@ -33,6 +33,14 @@ Every table then goes through the same five data quality checks, taken from the 
 | 4 | Duplicates | Does any combination of country, sex and year appear twice? | `distinct()`, `nrow()` |
 | 5 | Row counts | Does each country have the expected number of rows? | `count()`, `geom_col()` |
 
+**Tidy check** (the three rules of tidy data, class 05), answered for all six raw tables:
+
+- Each variable is a column: **yes**. Country, sex, year, the value and its flag each have their own column.
+- Each observation is a row: **yes**. One row is one country (or region), one sex and one year, with one value. The alcohol and GDP tables have no sex, so there one row is one country and one year.
+- Each value is a cell: **yes**. Every cell holds one value. The flags (`e`, `p`, `b`) sit in their own column, not inside the numbers.
+
+All six tables are therefore tidy as downloaded. The only reshaping, `pivot_wider()` in Section 4, puts women and men side by side so that the gap can be computed in one row.
+
 Short result tables are shown with `kable()` from `knitr`, which turns a table into a neat table in the rendered report. It changes only how a table looks, never the data.
 
 Each sub-section ends with a short summary table: what each check found, and what was decided because of it.

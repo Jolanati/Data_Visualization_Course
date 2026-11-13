@@ -1,3 +1,5 @@
+> **Update 12 Nov:** the talk is now the slide deck `talk.qmd` / `talk.html` (3 to 5 minutes, following Sergio's seven steps: question, data, exploration, preparation, graph versions, refinement, answer). The script is in the speaker notes: open `talk.html` and press S. The text below is the earlier 3-minute version, kept for reference.
+
 # Talk script: 3 minutes, one graph
 
 **Setup before you start:** open `figures/final_graph.png` full screen (double-click it, then F11 or the full-screen button). Nothing else on the screen. The teacher stops the clock at 3:00. Sergio's rule is one graph only, so the whole talk stays on this one image.
